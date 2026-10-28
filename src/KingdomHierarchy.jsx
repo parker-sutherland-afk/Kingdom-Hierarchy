@@ -17,16 +17,17 @@ const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH"
 
 // EDIT YOUR ROSTER & CUSTOM DESCRIPTIONS HERE:
 const INITIAL_MEMBERS = [
-  { id: 1, name: 'Will', role: 'King', customDesc: 'Absolute ruler of the realm.' },
-  { id: 2, name: 'Parker', role: 'Advisor', customDesc: 'Whispers strategic wisdom into the King\'s ear and orchestrates political maneuvers.' },
-  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: 'A master tactician who balances political counsel with ruthless battlefield command.' },
-  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: 'The master builder and treasurer, ensuring the kingdom’s coffers are full.' },
-  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: 'Maintains the delicate balance between the law of the land and the bounty of the harvest.' },
-  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: 'The realm\'s chief alchemist and healer, brewing remedies and guarding secrets.' },
-  { id: 7, name: 'Max', role: 'Prince', customDesc: 'Heir to the throne, currently learning the heavy burdens of leadership and crown politics.' },
-  { id: 8, name: 'Alex', role: 'Citizen', customDesc: 'A hardworking pillar of the local community, keeping the economy moving day by day.' },
-  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: 'An observant townsfolk member who always knows the latest gossip and local happenings.' }
+  { id: 1, name: 'Will', role: 'King', customDesc: 'The High Sovereign whose absolute authority binds the realm and commands the ultimate destiny of all subjects.' },
+  { id: 2, name: 'Parker', role: 'Advisor', customDesc: 'The Grand Strategist, architect of the throne\'s grand designs and master of deep-state diplomacy.' },
+  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: 'The Lord Marshal, blending sharp political intellect with a legendary, undefeated record on the frontline.' },
+  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: 'The Grand Architect and Treasurer, constructing the kingdom\'s eternal monuments while securing unimaginable wealth.' },
+  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: 'The High Arbiter, an unyielding judge who commands the life-giving harvest and enforces the iron law of the realm.' },
+  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: 'The Arch-Alchemist, custodian of forbidden medical lore, miraculous elixirs, and highly classified chemical secrets.' },
+  { id: 7, name: 'Max', role: 'Prince', customDesc: 'The Royal Heir, enduring the brutal crucible of high court intrigue to one day inherit the crown.' },
+  { id: 8, name: 'Alex', role: 'Citizen', customDesc: 'A prominent Guildmaster and economic powerhouse, driving the engine of local commerce and industry.' },
+  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: 'The Eyes of the Commons, a master informant who maps the city\'s hidden undercurrents and vital street intelligence.' }
 ];
+
 
 
 
