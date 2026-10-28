@@ -18,15 +18,17 @@ const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH"
 // EDIT YOUR ROSTER & CUSTOM DESCRIPTIONS HERE:
 const INITIAL_MEMBERS = [
   { id: 1, name: 'Will', role: 'King', customDesc: 'Absolute ruler of the realm.' },
-  { id: 2, name: 'Parker', role: 'Advisor', customDesc: '' },
-  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: '' },
-  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: '' },
-  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: '' },
-  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: '' },
-  { id: 7, name: 'Max', role: 'Prince', customDesc: '' },
-  { id: 8, name: 'Alex', role: 'Citizen', customDesc: '' },
-  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: '' }
+  { id: 2, name: 'Parker', role: 'Advisor', customDesc: 'Whispers strategic wisdom into the King\'s ear and orchestrates political maneuvers.' },
+  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: 'A master tactician who balances political counsel with ruthless battlefield command.' },
+  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: 'The master builder and treasurer, ensuring the kingdom’s coffers are full.' },
+  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: 'Maintains the delicate balance between the law of the land and the bounty of the harvest.' },
+  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: 'The realm\'s chief alchemist and healer, brewing remedies and guarding secrets.' },
+  { id: 7, name: 'Max', role: 'Prince', customDesc: 'Heir to the throne, currently learning the heavy burdens of leadership and crown politics.' },
+  { id: 8, name: 'Alex', role: 'Citizen', customDesc: 'A hardworking pillar of the local community, keeping the economy moving day by day.' },
+  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: 'An observant townsfolk member who always knows the latest gossip and local happenings.' }
 ];
+
+
 
 export default function KingdomHierarchy() {
   const members = INITIAL_MEMBERS;
