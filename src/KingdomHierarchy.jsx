@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Trash2, Edit2, Check, X, AlertCircle, Info, Hammer, RefreshCw } from 'lucide-react';
-
-const SUPABASE_URL = 'https://iciugodxqkyvyjrjpaty.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_37EJPKwuzkafwaBk9y4JuQ_ZZq9S_';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Trash2, Edit2, Check, X, AlertCircle, Info, Hammer, RotateCcw } from 'lucide-react';
 
 const ROLE_CONFIG = {
   "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-400", bgGlow: "bg-slate-800", icon: Crown, desc: "Absolute ruler of the realm." },
@@ -20,58 +15,49 @@ const ROLE_CONFIG = {
 
 const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH", 6: "CITIZENS" };
 
+const DEFAULT_MEMBERS = [
+  { id: 1, name: 'Will', role: 'King' },
+  { id: 2, name: 'Parker', role: 'Advisor' },
+  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3 },
+  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects' },
+  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice' },
+  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances' },
+  { id: 7, name: 'Max', role: 'Prince' },
+  { id: 8, name: 'Alex', role: 'Citizen' },
+  { id: 9, name: 'Nicky', role: 'Citizen' }
+];
+
 export default function KingdomHierarchy() {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState(() => {
+    const saved = localStorage.getItem('kingdom_roster');
+    return saved ? JSON.parse(saved) : DEFAULT_MEMBERS;
+  });
+
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('');
-  
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editDesc, setEditDesc] = useState('');
-  
   const [toastMsg, setToastMsg] = useState('');
+
+  // Auto-save changes to local storage whenever members update
+  useEffect(() => {
+    localStorage.setItem('kingdom_roster', JSON.stringify(members));
+  }, [members]);
 
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 4000);
   };
 
-  const fetchMembers = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from('kingdom_members').select('*');
-    if (error) {
-      showToast('Error fetching database!');
-    } else if (data) {
-      const formatted = data.map(m => ({
-        id: m.id,
-        name: m.name,
-        role: m.role,
-        secondaryRole: m.secondary_role,
-        customDesc: m.custom_desc,
-        customPoints: m.custom_points
-      }));
-      setMembers(formatted);
+  const resetToDefault = () => {
+    if (window.confirm("Reset roster back to default?")) {
+      setMembers(DEFAULT_MEMBERS);
+      localStorage.removeItem('kingdom_roster');
+      showToast("Roster reset to default.");
     }
-    setLoading(false);
   };
-
-  useEffect(() => {
-    fetchMembers();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel('kingdom_members_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'kingdom_members' }, () => {
-        fetchMembers();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const roleCounts = useMemo(() => {
     const counts = {};
@@ -82,47 +68,25 @@ export default function KingdomHierarchy() {
     return counts;
   }, [members]);
 
-  const handleAddMember = async (e) => {
+  const handleAddMember = (e) => {
     e.preventDefault();
     if (!newName.trim() || !newRole) return;
     if (roleCounts[newRole] >= ROLE_CONFIG[newRole].max) {
       showToast(`Cannot add! The role of "${newRole}" is full.`);
       return;
     }
-
-    const newId = Date.now();
-    const newMemberObj = {
-      id: newId,
-      name: newName.trim(),
-      role: newRole,
-      secondary_role: null,
-      custom_desc: '',
-      custom_points: null
-    };
-
-    const { error } = await supabase.from('kingdom_members').insert([newMemberObj]);
-    if (error) {
-      showToast('Database error when adding member.');
-    } else {
-      setNewName('');
-      setNewRole('');
-      fetchMembers();
-    }
+    setMembers([...members, { id: Date.now(), name: newName.trim(), role: newRole, customDesc: '' }]);
+    setNewName('');
+    setNewRole(''); 
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const member = members.find(m => m.id === id);
     if (member.role === 'King') {
       return showToast("Treason! You cannot delete the King.");
     }
-
-    const { error } = await supabase.from('kingdom_members').delete().eq('id', id);
-    if (error) {
-      showToast('Database error when deleting member.');
-    } else {
-      if (editingId === id) cancelEdit();
-      fetchMembers();
-    }
+    setMembers(members.filter(m => m.id !== id));
+    if (editingId === id) cancelEdit();
   };
 
   const startEdit = (member) => {
@@ -139,7 +103,7 @@ export default function KingdomHierarchy() {
     setEditDesc('');
   };
 
-  const saveEdit = async (id) => {
+  const saveEdit = (id) => {
     const member = members.find(m => m.id === id);
     if (!editName.trim()) return showToast("Name cannot be empty!");
     
@@ -150,19 +114,8 @@ export default function KingdomHierarchy() {
     if (member.role !== editRole && roleCounts[editRole] >= ROLE_CONFIG[editRole].max) {
       return showToast(`Cannot move to "${editRole}", the position is full!`);
     }
-
-    const { error } = await supabase.from('kingdom_members').update({
-      name: editName.trim(),
-      role: editRole,
-      custom_desc: editDesc.trim()
-    }).eq('id', id);
-
-    if (error) {
-      showToast('Database error when updating member.');
-    } else {
-      setEditingId(null);
-      fetchMembers();
-    }
+    setMembers(members.map(m => m.id === id ? { ...m, name: editName.trim(), role: editRole, customDesc: editDesc.trim() } : m));
+    setEditingId(null);
   };
 
   return (
@@ -179,15 +132,17 @@ export default function KingdomHierarchy() {
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <header className="mb-12 border-b border-stone-700 pb-8 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-wide text-stone-100 mb-2 uppercase flex items-center gap-3">
-              Kingdom Hierarchy
-              {loading && <RefreshCw className="animate-spin text-stone-500" size={24} />}
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-wide text-stone-100 mb-2 uppercase">Kingdom Hierarchy</h1>
             <p className="text-stone-400 text-lg italic">Official Roster & Power Structure</p>
           </div>
-          <div className="bg-stone-800 border border-stone-700 rounded px-4 py-3 flex items-center gap-3 max-w-sm">
-            <Info className="text-stone-400 shrink-0" size={20} />
-            <p className="text-xs text-stone-300">Citizens are <strong className="text-red-400">strictly forbidden</strong> from wearing armor trims.</p>
+          <div className="flex items-center gap-4">
+            <button onClick={resetToDefault} className="bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-400 hover:text-stone-200 p-2.5 rounded transition-colors" title="Reset Roster">
+              <RotateCcw size={18} />
+            </button>
+            <div className="bg-stone-800 border border-stone-700 rounded px-4 py-3 flex items-center gap-3 max-w-sm">
+              <Info className="text-stone-400 shrink-0" size={20} />
+              <p className="text-xs text-stone-300">Citizens are <strong className="text-red-400">strictly forbidden</strong> from wearing armor trims.</p>
+            </div>
           </div>
         </header>
 
@@ -213,7 +168,7 @@ export default function KingdomHierarchy() {
                       const isEditing = editingId === member.id;
                       const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
                       
-                      const pts = member.customPoints !== undefined && member.customPoints !== null
+                      const pts = member.customPoints !== undefined && member.customPoints !== null 
                         ? member.customPoints 
                         : config?.points + (secCfg ? secCfg.points : 0);
 
