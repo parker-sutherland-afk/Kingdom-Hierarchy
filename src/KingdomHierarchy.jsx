@@ -1,25 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Activity, Users, ShieldAlert } from 'lucide-react';
-
-const ROLE_CONFIG = {
-  "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-400", glow: "hover:shadow-[0_0_20px_rgba(96,165,250,0.4)] hover:border-blue-400", icon: Crown, desc: "Absolute ruler of the realm." },
-  "Advisor": { max: 2, trim: "Netherite Dune", rank: 2, points: 3, color: "text-stone-300", border: "border-stone-500", glow: "hover:shadow-[0_0_20px_rgba(168,162,158,0.4)] hover:border-stone-400", icon: Shield, desc: "Provides counsel to the King." },
-  "Head Of Resources and Projects": { max: 1, trim: "Amethyst Flow", rank: 3, points: 2, color: "text-purple-300", border: "border-purple-800", glow: "hover:This is going to look incredibly cool for a Minecraft server. Skipping the lore books makes perfect sense if you already have them in-game!
-
-I have integrated **Minecraft Player Heads**, the **Kingdom Stats Banner**, and the **Magical Hover Glows**. 
-
-### How the new features work:
-1. **Minecraft Heads:** I added an `mcName` field to everyone in the code. It automatically fetches their 3D Minecraft face! *(Note: You will need to type their exact Minecraft usernames into the `mcName` field for their real skin to show up. If it's wrong, it defaults to a Steve head).*
-2. **Kingdom Stats:** There is now a clean 3-panel stats board that automatically calculates the total server population, the size of the High Council, and the total Voting Power in the kingdom.
-3. **Magical Glows:** Every role now has a custom `shadowGlow` in `ROLE_CONFIG`. When you hover your mouse over a card, it floats up slightly and emits a magical glow matching their armor trim color!
-
-### Here is your final `KingdomHierarchy.jsx`:
-
-Copy and paste this completely updated code over your current file:
-
-```jsx
-import React, { useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, Fortress } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale } from 'lucide-react';
 
 const ROLE_CONFIG = {
   "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(147,197,253,0.3)] hover:border-blue-400", icon: Crown, desc: "Absolute ruler of the realm." },
@@ -35,7 +15,6 @@ const ROLE_CONFIG = {
 
 const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH", 6: "CITIZENS" };
 
-// EDIT YOUR ROSTER HERE (Update mcName to their exact Minecraft username!)
 const INITIAL_MEMBERS = [
   { id: 1, name: 'Will', mcName: 'Will', role: 'King', customDesc: 'The sovereign overlord, whose mere whisper commands the tides of fate and whose iron will binds the very foundations of the realm.' },
   { id: 2, name: 'Parker', mcName: 'Parker', role: 'Advisor', customDesc: 'Master of whispers and the silent orchestrator of the throne\'s absolute power. He sees all that the light touches, and all that it does not.' },
@@ -81,7 +60,7 @@ export default function KingdomHierarchy() {
               <p className="text-stone-400 text-lg md:text-xl italic">Official Roster & Power Structure</p>
             </div>
             <div className="bg-stone-900 border border-stone-800 rounded px-4 py-3 flex items-center gap-3 max-w-sm w-full md:w-auto shadow-lg">
-              <Info className="text-stone-500 shrink-0" size="{20}"/>
+              <Info className="text-stone-500 shrink-0" size={20} />
               <p className="text-xs text-stone-400">Citizens are <strong className="text-red-500 font-bold">strictly forbidden</strong> from wearing armor trims.</p>
             </div>
           </div>
@@ -89,21 +68,21 @@ export default function KingdomHierarchy() {
           {/* Kingdom Stats Banner */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-stone-400"><Users size="{24}"/></div>
+              <div className="p-3 bg-stone-800 rounded text-stone-400"><Users size={24} /></div>
               <div>
                 <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">Total Souls</div>
                 <div className="text-2xl font-black text-stone-200">{totalSouls}</div>
               </div>
             </div>
             <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-amber-500/80"><Crown size="{24}"/></div>
+              <div className="p-3 bg-stone-800 rounded text-amber-500/80"><Crown size={24} /></div>
               <div>
                 <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">High Council</div>
                 <div className="text-2xl font-black text-stone-200">{highCouncilCount}</div>
               </div>
             </div>
             <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-blue-400/80"><Scale size="{24}"/></div>
+              <div className="p-3 bg-stone-800 rounded text-blue-400/80"><Scale size={24} /></div>
               <div>
                 <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">Voting Power</div>
                 <div className="text-2xl font-black text-stone-200">{totalVotingPower} Pts</div>
@@ -114,7 +93,7 @@ export default function KingdomHierarchy() {
           {/* Search Bar Section */}
           <div className="relative max-w-md w-full mt-4">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="text-stone-500" size="{18}"/>
+              <Search className="text-stone-500" size={18} />
             </div>
             <input
               type="text"
@@ -150,6 +129,7 @@ export default function KingdomHierarchy() {
                       const config = ROLE_CONFIG[member.role];
                       const Icon = config?.icon || User;
                       const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
+                      const SecIcon = secCfg ? secCfg.icon : null;
                       
                       const pts = member.customPoints !== undefined && member.customPoints !== null 
                         ? member.customPoints 
@@ -166,16 +146,16 @@ export default function KingdomHierarchy() {
                                 {/* MINECRAFT PLAYER HEAD */}
                                 <div className="shrink-0 relative">
                                   <img 
-                                    src={`[https://minotar.net/helm/$](https://minotar.net/helm/$){member.mcName}/64.png`} 
+                                    src={`https://minotar.net/helm/${member.mcName}/64.png`} 
                                     alt={`${member.name}'s Minecraft Head`}
                                     className="w-12 h-12 rounded bg-stone-950 border border-stone-700 shadow-md"
-                                    onError={(e) => { e.target.src = '[https://minotar.net/helm/Steve/64.png](https://minotar.net/helm/Steve/64.png)' }} 
+                                    onError={(e) => { e.target.src = 'https://minotar.net/helm/Steve/64.png' }} 
                                   />
                                 </div>
                                 <div>
                                   <h3 className="text-xl font-black text-stone-100 truncate tracking-wide">{member.name}</h3>
                                   <div className="flex items-center gap-1.5 text-xs text-stone-400 mt-0.5 font-sans font-medium">
-                                    <Icon className="{config?.color}" size="{12}"/>
+                                    <Icon className={config?.color} size={12} />
                                     <span>{member.role}</span>
                                   </div>
                                 </div>
@@ -194,11 +174,11 @@ export default function KingdomHierarchy() {
                                 )}
                               </div>
 
-                              {member.secondaryRole && secCfg && (
+                              {member.secondaryRole && secCfg && SecIcon && (
                                 <div className="pt-3 border-t border-stone-800 space-y-1 text-sm font-sans">
                                   <div className="font-medium text-stone-500 text-xs uppercase tracking-wider">Secondary Role</div>
                                   <div className="flex items-center gap-1.5 text-stone-300">
-                                    <secCfg.icon size={12} className={secCfg.color} />
+                                    <SecIcon size={12} className={secCfg.color} />
                                     {member.secondaryRole}
                                   </div>
                                   {secCfg.trim !== "None" && <div className={`text-xs font-bold ${secCfg.color}`}>✦ {secCfg.trim}</div>}
