@@ -30,15 +30,32 @@ const INITIAL_MEMBERS = [
 
 export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
 
-  // Filter members based on search query
+  // Filter members based on search query AND active button
   const filteredMembers = INITIAL_MEMBERS.filter(member => {
+    // 1. Text Search Check
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = 
       member.name.toLowerCase().includes(q) ||
       member.role.toLowerCase().includes(q) ||
-      (member.secondaryRole && member.secondaryRole.toLowerCase().includes(q))
-    );
+      (member.secondaryRole && member.secondaryRole.toLowerCase().includes(q));
+
+    // 2. Button Filter Check
+    const rank = ROLE_CONFIG[member.role]?.rank;
+    let matchesFilter = true;
+    
+    if (activeFilter === 'High Council') {
+      matchesFilter = rank <= 4;
+    } else if (activeFilter === 'Citizens') {
+      matchesFilter = rank === 6;
+    } else if (activeFilter === 'Military') {
+      matchesFilter = 
+        member.role.includes('War') || member.role.includes('Combat') ||
+        (member.secondaryRole && (member.secondaryRole.includes('War') || member.secondaryRole.includes('Combat')));
+    }
+
+    return matchesSearch && matchesFilter;
   });
 
   // Calculate stats dynamically
@@ -49,6 +66,8 @@ export default function KingdomHierarchy() {
     const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
     return sum + (member.customPoints !== undefined && member.customPoints !== null ? member.customPoints : config?.points + (secCfg ? secCfg.points : 0));
   }, 0);
+
+  const filterOptions = ['All', 'High Council', 'Military', 'Citizens'];
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-200 font-serif selection:bg-stone-700 pb-12">
@@ -90,25 +109,44 @@ export default function KingdomHierarchy() {
             </div>
           </div>
 
-          {/* Search Bar Section */}
-          <div className="relative max-w-md w-full mt-4">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="text-stone-500" size={18} />
+          {/* Search Bar & Filters Section */}
+          <div className="flex flex-col gap-4 max-w-xl w-full mt-4">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="text-stone-500" size={18} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, role, or position..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-stone-900 border border-stone-800 rounded-md py-3 pl-10 pr-3 text-sm text-stone-200 placeholder-stone-500 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-all shadow-inner"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search by name, role, or position..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-stone-900 border border-stone-800 rounded-md py-3 pl-10 pr-3 text-sm text-stone-200 placeholder-stone-500 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-all shadow-inner"
-            />
+            
+            {/* Quick Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filter)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 ${
+                    activeFilter === filter
+                      ? 'bg-stone-200 text-stone-900 shadow-[0_0_10px_rgba(231,229,228,0.5)]'
+                      : 'bg-stone-900 text-stone-400 border border-stone-700 hover:bg-stone-800 hover:text-stone-300'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
         <div className="flex flex-col gap-10">
           {filteredMembers.length === 0 ? (
-            <div className="text-center text-stone-600 py-16 italic border border-stone-800 rounded-lg bg-stone-900/30">
-              No souls found matching "{searchQuery}"
+            <div className="text-center text-stone-500 py-16 italic border border-stone-800 rounded-lg bg-stone-900/30 font-sans">
+              No souls found matching those filters.
             </div>
           ) : (
             [1, 2, 3, 4, 5, 6].map((rankNum) => {
@@ -143,7 +181,6 @@ export default function KingdomHierarchy() {
                             
                             <div className="flex items-start justify-between mb-5 gap-3 relative z-10">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                {/* MINECRAFT PLAYER HEAD */}
                                 <div className="shrink-0 relative">
                                   <img 
                                     src={`https://minotar.net/helm/${member.mcName}/64.png`} 
