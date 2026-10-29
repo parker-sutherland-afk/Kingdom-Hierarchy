@@ -17,15 +17,16 @@ const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH"
 
 // EDIT YOUR ROSTER & CUSTOM DESCRIPTIONS HERE:
 const INITIAL_MEMBERS = [
-  { id: 1, name: 'Will', role: 'King', customDesc: 'The High Sovereign whose absolute authority binds the realm and commands the ultimate destiny of all subjects.' },
-  { id: 2, name: 'Parker', role: 'Advisor', customDesc: 'The Grand Strategist, architect of the throne\'s grand designs and master of deep-state diplomacy.' },
-  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: 'The Lord Marshal, blending sharp political intellect with a legendary, undefeated record on the frontline.' },
-  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: 'The Grand Architect and Treasurer, constructing the kingdom\'s eternal monuments while securing unimaginable wealth.' },
-  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: 'The High Arbiter, an unyielding judge who commands the life-giving harvest and enforces the iron law of the realm.' },
-  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: 'The Arch-Alchemist, custodian of forbidden medical lore, miraculous elixirs, and highly classified chemical secrets.' },
-  { id: 7, name: 'Max', role: 'Prince', customDesc: 'The Royal Heir, enduring the brutal crucible of high court intrigue to one day inherit the crown.' },
-  { id: 8, name: 'Alex', role: 'Citizen', customDesc: 'A prominent Guildmaster and economic powerhouse, driving the engine of local commerce and industry.' },
-  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: 'The Eyes of the Commons, a master informant who maps the city\'s hidden undercurrents and vital street intelligence.' }
+  { id: 1, name: 'Will', role: 'King', customDesc: 'Absolute ruler of the realm.' },
+  { id: 2, name: 'Parker', role: 'Advisor', customDesc: '' },
+  { id: 3, name: 'Darcy', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: '' },
+  { id: 4, name: 'Harrison', role: 'Head Of Resources and Projects', customDesc: '' },
+  { id: 5, name: 'Thomas', role: 'Head Of Agriculture and Justice', customDesc: '' },
+  { id: 6, name: 'Nate', role: 'Head Of Medicinal Substances', customDesc: '' },
+  { id: 7, name: 'Max', role: 'Prince', customDesc: '' },
+  { id: 8, name: 'Alex', role: 'Citizen', customDesc: '' },
+  { id: 9, name: 'Nicky', role: 'Citizen', customDesc: '' },
+  { id: 10, name: 'Poppy', role: 'Citizen', customDesc: 'A dedicated and loyal resident, working hard to build a prosperous kingdom.' }
 ];
 
 
