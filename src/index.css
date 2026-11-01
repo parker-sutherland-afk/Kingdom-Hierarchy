@@ -3,5 +3,19 @@
 @tailwind utilities;
 
 body {
-  background-color: #f5f5f4; /* Stone 100 for the matte medieval look */
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #0b0d0b;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  color: #fffbeb;
+  background: #78350f;
 }
