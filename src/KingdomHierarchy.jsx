@@ -30,6 +30,7 @@ const INITIAL_MEMBERS = [
 
 const COUNCIL_ROLES = Object.keys(ROLE_CONFIG).filter(role => role.startsWith('Head Of '));
 const HIGH_COUNCIL_ROLES = ['King', 'Advisor'];
+const COUNCIL_FILTER_ROLES = [...HIGH_COUNCIL_ROLES, ...COUNCIL_ROLES];
 const memberHasAnyRole = (member, roles) =>
   [member.role, member.secondaryRole].some(role => roles.includes(role));
 
@@ -61,7 +62,7 @@ export default function KingdomHierarchy() {
     const roles = [member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase();
     const matchesFilter = activeFilter === 'All' ||
       (activeFilter === 'High Council' && memberHasAnyRole(member, HIGH_COUNCIL_ROLES)) ||
-      (activeFilter === 'Council' && memberHasAnyRole(member, COUNCIL_ROLES)) ||
+      (activeFilter === 'Council' && memberHasAnyRole(member, COUNCIL_FILTER_ROLES)) ||
       (activeFilter === 'Citizens' && member.role === 'Citizen') ||
       (activeFilter === 'Military' && /war|combat|military/.test(roles));
     return matchesSearch && matchesFilter;
@@ -69,7 +70,7 @@ export default function KingdomHierarchy() {
 
   const totalSouls = INITIAL_MEMBERS.length;
   const highCouncilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, HIGH_COUNCIL_ROLES)).length;
-  const councilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, COUNCIL_ROLES)).length;
+  const councilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, COUNCIL_FILTER_ROLES)).length;
   const totalVotingPower = INITIAL_MEMBERS.reduce((sum, member) => {
     const config = ROLE_CONFIG[member.role];
     const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
