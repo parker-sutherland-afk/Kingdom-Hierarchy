@@ -117,6 +117,141 @@ function MemberAvatar({ member, config }) {
   );
 }
 
+function ThemedDropdown({ id, label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+  const optionRefs = useRef([]);
+  const focusIndex = useRef(null);
+  const selectedIndex = Math.max(0, options.findIndex(option => option.value === value));
+  const selectedOption = options[selectedIndex];
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeOnOutsideClick = event => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const index = focusIndex.current ?? selectedIndex;
+    optionRefs.current[index]?.focus();
+    focusIndex.current = null;
+  }, [open, selectedIndex]);
+
+  function closeAndRestoreFocus() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  function handleTriggerKeyDown(event) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusIndex.current = event.key === 'ArrowUp' ? options.length - 1 : selectedIndex;
+      setOpen(true);
+    } else if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      closeAndRestoreFocus();
+    }
+  }
+
+  function handleOptionKeyDown(event, index) {
+    let nextIndex = index;
+    if (event.key === 'ArrowDown') nextIndex = (index + 1) % options.length;
+    else if (event.key === 'ArrowUp') nextIndex = (index - 1 + options.length) % options.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = options.length - 1;
+    else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeAndRestoreFocus();
+      return;
+    } else if (event.key === 'Tab') {
+      setOpen(false);
+      return;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    optionRefs.current[nextIndex]?.focus();
+  }
+
+  function chooseOption(option) {
+    onChange(option.value);
+    closeAndRestoreFocus();
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={`relative ${open ? 'z-30' : ''}`}
+      onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button
+        ref={triggerRef}
+        id={`${id}-trigger`}
+        type="button"
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-options`}
+        onClick={() => {
+          focusIndex.current = selectedIndex;
+          setOpen(current => !current);
+        }}
+        onKeyDown={handleTriggerKeyDown}
+        className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-black/30 px-3 text-left font-sans text-xs transition focus:outline-none focus:ring-2 focus:ring-amber-500/20 ${
+          open
+            ? 'border-amber-400/50 text-amber-100'
+            : 'border-stone-700/90 text-stone-200 hover:border-stone-600'
+        }`}
+      >
+        <span className="truncate">{selectedOption.label}</span>
+        <ChevronDown aria-hidden="true" size={15} className={`shrink-0 text-amber-500/70 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div
+          id={`${id}-options`}
+          role="listbox"
+          aria-label={label}
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-[min(20rem,50vh)] overflow-y-auto rounded-xl border border-stone-700 bg-[#151610] p-1.5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] ring-1 ring-amber-400/10"
+        >
+          {options.map((option, index) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                key={option.value}
+                ref={element => { optionRefs.current[index] = element; }}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                tabIndex={-1}
+                onClick={() => chooseOption(option)}
+                onKeyDown={event => handleOptionKeyDown(event, index)}
+                className={`flex min-h-9 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left font-sans text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
+                  isSelected
+                    ? 'bg-amber-400/[0.12] text-amber-100'
+                    : 'text-stone-300 hover:bg-stone-800/80 hover:text-stone-100'
+                }`}
+              >
+                <span className="min-w-0 break-words">{option.label}</span>
+                {isSelected && <Check aria-hidden="true" size={14} className="shrink-0 text-amber-300" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -234,7 +369,7 @@ export default function KingdomHierarchy() {
             </div>
           </div>
 
-          <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
+          <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
             <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
             <div className="p-4 sm:p-5">
               <div className="flex items-center gap-3">
@@ -269,39 +404,33 @@ export default function KingdomHierarchy() {
                     )}
                   </div>
                 </div>
-                <label htmlFor="role-filter" className="block min-w-0">
+                <div className="block min-w-0">
                   <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Position</span>
-                  <span className="relative block">
-                    <select
-                      id="role-filter"
-                      aria-label="Filter by exact role"
-                      value={selectedRole}
-                      onChange={event => setSelectedRole(event.target.value)}
-                      className="h-11 w-full appearance-none rounded-xl border border-stone-700/90 bg-black/30 px-3 pr-9 font-sans text-xs text-stone-200 transition hover:border-stone-600 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
-                    >
-                      <option value="" className="bg-stone-900">All positions</option>
-                      {ROLE_NAMES.map(role => <option key={role} value={role} className="bg-stone-900">{role}</option>)}
-                    </select>
-                    <ChevronDown aria-hidden="true" size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-amber-500/70" />
-                  </span>
-                </label>
-                <label htmlFor="member-sort" className="block min-w-0">
+                  <ThemedDropdown
+                    id="role-filter"
+                    label="Filter by exact role"
+                    value={selectedRole}
+                    onChange={setSelectedRole}
+                    options={[
+                      { value: '', label: 'All positions' },
+                      ...ROLE_NAMES.map(role => ({ value: role, label: role })),
+                    ]}
+                  />
+                </div>
+                <div className="block min-w-0">
                   <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Arrange by</span>
-                  <span className="relative block">
-                    <select
-                      id="member-sort"
-                      aria-label="Sort members"
-                      value={sortMode}
-                      onChange={event => setSortMode(event.target.value)}
-                      className="h-11 w-full appearance-none rounded-xl border border-stone-700/90 bg-black/30 px-3 pr-9 font-sans text-xs text-stone-200 transition hover:border-stone-600 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
-                    >
-                      <option value="rank" className="bg-stone-900">Rank order</option>
-                      <option value="name" className="bg-stone-900">Name (A–Z)</option>
-                      <option value="power" className="bg-stone-900">Voting power</option>
-                    </select>
-                    <ChevronDown aria-hidden="true" size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-amber-500/70" />
-                  </span>
-                </label>
+                  <ThemedDropdown
+                    id="member-sort"
+                    label="Sort members"
+                    value={sortMode}
+                    onChange={setSortMode}
+                    options={[
+                      { value: 'rank', label: 'Rank order' },
+                      { value: 'name', label: 'Name (A–Z)' },
+                      { value: 'power', label: 'Voting power' },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
 
