@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
 
 const ROLE_CONFIG = {
   "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(147,197,253,0.3)] hover:border-blue-400", icon: Crown, desc: "Absolute ruler of the realm." },
@@ -22,7 +22,7 @@ const INITIAL_MEMBERS = [
   { id: 4, name: 'Harrison', mcName: 'paddcake2016', role: 'Head Of Resources and Projects', customDesc: 'The grand architect of prosperity. He bends the very earth to his will, forging unstoppable empires from raw stone and boundless ambition.' },
   { id: 5, name: 'Thomas', mcName: 'HYPERIOUS12', role: 'Head Of Agriculture and Justice', customDesc: 'The iron-fisted warden of the harvest and the law. He reaps both the golden wheat and the souls of the guilty with equal, merciless judgment.' },
   { id: 6, name: 'Nate', mcName: 'DirtGrub58', role: 'Head Of Medicinal Substances', customDesc: 'An enigmatic alchemist dancing on the razor\'s edge of life and death, brewing volatile elixirs that could either grant immortality or shatter the mind.' },
-  { id: 7, name: 'Max', mcName: 'Max', role: 'Prince', customDesc: 'The golden heir to the throne, bearing the crushing, inescapable weight of a legacy forged in blood and destined to one day eclipse the stars.' },
+  { id: 7, name: 'Max', mcName: 'maxthaking____', role: 'Prince', customDesc: 'The golden heir to the throne, bearing the crushing, inescapable weight of a legacy forged in blood and destined to one day eclipse the stars.' },
   { id: 8, name: 'Alex', mcName: 'Gamer2143707', role: 'Citizen', customDesc: 'A humble soul bound to the dirt, yet harboring the burning, unyielding spirit of a thousand ancestors in the eternal shadow of the crown.' },
   { id: 9, name: 'Nicky', mcName: 'Chicky31889', role: 'Citizen', customDesc: 'An unsung hero of the cobblestones, whose relentless daily toil weaves the very fabric of the kingdom\'s glorious and unending tapestry.' },
   { id: 10, name: 'Poppy', mcName: 'beastygirl101', role: 'Citizen', customDesc: 'A fiercely loyal resident whose unwavering devotion to the realm burns brighter than the hottest forge. A true, unstoppable pillar of the kingdom\'s grand destiny.' }
@@ -31,34 +31,37 @@ const INITIAL_MEMBERS = [
 export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [copiedUsername, setCopiedUsername] = useState('');
+  const [copyFailed, setCopyFailed] = useState(false);
 
-  // Filter members based on search query AND active button
-  const filteredMembers = INITIAL_MEMBERS.filter(member => {
-    // 1. Text Search Check
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      member.name.toLowerCase().includes(q) ||
-      member.role.toLowerCase().includes(q) ||
-      (member.secondaryRole && member.secondaryRole.toLowerCase().includes(q));
-
-    // 2. Button Filter Check
-    const rank = ROLE_CONFIG[member.role]?.rank;
-    let matchesFilter = true;
-    
-    if (activeFilter === 'High Council') {
-      matchesFilter = rank <= 4;
-    } else if (activeFilter === 'Citizens') {
-      matchesFilter = rank === 6;
-    } else if (activeFilter === 'Military') {
-      matchesFilter = 
-        member.role.includes('War') || member.role.includes('Combat') ||
-        (member.secondaryRole && (member.secondaryRole.includes('War') || member.secondaryRole.includes('Combat')));
+  async function copyUsername(username) {
+    try {
+      await navigator.clipboard.writeText(username);
+      setCopiedUsername(username);
+      setCopyFailed(false);
+    } catch {
+      setCopiedUsername('');
+      setCopyFailed(true);
     }
+  }
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredMembers = INITIAL_MEMBERS.filter(member => {
+    const searchableText = [member.name, member.mcName, member.role, member.secondaryRole, member.customDesc]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const matchesSearch = searchableText.includes(normalizedQuery);
+    const rank = ROLE_CONFIG[member.role]?.rank;
+    const roles = [member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase();
+    const matchesFilter = activeFilter === 'All' ||
+      (activeFilter === 'High Council' && rank <= 4) ||
+      (activeFilter === 'Citizens' && rank === 6) ||
+      (activeFilter === 'Military' && /war|combat|military/.test(roles));
     return matchesSearch && matchesFilter;
   });
 
-  // Calculate stats dynamically
   const totalSouls = INITIAL_MEMBERS.length;
   const highCouncilCount = INITIAL_MEMBERS.filter(m => ROLE_CONFIG[m.role]?.rank <= 4).length;
   const totalVotingPower = INITIAL_MEMBERS.reduce((sum, member) => {
@@ -67,86 +70,110 @@ export default function KingdomHierarchy() {
     return sum + (member.customPoints !== undefined && member.customPoints !== null ? member.customPoints : config?.points + (secCfg ? secCfg.points : 0));
   }, 0);
 
-  const filterOptions = ['All', 'High Council', 'Military', 'Citizens'];
+  const filterOptions = [
+    { label: 'All members', value: 'All', count: totalSouls },
+    { label: 'High council', value: 'High Council', count: highCouncilCount },
+    { label: 'Military', value: 'Military', count: INITIAL_MEMBERS.filter(member =>
+      /war|combat|military/.test([member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase())
+    ).length },
+    { label: 'Citizens', value: 'Citizens', count: INITIAL_MEMBERS.filter(member => ROLE_CONFIG[member.role]?.rank === 6).length },
+  ];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-200 font-serif selection:bg-stone-700 pb-12">
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <header className="mb-10 border-b border-stone-800 pb-8 flex flex-col gap-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-black tracking-wider text-stone-100 mb-2 uppercase drop-shadow-lg">Kingdom Hierarchy</h1>
-              <p className="text-stone-400 text-lg md:text-xl italic">Official Roster & Power Structure</p>
-            </div>
-            <div className="bg-stone-900 border border-stone-800 rounded px-4 py-3 flex items-center gap-3 max-w-sm w-full md:w-auto shadow-lg">
-              <Info className="text-stone-500 shrink-0" size={20} />
-              <p className="text-xs text-stone-400">Citizens are <strong className="text-red-500 font-bold">strictly forbidden</strong> from wearing armor trims.</p>
-            </div>
-          </div>
-          
-          {/* Kingdom Stats Banner */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-stone-400"><Users size={24} /></div>
-              <div>
-                <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">Total Souls</div>
-                <div className="text-2xl font-black text-stone-200">{totalSouls}</div>
+    <div className="min-h-screen bg-[#0b0d0b] text-stone-200 font-serif selection:bg-amber-900/70 selection:text-amber-50 pb-16">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,34,0.13),_transparent_55%)]" />
+      <div className="relative max-w-6xl mx-auto px-4 py-8 md:px-8 md:py-12">
+        <header className="mb-10">
+          <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-6 py-8 shadow-2xl md:px-10 md:py-10">
+            <div className="absolute -right-10 -top-14 text-amber-100/[0.035]"><Crown size={260} strokeWidth={0.7} /></div>
+            <div className="relative">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
               </div>
-            </div>
-            <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-amber-500/80"><Crown size={24} /></div>
-              <div>
-                <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">High Council</div>
-                <div className="text-2xl font-black text-stone-200">{highCouncilCount}</div>
+              <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+                <div>
+                  <h1 className="text-4xl font-black uppercase tracking-[0.08em] text-stone-100 md:text-6xl">Kingdom<br className="sm:hidden" /> Hierarchy</h1>
+                  <p className="mt-3 text-base italic text-stone-400 md:text-lg">The people, positions, and power that shape our realm.</p>
+                </div>
+                <div className="flex max-w-sm items-start gap-3 rounded-xl border border-stone-700/70 bg-black/20 p-4 text-sm leading-relaxed text-stone-400">
+                  <Info className="mt-0.5 shrink-0 text-amber-500/80" size={18} />
+                  <p>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></p>
+                </div>
               </div>
-            </div>
-            <div className="bg-stone-900/50 border border-stone-800 rounded-lg p-4 flex items-center gap-4">
-              <div className="p-3 bg-stone-800 rounded text-blue-400/80"><Scale size={24} /></div>
-              <div>
-                <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">Voting Power</div>
-                <div className="text-2xl font-black text-stone-200">{totalVotingPower} Pts</div>
+              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {[
+                  { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
+                  { label: 'Council seats', value: highCouncilCount, icon: Crown, color: 'text-amber-300' },
+                  { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
+                ].map(({ label, value, icon: Icon, color }) => (
+                  <div key={label} className="flex items-center gap-4 rounded-xl border border-stone-800 bg-black/25 p-4">
+                    <div className={`rounded-lg bg-stone-800/80 p-3 ${color}`}><Icon size={20} /></div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">{label}</div>
+                      <div className="mt-0.5 text-2xl font-black text-stone-100">{value}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Search Bar & Filters Section */}
-          <div className="flex flex-col gap-4 max-w-xl w-full mt-4">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="text-stone-500" size={18} />
-              </div>
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-4 md:flex-row md:items-center md:justify-between md:p-5">
+            <div className="relative w-full md:max-w-md">
+              <label htmlFor="member-search" className="sr-only">Search members</label>
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
               <input
-                type="text"
-                placeholder="Search by name, role, or position..."
+                id="member-search"
+                type="search"
+                placeholder="Search name, Minecraft username, role..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-800 rounded-md py-3 pl-10 pr-3 text-sm text-stone-200 placeholder-stone-500 focus:outline-none focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-all shadow-inner"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full appearance-none rounded-xl border border-stone-700 bg-stone-950/80 py-3 pl-10 pr-10 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600/70 focus:outline-none focus:ring-2 focus:ring-amber-600/20"
               />
+              {searchQuery && (
+                <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-stone-500 hover:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            
-            {/* Quick Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {filterOptions.map(filter => (
+            <div className="flex flex-wrap gap-2" aria-label="Filter members">
+              {filterOptions.map(({ label, value, count }) => (
                 <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 ${
-                    activeFilter === filter
-                      ? 'bg-stone-200 text-stone-900 shadow-[0_0_10px_rgba(231,229,228,0.5)]'
-                      : 'bg-stone-900 text-stone-400 border border-stone-700 hover:bg-stone-800 hover:text-stone-300'
+                  key={value}
+                  type="button"
+                  aria-pressed={activeFilter === value}
+                  onClick={() => setActiveFilter(value)}
+                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                    activeFilter === value
+                      ? 'border-amber-600/60 bg-amber-950/50 text-amber-200'
+                      : 'border-stone-700 bg-stone-950/50 text-stone-400 hover:border-stone-500 hover:text-stone-200'
                   }`}
                 >
-                  {filter}
+                  {label}<span className="rounded-md bg-black/25 px-1.5 py-0.5 text-[10px] opacity-75">{count}</span>
                 </button>
               ))}
             </div>
           </div>
+          <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
+            Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
+            {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
+          </p>
+          {(copiedUsername || copyFailed) && (
+            <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
+              {copyFailed ? 'Could not copy username. Check clipboard permissions and try again.' : `Copied ${copiedUsername} to clipboard.`}
+            </p>
+          )}
         </header>
 
-        <div className="flex flex-col gap-10">
+        <main className="flex flex-col gap-10">
           {filteredMembers.length === 0 ? (
-            <div className="text-center text-stone-500 py-16 italic border border-stone-800 rounded-lg bg-stone-900/30 font-sans">
-              No souls found matching those filters.
+            <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
+              <Search className="mx-auto mb-4 text-stone-600" size={28} />
+              <h2 className="text-lg font-semibold text-stone-200">No members found</h2>
+              <p className="mt-2 text-sm text-stone-500">Try another search or clear the current filters.</p>
+              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); }} className="mt-5 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                Reset search and filters
+              </button>
             </div>
           ) : (
             [1, 2, 3, 4, 5, 6].map((rankNum) => {
@@ -154,82 +181,78 @@ export default function KingdomHierarchy() {
               if (membersInRank.length === 0) return null;
 
               return (
-                <section key={rankNum}>
-                  <div className="flex items-center gap-4 mb-6">
-                    <h2 className="text-xs font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-900 px-4 py-1.5 rounded border border-stone-800">
-                      {RANK_TITLES[rankNum]}
+                <section key={rankNum} aria-labelledby={`rank-${rankNum}`}>
+                  <div className="mb-5 flex items-center gap-4">
+                    <h2 id={`rank-${rankNum}`} className="flex items-center gap-2 rounded-lg border border-stone-800 bg-stone-900 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-stone-300">
+                      {RANK_TITLES[rankNum]}<span className="text-stone-600">/</span><span className="font-medium tracking-normal text-stone-500">{membersInRank.length}</span>
                     </h2>
-                    <div className="flex-1 h-px bg-stone-800"></div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-stone-700 to-transparent" />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {membersInRank.map((member) => {
                       const config = ROLE_CONFIG[member.role];
                       const Icon = config?.icon || User;
                       const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
                       const SecIcon = secCfg ? secCfg.icon : null;
-                      
-                      const pts = member.customPoints !== undefined && member.customPoints !== null 
-                        ? member.customPoints 
+                      const pts = member.customPoints !== undefined && member.customPoints !== null
+                        ? member.customPoints
                         : config?.points + (secCfg ? secCfg.points : 0);
-
                       const displayDesc = member.customDesc || config?.desc;
                       
                       return (
-                        <div key={member.id} className={`bg-stone-900 rounded-lg border ${config?.border} transition-all duration-300 hover:-translate-y-1 ${config?.shadowGlow}`}>
-                          <div className="p-5 flex flex-col h-full relative overflow-hidden">
-                            
-                            <div className="flex items-start justify-between mb-5 gap-3 relative z-10">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="shrink-0 relative">
-                                  <img 
-                                    src={`https://minotar.net/helm/${member.mcName}/64.png`} 
-                                    alt={`${member.name}'s Minecraft Head`}
-                                    className="w-12 h-12 rounded bg-stone-950 border border-stone-700 shadow-md"
-                                    onError={(e) => { e.target.src = 'https://minotar.net/helm/Steve/64.png' }} 
-                                  />
-                                </div>
-                                <div>
-                                  <h3 className="text-xl font-black text-stone-100 truncate tracking-wide">{member.name}</h3>
-                                  <div className="flex items-center gap-1.5 text-xs text-stone-400 mt-0.5 font-sans font-medium">
-                                    <Icon className={config?.color} size={12} />
-                                    <span>{member.role}</span>
+                        <article key={member.id} className={`group relative overflow-hidden rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] transition duration-300 hover:-translate-y-1 hover:border-stone-600 hover:shadow-xl ${config?.shadowGlow}`}>
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-amber-700/40 via-stone-700/40 to-transparent" />
+                          <div className="flex h-full flex-col p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <img
+                                  src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png`}
+                                  alt={`${member.name}'s Minecraft avatar`}
+                                  loading="lazy"
+                                  className="h-12 w-12 shrink-0 rounded-lg border border-stone-700 bg-stone-950 shadow-md"
+                                  onError={(event) => {
+                                    event.currentTarget.onerror = null;
+                                    event.currentTarget.src = 'https://minotar.net/helm/Steve/64.png';
+                                  }}
+                                />
+                                <div className="min-w-0">
+                                  <h3 className="truncate text-lg font-black tracking-wide text-stone-100">{member.name}</h3>
+                                  <div className="mt-0.5 flex min-w-0 items-center gap-1 font-sans text-xs text-stone-500">
+                                    <span className="truncate">@{member.mcName}</span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Copy ${member.mcName} Minecraft username`}
+                                      title={`Copy ${member.mcName}`}
+                                      onClick={() => copyUsername(member.mcName)}
+                                      className="shrink-0 rounded p-1 text-stone-500 transition hover:bg-stone-800 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    >
+                                      {copiedUsername === member.mcName && !copyFailed ? <Check size={12} /> : <Copy size={12} />}
+                                    </button>
                                   </div>
                                 </div>
                               </div>
-                              <div className="bg-stone-950 text-stone-300 px-3 py-1.5 rounded border border-stone-800 text-xs font-bold shrink-0 shadow-inner">
-                                {pts} Pts
-                              </div>
+                              <div className="shrink-0 rounded-lg border border-stone-800 bg-stone-950/80 px-2.5 py-1.5 text-xs font-bold text-stone-300">{pts} pts</div>
                             </div>
-                            
-                            <div className="flex-1 space-y-3 relative z-10">
-                              <div className="space-y-1 text-sm font-sans">
-                                {config?.trim !== "None" && (
-                                  <div className={`text-xs font-bold tracking-wide ${config?.color}`}>
-                                    ✦ {config?.trim}
-                                  </div>
-                                )}
-                              </div>
 
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                              <div className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-stone-800 bg-black/20 px-2 py-1 font-sans text-xs text-stone-300">
+                                <Icon className={config?.color} size={13} /><span className="truncate">{member.role}</span>
+                              </div>
                               {member.secondaryRole && secCfg && SecIcon && (
-                                <div className="pt-3 border-t border-stone-800 space-y-1 text-sm font-sans">
-                                  <div className="font-medium text-stone-500 text-xs uppercase tracking-wider">Secondary Role</div>
-                                  <div className="flex items-center gap-1.5 text-stone-300">
-                                    <SecIcon size={12} className={secCfg.color} />
-                                    {member.secondaryRole}
-                                  </div>
-                                  {secCfg.trim !== "None" && <div className={`text-xs font-bold ${secCfg.color}`}>✦ {secCfg.trim}</div>}
-                                </div>
-                              )}
-
-                              {displayDesc && (
-                                <div className="text-sm text-stone-400 italic mt-3 pt-3 border-t border-stone-800/50 leading-relaxed">
-                                  "{displayDesc}"
+                                <div className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-stone-800 bg-black/20 px-2 py-1 font-sans text-xs text-stone-400">
+                                  <SecIcon className={secCfg.color} size={13} /><span className="truncate">{member.secondaryRole}</span>
                                 </div>
                               )}
                             </div>
+
+                            <div className="mt-4 flex flex-wrap gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-wide">
+                              {config?.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${config?.color}`}>✦ {config?.trim}</span>}
+                              {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${secCfg.color}`}>✦ {secCfg.trim}</span>}
+                            </div>
+                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400">{displayDesc}</p>}
                           </div>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
@@ -237,7 +260,7 @@ export default function KingdomHierarchy() {
               );
             })
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
