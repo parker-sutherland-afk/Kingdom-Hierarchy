@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
@@ -78,6 +78,7 @@ const ROLE_CONFIG = {
   }
 };
 
+const ROLE_NAMES = Object.keys(ROLE_CONFIG);
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 const RANK_ACCENTS = {
   1: 'text-blue-200 border-blue-400/25 bg-blue-400/[0.07]',
@@ -120,6 +121,7 @@ export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortMode, setSortMode] = useState('rank');
+  const [selectedRole, setSelectedRole] = useState('');
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -148,7 +150,7 @@ export default function KingdomHierarchy() {
     }
   }
 
-  const filteredMembers = filterMembers(members, searchQuery, activeFilter);
+  const filteredMembers = filterMembers(members, searchQuery, activeFilter, selectedRole);
   const normalizedQuery = searchQuery.trim();
   const totalSouls = members.length;
   const highCouncilCount = members.filter(member => matchesMemberFilter(member, 'High Council')).length;
@@ -159,14 +161,20 @@ export default function KingdomHierarchy() {
   );
   const displayMembers = sortMode === 'power'
     ? sortByVotingPower(filteredMembers, ROLE_CONFIG)
-    : filteredMembers;
-  const rankSections = sortMode === 'power'
-    ? [{ key: 'power', title: 'VOTING POWER', members: displayMembers }]
-    : [1, 2, 3, 4, 5].map(rank => ({
+    : sortMode === 'name'
+      ? sortByName(filteredMembers)
+      : filteredMembers;
+  const rankSections = sortMode === 'rank'
+    ? [1, 2, 3, 4, 5].map(rank => ({
       key: rank,
       title: RANK_TITLES[rank],
       members: filteredMembers.filter(member => ROLE_CONFIG[member.role]?.rank === rank),
-    })).filter(section => section.members.length > 0);
+    })).filter(section => section.members.length > 0)
+    : [{
+      key: sortMode,
+      title: sortMode === 'power' ? 'VOTING POWER' : 'A–Z',
+      members: displayMembers,
+    }];
 
   const filterOptions = [
     { label: 'All members', value: 'All', count: totalSouls },
@@ -220,38 +228,67 @@ export default function KingdomHierarchy() {
               </div>
               <p className="mt-4 flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-4 py-3 font-sans text-xs leading-relaxed text-stone-400">
                 <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
-                <span>Role points add across primary and secondary roles. A custom allocation replaces that total. Use the sort menu to compare members by voting power.</span>
+                <span>Voting power comes from each member’s primary role only. Secondary roles do not add voting points.</span>
               </p>
               <p className="mt-4 font-sans text-[11px] text-stone-500">Roster data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.</p>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/95 to-[#11120f]/95 p-3 shadow-xl shadow-black/10 sm:p-4 md:flex-row md:items-center md:justify-between md:p-5">
-            <div className="relative w-full md:max-w-md">
-              <label htmlFor="member-search" className="sr-only">Search members</label>
-              <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
-              <input
-                id="member-search"
-                type="search"
-                placeholder="Search name, Minecraft username, role..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full appearance-none rounded-xl border border-stone-700 bg-stone-950/80 py-3 pl-10 pr-10 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600/70 focus:outline-none focus:ring-2 focus:ring-amber-600/20"
-              />
-              {searchQuery && (
-                <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-stone-500 hover:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                  <X size={16} />
-                </button>
-              )}
+          <div className="mt-6 grid gap-3 rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/95 to-[#11120f]/95 p-3 shadow-xl shadow-black/10 sm:p-4 md:p-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="relative w-full md:max-w-md md:flex-1">
+                <label htmlFor="member-search" className="sr-only">Search members</label>
+                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
+                <input
+                  id="member-search"
+                  type="search"
+                  placeholder="Search name, Minecraft username, role..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="w-full appearance-none rounded-xl border border-stone-700 bg-stone-950/80 py-3 pl-10 pr-10 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600/70 focus:outline-none focus:ring-2 focus:ring-amber-600/20"
+                />
+                {searchQuery && (
+                  <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-stone-500 hover:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 md:w-[min(100%,32rem)]">
+                <label className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/70 px-3 py-2 text-xs font-medium text-stone-400">
+                  <span className="shrink-0">Role</span>
+                  <select
+                    aria-label="Filter by exact role"
+                    value={selectedRole}
+                    onChange={event => setSelectedRole(event.target.value)}
+                    className="min-h-7 min-w-0 flex-1 bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="" className="bg-stone-900">All roles</option>
+                    {ROLE_NAMES.map(role => <option key={role} value={role} className="bg-stone-900">{role}</option>)}
+                  </select>
+                </label>
+                <label className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/70 px-3 py-2 text-xs font-medium text-stone-400">
+                  <span className="shrink-0">Sort</span>
+                  <select
+                    aria-label="Sort members"
+                    value={sortMode}
+                    onChange={event => setSortMode(event.target.value)}
+                    className="min-h-7 min-w-0 flex-1 bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="rank" className="bg-stone-900">By rank</option>
+                    <option value="name" className="bg-stone-900">A–Z by name</option>
+                    <option value="power" className="bg-stone-900">Voting power</option>
+                  </select>
+                </label>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2" aria-label="Filter members">
+            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible" role="group" aria-label="Filter member groups">
               {filterOptions.map(({ label, value, count }) => (
                 <button
                   key={value}
                   type="button"
                   aria-pressed={activeFilter === value}
                   onClick={() => setActiveFilter(value)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                     activeFilter === value
                       ? 'border-amber-600/60 bg-amber-950/50 text-amber-200'
                       : 'border-stone-700 bg-stone-950/50 text-stone-400 hover:border-stone-500 hover:text-stone-200'
@@ -260,23 +297,12 @@ export default function KingdomHierarchy() {
                   {label}<span className="rounded-md bg-black/25 px-1.5 py-0.5 text-[10px] opacity-75">{count}</span>
                 </button>
               ))}
-              <label className="flex items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/50 px-3 py-2 text-xs font-medium text-stone-400">
-                Sort
-                <select
-                  aria-label="Sort members"
-                  value={sortMode}
-                  onChange={event => setSortMode(event.target.value)}
-                  className="bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="rank" className="bg-stone-900">By rank</option>
-                  <option value="power" className="bg-stone-900">Voting power</option>
-                </select>
-              </label>
             </div>
           </div>
           <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
+            {selectedRole && <> with role <span className="text-stone-300">{selectedRole}</span></>}
           </p>
           {(copiedUsername || copyFailed) && (
             <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
@@ -291,7 +317,7 @@ export default function KingdomHierarchy() {
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
               <h2 className="text-lg font-semibold text-stone-200">No members found</h2>
               <p className="mt-2 text-sm text-stone-500">Try another search or clear the current filters.</p>
-              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); }} className="mt-5 min-h-11 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRole(''); }} className="mt-5 min-h-11 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 Reset search and filters
               </button>
             </div>
@@ -299,10 +325,10 @@ export default function KingdomHierarchy() {
             rankSections.map(({ key, title, members: membersInRank }) => (
                 <section key={key} aria-labelledby={`rank-${key}`} className="group/rank">
                   <div className="mb-5 flex items-center gap-4">
-                    <h2 id={`rank-${key}`} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black uppercase tracking-[0.18em] transition-colors group-hover/rank:brightness-125 ${key === 'power' ? 'border-sky-400/25 bg-sky-400/[0.06] text-sky-200' : RANK_ACCENTS[key]}`}>
+                    <h2 id={`rank-${key}`} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black uppercase tracking-[0.18em] transition-colors group-hover/rank:brightness-125 ${key === 'power' ? 'border-sky-400/25 bg-sky-400/[0.06] text-sky-200' : key === 'name' ? 'border-amber-400/25 bg-amber-400/[0.06] text-amber-200' : RANK_ACCENTS[key]}`}>
                       {title}<span className="opacity-50">/</span><span className="font-medium tracking-normal opacity-70">{membersInRank.length}</span>
                     </h2>
-                    <div className={`h-px flex-1 bg-gradient-to-r ${key === 'power' ? 'from-sky-400/60' : key === 1 ? 'from-blue-400/60' : key === 2 ? 'from-stone-300/50' : key === 3 ? 'from-purple-400/60' : key === 4 ? 'from-slate-300/50' : 'from-stone-600'} to-transparent transition-colors group-hover/rank:to-stone-800`} />
+                    <div className={`h-px flex-1 bg-gradient-to-r ${key === 'power' ? 'from-sky-400/60' : key === 'name' ? 'from-amber-400/60' : key === 1 ? 'from-blue-400/60' : key === 2 ? 'from-stone-300/50' : key === 3 ? 'from-purple-400/60' : key === 4 ? 'from-slate-300/50' : 'from-stone-600'} to-transparent transition-colors group-hover/rank:to-stone-800`} />
                   </div>
                   
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -340,17 +366,22 @@ export default function KingdomHierarchy() {
                               </div>
                               <div className={`shrink-0 rounded-lg border bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300 transition-colors ${config?.badge}`}>
                                 <div>{votingPower.points} pts</div>
-                                {votingPower.isCustom && <div className="mt-0.5 text-[9px] font-medium text-amber-300">Custom allocation</div>}
                               </div>
                             </div>
 
-                            <div className="mt-4 flex flex-wrap items-center gap-2">
-                              <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${config?.badge}`}>
-                                <Icon className={config?.color} size={13} /><span className="truncate">{member.role}</span>
+                            <div className="mt-4 grid gap-2">
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Primary</span>
+                                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${config?.badge}`}>
+                                  <Icon className={config?.color} size={13} /><span className="truncate">{member.role}</span>
+                                </div>
                               </div>
                               {member.secondaryRole && secCfg && SecIcon && (
-                                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${secCfg.badge}`}>
-                                  <SecIcon className={secCfg.color} size={13} /><span className="truncate">{member.secondaryRole}</span>
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                  <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Secondary</span>
+                                  <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${secCfg.badge}`}>
+                                    <SecIcon className={secCfg.color} size={13} /><span className="truncate">{member.secondaryRole}</span>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -360,7 +391,7 @@ export default function KingdomHierarchy() {
                               {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
                             </div>
                             <details className="mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs">
-                              <summary className="cursor-pointer text-stone-400 transition hover:text-amber-200">Voting points breakdown</summary>
+                              <summary className="cursor-pointer text-stone-400 transition hover:text-amber-200">Primary-role voting points</summary>
                               <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
                             </details>
                             {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400">{displayDesc}</p>}
