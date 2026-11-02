@@ -10,6 +10,8 @@ import {
   sortByName,
   sortByVotingPower,
 } from '../rosterUtils.js';
+import ROLE_CONFIG from '../roleConfig.js';
+import { validateRoster } from '../rosterValidation.js';
 
 const members = JSON.parse(
   readFileSync(new URL('../data/members.json', import.meta.url), 'utf8')
@@ -112,5 +114,25 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
   assert.deepEqual(sortedNames, [
     'Will', 'Darcy', 'Parker', 'Harrison', 'Nate', 'Thomas', 'Max',
     'Alex', 'Nicky', 'Poppy',
+  ]);
+});
+
+test('published roster passes structural and role validation', () => {
+  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG)), []);
+});
+
+test('roster validation reports duplicate identities, invalid roles, and missing fields', () => {
+  const invalidRoster = [
+    { id: 1, name: 'Will', mcName: 'PlayerOne', role: 'King' },
+    { id: 1, name: '', mcName: 'playerone', role: 'Unknown', secondaryRole: 'King' },
+    { id: 2, name: 'Alex', mcName: 'PlayerTwo', role: 'Citizen', secondaryRole: 'Citizen' },
+  ];
+
+  assert.deepEqual(validateRoster(invalidRoster, Object.keys(ROLE_CONFIG)), [
+    'Member at index 1 has duplicate id 1.',
+    'Member at index 1 must have a non-empty name.',
+    'Member at index 1 has duplicate Minecraft username playerone.',
+    'Member at index 1 uses unknown primary role "Unknown".',
+    'Member at index 2 cannot have the same primary and secondary role.',
   ]);
 });
