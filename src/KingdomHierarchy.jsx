@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
+import MEMBERS from './data/members.json';
+import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(147,197,253,0.3)] hover:border-blue-400", icon: Crown, desc: "Absolute ruler of the realm." },
@@ -15,28 +17,39 @@ const ROLE_CONFIG = {
 
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 
-const INITIAL_MEMBERS = [
-  { id: 1, name: 'Will', mcName: 'EighthSea6218', role: 'King', customDesc: 'The sovereign overlord, whose mere whisper commands the tides of fate and whose iron will binds the very foundations of the realm.' },
-  { id: 2, name: 'Parker', mcName: 'pikkapokaparker', role: 'Advisor', customDesc: 'Master of whispers and the silent orchestrator of the throne\'s absolute power. He sees all that the light touches, and all that it does not.' },
-  { id: 3, name: 'Darcy', mcName: 'ImmortalPrince63', role: 'Advisor', secondaryRole: 'Head Of Combat And War', customPoints: 3, customDesc: 'The blood-soaked vanguard of the King\'s wrath. A relentless tactician whose enchanted blade has tasted the ruin of a thousand empires.' },
-  { id: 4, name: 'Harrison', mcName: 'paddcake2016', role: 'Head Of Resources and Projects', customDesc: 'The grand architect of prosperity. He bends the very earth to his will, forging unstoppable empires from raw stone and boundless ambition.' },
-  { id: 5, name: 'Thomas', mcName: 'HYPERIOUS12', role: 'Head Of Agriculture and Justice', customDesc: 'The iron-fisted warden of the harvest and the law. He reaps both the golden wheat and the souls of the guilty with equal, merciless judgment.' },
-  { id: 6, name: 'Nate', mcName: 'DirtGrub58', role: 'Head Of Medicinal Substances', customDesc: 'An enigmatic alchemist dancing on the razor\'s edge of life and death, brewing volatile elixirs that could either grant immortality or shatter the mind.' },
-  { id: 7, name: 'Max', mcName: 'maxthaking____', role: 'Prince', customDesc: 'The golden heir to the throne, bearing the crushing, inescapable weight of a legacy forged in blood and destined to one day eclipse the stars.' },
-  { id: 8, name: 'Alex', mcName: 'Gamer2143707', role: 'Citizen', customDesc: 'A humble soul bound to the dirt, yet harboring the burning, unyielding spirit of a thousand ancestors in the eternal shadow of the crown.' },
-  { id: 9, name: 'Nicky', mcName: 'Chicky31889', role: 'Citizen', customDesc: 'An unsung hero of the cobblestones, whose relentless daily toil weaves the very fabric of the kingdom\'s glorious and unending tapestry.' },
-  { id: 10, name: 'Poppy', mcName: 'beastygirl101', role: 'Citizen', customDesc: 'A fiercely loyal resident whose unwavering devotion to the realm burns brighter than the hottest forge. A true, unstoppable pillar of the kingdom\'s grand destiny.' }
-];
+function MemberAvatar({ member }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const nameParts = member.name.trim().split(/\s+/);
+  const initials = (nameParts.length > 1
+    ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
+    : nameParts[0].slice(0, 2)
+  ).toUpperCase();
 
-const COUNCIL_ROLES = Object.keys(ROLE_CONFIG).filter(role => role.startsWith('Head Of '));
-const HIGH_COUNCIL_ROLES = ['King', 'Advisor'];
-const COUNCIL_FILTER_ROLES = [...HIGH_COUNCIL_ROLES, ...COUNCIL_ROLES];
-const memberHasAnyRole = (member, roles) =>
-  [member.role, member.secondaryRole].some(role => roles.includes(role));
+  return (
+    <div
+      role="img"
+      aria-label={`${member.name}'s Minecraft avatar`}
+      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold text-amber-200 shadow-md"
+    >
+      {imageFailed ? (
+        <span aria-hidden="true">{initials}</span>
+      ) : (
+        <img
+          src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png`}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [sortMode, setSortMode] = useState('rank');
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -51,40 +64,32 @@ export default function KingdomHierarchy() {
     }
   }
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-
-  const filteredMembers = INITIAL_MEMBERS.filter(member => {
-    const searchableText = [member.name, member.mcName, member.role, member.secondaryRole, member.customDesc]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    const matchesSearch = searchableText.includes(normalizedQuery);
-    const roles = [member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase();
-    const matchesFilter = activeFilter === 'All' ||
-      (activeFilter === 'High Council' && memberHasAnyRole(member, HIGH_COUNCIL_ROLES)) ||
-      (activeFilter === 'Council' && memberHasAnyRole(member, COUNCIL_FILTER_ROLES)) ||
-      (activeFilter === 'Citizens' && member.role === 'Citizen') ||
-      (activeFilter === 'Military' && /war|combat|military/.test(roles));
-    return matchesSearch && matchesFilter;
-  });
-
-  const totalSouls = INITIAL_MEMBERS.length;
-  const highCouncilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, HIGH_COUNCIL_ROLES)).length;
-  const councilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, COUNCIL_FILTER_ROLES)).length;
-  const totalVotingPower = INITIAL_MEMBERS.reduce((sum, member) => {
-    const config = ROLE_CONFIG[member.role];
-    const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
-    return sum + (member.customPoints !== undefined && member.customPoints !== null ? member.customPoints : config?.points + (secCfg ? secCfg.points : 0));
-  }, 0);
+  const filteredMembers = filterMembers(MEMBERS, searchQuery, activeFilter);
+  const normalizedQuery = searchQuery.trim();
+  const totalSouls = MEMBERS.length;
+  const highCouncilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'High Council')).length;
+  const councilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'Council')).length;
+  const totalVotingPower = MEMBERS.reduce(
+    (total, member) => total + getVotingPowerBreakdown(member, ROLE_CONFIG).points,
+    0
+  );
+  const displayMembers = sortMode === 'power'
+    ? sortByVotingPower(filteredMembers, ROLE_CONFIG)
+    : filteredMembers;
+  const rankSections = sortMode === 'power'
+    ? [{ key: 'power', title: 'VOTING POWER', members: displayMembers }]
+    : [1, 2, 3, 4, 5].map(rank => ({
+      key: rank,
+      title: RANK_TITLES[rank],
+      members: filteredMembers.filter(member => ROLE_CONFIG[member.role]?.rank === rank),
+    })).filter(section => section.members.length > 0);
 
   const filterOptions = [
     { label: 'All members', value: 'All', count: totalSouls },
     { label: 'High council', value: 'High Council', count: highCouncilCount },
     { label: 'Council', value: 'Council', count: councilCount },
-    { label: 'Military', value: 'Military', count: INITIAL_MEMBERS.filter(member =>
-      /war|combat|military/.test([member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase())
-    ).length },
-    { label: 'Citizens', value: 'Citizens', count: INITIAL_MEMBERS.filter(member => member.role === 'Citizen').length },
+    { label: 'Military', value: 'Military', count: MEMBERS.filter(member => matchesMemberFilter(member, 'Military')).length },
+    { label: 'Citizens', value: 'Citizens', count: MEMBERS.filter(member => matchesMemberFilter(member, 'Citizens')).length },
   ];
 
   return (
@@ -111,7 +116,7 @@ export default function KingdomHierarchy() {
               <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
-                  { label: 'Council heads', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
+                  { label: 'Council members', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="flex items-center gap-4 rounded-xl border border-stone-800 bg-black/25 p-4">
@@ -123,6 +128,10 @@ export default function KingdomHierarchy() {
                   </div>
                 ))}
               </div>
+              <p className="mt-4 flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-4 py-3 font-sans text-xs leading-relaxed text-stone-400">
+                <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
+                <span>Role points add across primary and secondary roles. A custom allocation replaces that total. Use the sort menu to compare members by voting power.</span>
+              </p>
             </div>
           </div>
 
@@ -160,6 +169,18 @@ export default function KingdomHierarchy() {
                   {label}<span className="rounded-md bg-black/25 px-1.5 py-0.5 text-[10px] opacity-75">{count}</span>
                 </button>
               ))}
+              <label className="flex items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/50 px-3 py-2 text-xs font-medium text-stone-400">
+                Sort
+                <select
+                  aria-label="Sort members"
+                  value={sortMode}
+                  onChange={event => setSortMode(event.target.value)}
+                  className="bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="rank" className="bg-stone-900">By rank</option>
+                  <option value="power" className="bg-stone-900">Voting power</option>
+                </select>
+              </label>
             </div>
           </div>
           <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
@@ -184,15 +205,11 @@ export default function KingdomHierarchy() {
               </button>
             </div>
           ) : (
-            [1, 2, 3, 4, 5].map((rankNum) => {
-              const membersInRank = filteredMembers.filter(m => ROLE_CONFIG[m.role]?.rank === rankNum);
-              if (membersInRank.length === 0) return null;
-
-              return (
-                <section key={rankNum} aria-labelledby={`rank-${rankNum}`}>
+            rankSections.map(({ key, title, members: membersInRank }) => (
+                <section key={key} aria-labelledby={`rank-${key}`}>
                   <div className="mb-5 flex items-center gap-4">
-                    <h2 id={`rank-${rankNum}`} className="flex items-center gap-2 rounded-lg border border-stone-800 bg-stone-900 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-stone-300">
-                      {RANK_TITLES[rankNum]}<span className="text-stone-600">/</span><span className="font-medium tracking-normal text-stone-500">{membersInRank.length}</span>
+                    <h2 id={`rank-${key}`} className="flex items-center gap-2 rounded-lg border border-stone-800 bg-stone-900 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-stone-300">
+                      {title}<span className="text-stone-600">/</span><span className="font-medium tracking-normal text-stone-500">{membersInRank.length}</span>
                     </h2>
                     <div className="h-px flex-1 bg-gradient-to-r from-stone-700 to-transparent" />
                   </div>
@@ -203,9 +220,7 @@ export default function KingdomHierarchy() {
                       const Icon = config?.icon || User;
                       const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
                       const SecIcon = secCfg ? secCfg.icon : null;
-                      const pts = member.customPoints !== undefined && member.customPoints !== null
-                        ? member.customPoints
-                        : config?.points + (secCfg ? secCfg.points : 0);
+                      const votingPower = getVotingPowerBreakdown(member, ROLE_CONFIG);
                       const displayDesc = member.customDesc || config?.desc;
                       
                       return (
@@ -214,16 +229,7 @@ export default function KingdomHierarchy() {
                           <div className="flex h-full flex-col p-5">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <img
-                                  src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png`}
-                                  alt={`${member.name}'s Minecraft avatar`}
-                                  loading="lazy"
-                                  className="h-12 w-12 shrink-0 rounded-lg border border-stone-700 bg-stone-950 shadow-md"
-                                  onError={(event) => {
-                                    event.currentTarget.onerror = null;
-                                    event.currentTarget.src = 'https://minotar.net/helm/Steve/64.png';
-                                  }}
-                                />
+                                <MemberAvatar member={member} />
                                 <div className="min-w-0">
                                   <h3 className="truncate text-lg font-black tracking-wide text-stone-100">{member.name}</h3>
                                   <div className="mt-0.5 flex min-w-0 items-center gap-1 font-sans text-xs text-stone-500">
@@ -240,7 +246,10 @@ export default function KingdomHierarchy() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="shrink-0 rounded-lg border border-stone-800 bg-stone-950/80 px-2.5 py-1.5 text-xs font-bold text-stone-300">{pts} pts</div>
+                              <div className="shrink-0 rounded-lg border border-stone-800 bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300">
+                                <div>{votingPower.points} pts</div>
+                                {votingPower.isCustom && <div className="mt-0.5 text-[9px] font-medium text-amber-300">Custom allocation</div>}
+                              </div>
                             </div>
 
                             <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -258,6 +267,10 @@ export default function KingdomHierarchy() {
                               {config?.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${config?.color}`}>✦ {config?.trim}</span>}
                               {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${secCfg.color}`}>✦ {secCfg.trim}</span>}
                             </div>
+                            <details className="mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs">
+                              <summary className="cursor-pointer text-stone-400 transition hover:text-amber-200">Voting points breakdown</summary>
+                              <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
+                            </details>
                             {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400">{displayDesc}</p>}
                           </div>
                         </article>
@@ -265,8 +278,7 @@ export default function KingdomHierarchy() {
                     })}
                   </div>
                 </section>
-              );
-            })
+              ))
           )}
         </main>
       </div>
