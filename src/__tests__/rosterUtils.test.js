@@ -6,6 +6,7 @@ import {
   filterMembers,
   getVotingPowerBreakdown,
   matchesMemberFilter,
+  sortByName,
   sortByVotingPower,
 } from '../rosterUtils.js';
 
@@ -50,21 +51,43 @@ test('search includes Minecraft usernames and descriptions', () => {
   assert.deepEqual(filterMembers(members, 'sovereign overlord', 'All').map(member => member.name), ['Will']);
 });
 
-test('voting power adds role points unless custom points override them', () => {
+test('exact role filtering matches primary and secondary role assignments', () => {
+  assert.deepEqual(
+    filterMembers(members, '', 'All', 'Head Of Combat And War').map(member => member.name),
+    ['Darcy']
+  );
+  assert.deepEqual(
+    filterMembers(members, '', 'All', 'Head Of General Purpose Resources'),
+    []
+  );
+  assert.deepEqual(
+    filterMembers(members, '', 'Council', 'Advisor').map(member => member.name),
+    ['Parker', 'Darcy']
+  );
+});
+
+test('name sorting is alphabetical without changing the source order', () => {
+  const sortedNames = sortByName(members).map(member => member.name);
+
+  assert.deepEqual(sortedNames, [
+    'Alex', 'Darcy', 'Harrison', 'Max', 'Nate', 'Nicky', 'Parker', 'Poppy', 'Thomas', 'Will',
+  ]);
+  assert.equal(members[0].name, 'Will');
+});
+
+test('voting power comes only from the primary role', () => {
   const king = getVotingPowerBreakdown(members[0], roleConfig);
   const darcy = members.find(member => member.name === 'Darcy');
-  const darcyBreakdown = getVotingPowerBreakdown(darcy, roleConfig);
+  const darcyBreakdown = getVotingPowerBreakdown({ ...darcy, customPoints: 99 }, roleConfig);
   const total = members.reduce(
     (sum, member) => sum + getVotingPowerBreakdown(member, roleConfig).points,
     0
   );
 
   assert.equal(king.points, 5);
-  assert.equal(king.isCustom, false);
-  assert.equal(darcyBreakdown.roleTotal, 5);
   assert.equal(darcyBreakdown.points, 3);
-  assert.equal(darcyBreakdown.isCustom, true);
-  assert.match(describeVotingPower(darcy, roleConfig), /role total: 5/);
+  assert.deepEqual(darcyBreakdown.roles, [{ role: 'Advisor', points: 3 }]);
+  assert.match(describeVotingPower(darcy, roleConfig), /Primary role — Advisor: 3 points/);
   assert.equal(total, 22);
 });
 
