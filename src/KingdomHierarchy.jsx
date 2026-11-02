@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower } from './rosterUtils.js';
 
@@ -234,71 +234,114 @@ export default function KingdomHierarchy() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/95 to-[#11120f]/95 p-3 shadow-xl shadow-black/10 sm:p-4 md:p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="relative w-full md:max-w-md md:flex-1">
-                <label htmlFor="member-search" className="sr-only">Search members</label>
-                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
-                <input
-                  id="member-search"
-                  type="search"
-                  placeholder="Search name, Minecraft username, role..."
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  className="w-full appearance-none rounded-xl border border-stone-700 bg-stone-950/80 py-3 pl-10 pr-10 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600/70 focus:outline-none focus:ring-2 focus:ring-amber-600/20"
-                />
-                {searchQuery && (
-                  <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-stone-500 hover:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    <X size={16} />
+          <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
+            <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="rounded-xl border border-amber-400/20 bg-amber-400/[0.07] p-2.5 text-amber-300">
+                    <SlidersHorizontal size={17} />
+                  </span>
+                  <div>
+                    <h2 id="roster-controls-title" className="text-sm font-bold text-stone-100">Find a member</h2>
+                    <p className="mt-0.5 font-sans text-[11px] text-stone-500">Search, filter, or arrange the realm roster.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.85fr)_minmax(0,0.85fr)]">
+                <div>
+                  <label htmlFor="member-search" className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Search the roster</label>
+                  <div className="relative">
+                    <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-amber-500/70" size={16} />
+                    <input
+                      id="member-search"
+                      type="search"
+                      placeholder="Name, username, or role..."
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      className="h-11 w-full rounded-xl border border-stone-700/90 bg-black/30 py-2.5 pl-10 pr-10 font-sans text-sm text-stone-100 placeholder:text-stone-600 transition placeholder:transition-colors hover:border-stone-600 hover:placeholder:text-stone-500 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+                    />
+                    {searchQuery && (
+                      <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-800 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <label htmlFor="role-filter" className="block min-w-0">
+                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Position</span>
+                  <span className="relative block">
+                    <select
+                      id="role-filter"
+                      aria-label="Filter by exact role"
+                      value={selectedRole}
+                      onChange={event => setSelectedRole(event.target.value)}
+                      className="h-11 w-full appearance-none rounded-xl border border-stone-700/90 bg-black/30 px-3 pr-9 font-sans text-xs text-stone-200 transition hover:border-stone-600 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+                    >
+                      <option value="" className="bg-stone-900">All positions</option>
+                      {ROLE_NAMES.map(role => <option key={role} value={role} className="bg-stone-900">{role}</option>)}
+                    </select>
+                    <ChevronDown aria-hidden="true" size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-amber-500/70" />
+                  </span>
+                </label>
+                <label htmlFor="member-sort" className="block min-w-0">
+                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Arrange by</span>
+                  <span className="relative block">
+                    <select
+                      id="member-sort"
+                      aria-label="Sort members"
+                      value={sortMode}
+                      onChange={event => setSortMode(event.target.value)}
+                      className="h-11 w-full appearance-none rounded-xl border border-stone-700/90 bg-black/30 px-3 pr-9 font-sans text-xs text-stone-200 transition hover:border-stone-600 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+                    >
+                      <option value="rank" className="bg-stone-900">Rank order</option>
+                      <option value="name" className="bg-stone-900">Name (A–Z)</option>
+                      <option value="power" className="bg-stone-900">Voting power</option>
+                    </select>
+                    <ChevronDown aria-hidden="true" size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-amber-500/70" />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="border-t border-stone-800/80 bg-black/15 px-4 py-3 sm:px-5">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Browse by group</p>
+                {(activeFilter !== 'All' || selectedRole || searchQuery) && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRole(''); }}
+                    className="font-sans text-[10px] font-semibold text-amber-400/80 transition hover:text-amber-200 focus:outline-none focus-visible:underline"
+                  >
+                    Clear filters
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2 md:w-[min(100%,32rem)]">
-                <label className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/70 px-3 py-2 text-xs font-medium text-stone-400">
-                  <span className="shrink-0">Role</span>
-                  <select
-                    aria-label="Filter by exact role"
-                    value={selectedRole}
-                    onChange={event => setSelectedRole(event.target.value)}
-                    className="min-h-7 min-w-0 flex-1 bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="" className="bg-stone-900">All roles</option>
-                    {ROLE_NAMES.map(role => <option key={role} value={role} className="bg-stone-900">{role}</option>)}
-                  </select>
-                </label>
-                <label className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-700 bg-stone-950/70 px-3 py-2 text-xs font-medium text-stone-400">
-                  <span className="shrink-0">Sort</span>
-                  <select
-                    aria-label="Sort members"
-                    value={sortMode}
-                    onChange={event => setSortMode(event.target.value)}
-                    className="min-h-7 min-w-0 flex-1 bg-transparent text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="rank" className="bg-stone-900">By rank</option>
-                    <option value="name" className="bg-stone-900">A–Z by name</option>
-                    <option value="power" className="bg-stone-900">Voting power</option>
-                  </select>
-                </label>
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:flex-wrap md:overflow-visible" role="group" aria-label="Filter member groups">
+                {filterOptions.map(({ label, value, count }) => {
+                  const isActive = activeFilter === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setActiveFilter(value)}
+                      className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg border px-3 font-sans text-[11px] font-semibold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 motion-reduce:transition-none ${
+                        isActive
+                          ? 'border-amber-400/40 bg-gradient-to-b from-amber-300/[0.13] to-amber-500/[0.06] text-amber-100 shadow-[inset_0_1px_0_rgba(252,211,77,0.08)]'
+                          : 'border-stone-700/70 bg-stone-900/45 text-stone-400 hover:border-amber-400/25 hover:bg-amber-400/[0.04] hover:text-stone-200'
+                      }`}
+                    >
+                      {isActive && <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.55)]" />}
+                      {label}
+                      <span className={`rounded-md px-1.5 py-0.5 text-[9px] tabular-nums ${isActive ? 'bg-amber-200/10 text-amber-200/80' : 'bg-black/25 text-stone-500'}`}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible" role="group" aria-label="Filter member groups">
-              {filterOptions.map(({ label, value, count }) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={activeFilter === value}
-                  onClick={() => setActiveFilter(value)}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                    activeFilter === value
-                      ? 'border-amber-600/60 bg-amber-950/50 text-amber-200'
-                      : 'border-stone-700 bg-stone-950/50 text-stone-400 hover:border-stone-500 hover:text-stone-200'
-                  }`}
-                >
-                  {label}<span className="rounded-md bg-black/25 px-1.5 py-0.5 text-[10px] opacity-75">{count}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          </section>
           <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
