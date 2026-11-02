@@ -21,3 +21,5 @@ npm run preview
 ## Updating the roster
 
 Edit the `INITIAL_MEMBERS` list and `ROLE_CONFIG` in `src/KingdomHierarchy.jsx`. Each member can have a primary role, an optional secondary role, a Minecraft username, a custom voting-point value, and a short description.
+
+The rank display groups department heads under Council and Advisors under High Council. Council and High Council filters include matching secondary roles; changing rank order does not change voting points.

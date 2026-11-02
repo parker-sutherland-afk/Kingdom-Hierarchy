@@ -6,14 +6,14 @@ const ROLE_CONFIG = {
   "Advisor": { max: 2, trim: "Netherite Dune", rank: 2, points: 3, color: "text-stone-300", border: "border-stone-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(168,162,158,0.3)] hover:border-stone-400", icon: Shield, desc: "Provides counsel to the King." },
   "Head Of Resources and Projects": { max: 1, trim: "Amethyst Flow", rank: 3, points: 2, color: "text-purple-300", border: "border-purple-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(216,180,254,0.3)] hover:border-purple-400", icon: Pickaxe, desc: "Resource Management, Production Amount And Money." },
   "Head Of General Purpose Resources": { max: 1, trim: "Amethyst Flow", rank: 3, points: 2, color: "text-purple-300", border: "border-purple-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(216,180,254,0.3)] hover:border-purple-400", icon: Hammer, desc: "Handles Armor and Gear PRODUCTION." },
-  "Head Of Agriculture and Justice": { max: 1, trim: "Gold Flow", rank: 4, points: 2, color: "text-amber-500", border: "border-amber-700", shadowGlow: "hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:border-amber-400", icon: Wheat, desc: "Oversees crops, food supply, and kingdom laws." },
-  "Head Of Combat And War": { max: 1, trim: "Redstone Flow", rank: 4, points: 2, color: "text-red-400", border: "border-red-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(248,113,113,0.3)] hover:border-red-400", icon: Swords, desc: "Handles Enchants and protection of gear." },
-  "Head Of Medicinal Substances": { max: 1, trim: "Emerald Flow", rank: 4, points: 2, color: "text-emerald-500", border: "border-emerald-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:border-emerald-400", icon: FlaskConical, desc: "Brewing and distributing potions." },
-  "Prince": { max: 1, trim: "Iron Flow Trim", rank: 5, points: 2, color: "text-slate-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(203,213,225,0.3)] hover:border-slate-300", icon: Star, desc: "Heir to the kingdom." },
-  "Citizen": { max: Infinity, trim: "None", rank: 6, points: 1, color: "text-stone-400", border: "border-stone-700", shadowGlow: "hover:shadow-[0_0_15px_rgba(120,113,108,0.3)] hover:border-stone-500", icon: User, desc: "Standard member of the kingdom." }
+  "Head Of Agriculture and Justice": { max: 1, trim: "Gold Flow", rank: 3, points: 2, color: "text-amber-500", border: "border-amber-700", shadowGlow: "hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:border-amber-400", icon: Wheat, desc: "Oversees crops, food supply, and kingdom laws." },
+  "Head Of Combat And War": { max: 1, trim: "Redstone Flow", rank: 3, points: 2, color: "text-red-400", border: "border-red-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(248,113,113,0.3)] hover:border-red-400", icon: Swords, desc: "Handles Enchants and protection of gear." },
+  "Head Of Medicinal Substances": { max: 1, trim: "Emerald Flow", rank: 3, points: 2, color: "text-emerald-500", border: "border-emerald-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:border-emerald-400", icon: FlaskConical, desc: "Brewing and distributing potions." },
+  "Prince": { max: 1, trim: "Iron Flow Trim", rank: 4, points: 2, color: "text-slate-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(203,213,225,0.3)] hover:border-slate-300", icon: Star, desc: "Heir to the kingdom." },
+  "Citizen": { max: Infinity, trim: "None", rank: 5, points: 1, color: "text-stone-400", border: "border-stone-700", shadowGlow: "hover:shadow-[0_0_15px_rgba(120,113,108,0.3)] hover:border-stone-500", icon: User, desc: "Standard member of the kingdom." }
 };
 
-const RANK_TITLES = { 1: "TOP", 2: "SECOND", 3: "THIRD", 4: "FOURTH", 5: "FIFTH", 6: "CITIZENS" };
+const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 
 const INITIAL_MEMBERS = [
   { id: 1, name: 'Will', mcName: 'EighthSea6218', role: 'King', customDesc: 'The sovereign overlord, whose mere whisper commands the tides of fate and whose iron will binds the very foundations of the realm.' },
@@ -27,6 +27,11 @@ const INITIAL_MEMBERS = [
   { id: 9, name: 'Nicky', mcName: 'Chicky31889', role: 'Citizen', customDesc: 'An unsung hero of the cobblestones, whose relentless daily toil weaves the very fabric of the kingdom\'s glorious and unending tapestry.' },
   { id: 10, name: 'Poppy', mcName: 'beastygirl101', role: 'Citizen', customDesc: 'A fiercely loyal resident whose unwavering devotion to the realm burns brighter than the hottest forge. A true, unstoppable pillar of the kingdom\'s grand destiny.' }
 ];
+
+const COUNCIL_ROLES = Object.keys(ROLE_CONFIG).filter(role => role.startsWith('Head Of '));
+const HIGH_COUNCIL_ROLES = ['King', 'Advisor'];
+const memberHasAnyRole = (member, roles) =>
+  [member.role, member.secondaryRole].some(role => roles.includes(role));
 
 export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,17 +58,18 @@ export default function KingdomHierarchy() {
       .join(' ')
       .toLowerCase();
     const matchesSearch = searchableText.includes(normalizedQuery);
-    const rank = ROLE_CONFIG[member.role]?.rank;
     const roles = [member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase();
     const matchesFilter = activeFilter === 'All' ||
-      (activeFilter === 'High Council' && rank <= 4) ||
-      (activeFilter === 'Citizens' && rank === 6) ||
+      (activeFilter === 'High Council' && memberHasAnyRole(member, HIGH_COUNCIL_ROLES)) ||
+      (activeFilter === 'Council' && memberHasAnyRole(member, COUNCIL_ROLES)) ||
+      (activeFilter === 'Citizens' && member.role === 'Citizen') ||
       (activeFilter === 'Military' && /war|combat|military/.test(roles));
     return matchesSearch && matchesFilter;
   });
 
   const totalSouls = INITIAL_MEMBERS.length;
-  const highCouncilCount = INITIAL_MEMBERS.filter(m => ROLE_CONFIG[m.role]?.rank <= 4).length;
+  const highCouncilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, HIGH_COUNCIL_ROLES)).length;
+  const councilCount = INITIAL_MEMBERS.filter(member => memberHasAnyRole(member, COUNCIL_ROLES)).length;
   const totalVotingPower = INITIAL_MEMBERS.reduce((sum, member) => {
     const config = ROLE_CONFIG[member.role];
     const secCfg = member.secondaryRole ? ROLE_CONFIG[member.secondaryRole] : null;
@@ -73,10 +79,11 @@ export default function KingdomHierarchy() {
   const filterOptions = [
     { label: 'All members', value: 'All', count: totalSouls },
     { label: 'High council', value: 'High Council', count: highCouncilCount },
+    { label: 'Council', value: 'Council', count: councilCount },
     { label: 'Military', value: 'Military', count: INITIAL_MEMBERS.filter(member =>
       /war|combat|military/.test([member.role, member.secondaryRole].filter(Boolean).join(' ').toLowerCase())
     ).length },
-    { label: 'Citizens', value: 'Citizens', count: INITIAL_MEMBERS.filter(member => ROLE_CONFIG[member.role]?.rank === 6).length },
+    { label: 'Citizens', value: 'Citizens', count: INITIAL_MEMBERS.filter(member => member.role === 'Citizen').length },
   ];
 
   return (
@@ -103,7 +110,7 @@ export default function KingdomHierarchy() {
               <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
-                  { label: 'Council seats', value: highCouncilCount, icon: Crown, color: 'text-amber-300' },
+                  { label: 'Council heads', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="flex items-center gap-4 rounded-xl border border-stone-800 bg-black/25 p-4">
@@ -176,7 +183,7 @@ export default function KingdomHierarchy() {
               </button>
             </div>
           ) : (
-            [1, 2, 3, 4, 5, 6].map((rankNum) => {
+            [1, 2, 3, 4, 5].map((rankNum) => {
               const membersInRank = filteredMembers.filter(m => ROLE_CONFIG[m.role]?.rank === rankNum);
               if (membersInRank.length === 0) return null;
 
