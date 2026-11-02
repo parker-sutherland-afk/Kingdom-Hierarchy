@@ -89,3 +89,38 @@ export function sortByVotingPower(members, roleConfig) {
     return rankDifference || left.name.localeCompare(right.name);
   });
 }
+
+export function getRoleCoverage(members, roleConfig) {
+  return Object.entries(roleConfig)
+    .filter(([, config]) => Number.isFinite(config.max))
+    .map(([role, config]) => {
+      const filled = members.filter(member => memberRoles(member).includes(role)).length;
+
+      return {
+        role,
+        capacity: config.max,
+        filled,
+        vacant: Math.max(0, config.max - filled),
+      };
+    });
+}
+
+export function getRankVotingTotals(members, roleConfig, rankTitles) {
+  return Object.entries(rankTitles)
+    .map(([rank, title]) => {
+      const rankMembers = members.filter(
+        member => roleConfig[member.role]?.rank === Number(rank)
+      );
+
+      return {
+        rank: Number(rank),
+        title,
+        memberCount: rankMembers.length,
+        votingPower: rankMembers.reduce(
+          (total, member) => total + getVotingPowerBreakdown(member, roleConfig).points,
+          0
+        ),
+      };
+    })
+    .filter(section => section.memberCount > 0);
+}

@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   describeVotingPower,
   filterMembers,
+  getRankVotingTotals,
+  getRoleCoverage,
   getVotingPowerBreakdown,
   matchesMemberFilter,
   sortByVotingPower,
@@ -14,15 +16,15 @@ const members = JSON.parse(
 );
 
 const roleConfig = {
-  King: { points: 5, rank: 1 },
-  Advisor: { points: 3, rank: 2 },
-  'Head Of Resources and Projects': { points: 2, rank: 3 },
-  'Head Of General Purpose Resources': { points: 2, rank: 3 },
-  'Head Of Agriculture and Justice': { points: 2, rank: 3 },
-  'Head Of Combat And War': { points: 2, rank: 3 },
-  'Head Of Medicinal Substances': { points: 2, rank: 3 },
-  Prince: { points: 2, rank: 4 },
-  Citizen: { points: 1, rank: 5 },
+  King: { points: 5, rank: 1, max: 1 },
+  Advisor: { points: 3, rank: 2, max: 2 },
+  'Head Of Resources and Projects': { points: 2, rank: 3, max: 1 },
+  'Head Of General Purpose Resources': { points: 2, rank: 3, max: 1 },
+  'Head Of Agriculture and Justice': { points: 2, rank: 3, max: 1 },
+  'Head Of Combat And War': { points: 2, rank: 3, max: 1 },
+  'Head Of Medicinal Substances': { points: 2, rank: 3, max: 1 },
+  Prince: { points: 2, rank: 4, max: 1 },
+  Citizen: { points: 1, rank: 5, max: Infinity },
 };
 
 test('Council includes High Council and department heads once each', () => {
@@ -75,4 +77,40 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
     'Will', 'Darcy', 'Parker', 'Harrison', 'Nate', 'Thomas', 'Max',
     'Alex', 'Nicky', 'Poppy',
   ]);
+});
+
+test('role coverage counts secondary assignments and reports open seats', () => {
+  const coverage = getRoleCoverage(members, roleConfig);
+  const vacantRoles = coverage.filter(role => role.vacant > 0);
+
+  assert.deepEqual(vacantRoles, [
+    {
+      role: 'Head Of General Purpose Resources',
+      capacity: 1,
+      filled: 0,
+      vacant: 1,
+    },
+  ]);
+  assert.equal(coverage.find(role => role.role === 'Head Of Combat And War').filled, 1);
+});
+
+test('rank voting totals attribute each member once and sum to total power', () => {
+  const totals = getRankVotingTotals(members, roleConfig, {
+    1: 'KING',
+    2: 'HIGH COUNCIL',
+    3: 'COUNCIL',
+    4: 'PRINCE',
+    5: 'CITIZENS',
+  });
+
+  assert.deepEqual(totals.map(({ title, memberCount, votingPower }) => ({
+    title, memberCount, votingPower,
+  })), [
+    { title: 'KING', memberCount: 1, votingPower: 5 },
+    { title: 'HIGH COUNCIL', memberCount: 2, votingPower: 6 },
+    { title: 'COUNCIL', memberCount: 3, votingPower: 6 },
+    { title: 'PRINCE', memberCount: 1, votingPower: 2 },
+    { title: 'CITIZENS', memberCount: 3, votingPower: 3 },
+  ]);
+  assert.equal(totals.reduce((sum, section) => sum + section.votingPower, 0), 22);
 });

@@ -31,3 +31,7 @@ Edit [`src/data/members.json`](./src/data/members.json) to add or update roster 
 The rank display groups department heads under Council and the King and Advisors under High Council. The Council filter includes both High Council and department heads, while the High Council filter shows only the King and Advisors. Both filters include matching secondary roles.
 
 Voting points add the primary and secondary role values unless `customPoints` is set; custom points replace that sum. Each member card has an expandable breakdown, and the sort menu can order the roster from highest to lowest voting power. Sorting does not change roles or points.
+
+The dashboard shows vacancies for roles with a seat limit; secondary roles count toward seat occupancy, while unlimited roles are omitted. Rank voting totals count each member once under their primary role, so the rank totals add up to the realm total. Select **View full profile** on a member card for their roles, trims, description, and voting breakdown.
+
+Roster editing remains file-based: update `src/data/members.json` and deploy the site to publish the changes. There is no public roster editor.
