@@ -1,84 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2 } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2 } from 'lucide-react';
 import MEMBERS from './data/members.json';
+import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
 import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
 
-const ROLE_CONFIG = {
-  King: {
-    trim: 'Diamond Flow', rank: 1, points: 5, color: 'text-blue-300', nameHover: 'group-hover:text-blue-200',
-    badge: 'border-blue-400/30 bg-blue-400/10 text-blue-200 group-hover:border-blue-300/60 group-hover:bg-blue-400/20',
-    accent: 'hover:border-blue-300/70 hover:ring-blue-300/20 hover:shadow-[0_0_34px_rgba(96,165,250,0.24)] focus-within:border-blue-300/70 focus-within:ring-blue-300/25',
-    line: 'from-cyan-200 via-blue-400/50 to-transparent',
-    wash: 'from-blue-400/[0.13] via-blue-400/[0.03] to-transparent',
-    icon: Crown, desc: 'Absolute ruler of the realm.'
-  },
-  Advisor: {
-    trim: 'Netherite Dune', rank: 2, points: 3, color: 'text-stone-300', nameHover: 'group-hover:text-stone-100',
-    badge: 'border-stone-400/30 bg-stone-300/[0.06] text-stone-200 group-hover:border-stone-300/60 group-hover:bg-stone-300/[0.12]',
-    accent: 'hover:border-stone-300/60 hover:ring-stone-300/15 hover:shadow-[0_0_30px_rgba(214,211,209,0.16)] focus-within:border-stone-300/60 focus-within:ring-stone-300/20',
-    line: 'from-stone-200 via-stone-400/40 to-transparent',
-    wash: 'from-stone-300/[0.10] via-stone-300/[0.02] to-transparent',
-    icon: Shield, desc: 'Provides counsel to the King.'
-  },
-  'Head Of Resources and Projects': {
-    trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
-    badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
-    accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
-    line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
-    wash: 'from-purple-400/[0.12] via-purple-400/[0.03] to-transparent',
-    icon: Pickaxe, desc: 'Resource Management, Production Amount And Money.'
-  },
-  'Head Of General Purpose Resources': {
-    trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
-    badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
-    accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
-    line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
-    wash: 'from-purple-400/[0.12] via-purple-400/[0.03] to-transparent',
-    icon: Hammer, desc: 'Handles Armor and Gear PRODUCTION.'
-  },
-  'Head Of Agriculture and Justice': {
-    trim: 'Gold Flow', rank: 3, points: 2, color: 'text-amber-300', nameHover: 'group-hover:text-amber-200',
-    badge: 'border-amber-400/30 bg-amber-400/[0.08] text-amber-200 group-hover:border-amber-300/60 group-hover:bg-amber-400/[0.16]',
-    accent: 'hover:border-amber-400/70 hover:ring-amber-400/20 hover:shadow-[0_0_32px_rgba(251,191,36,0.2)] focus-within:border-amber-400/70 focus-within:ring-amber-400/25',
-    line: 'from-yellow-100 via-amber-400/50 to-transparent',
-    wash: 'from-amber-400/[0.12] via-amber-400/[0.03] to-transparent',
-    icon: Wheat, desc: 'Oversees crops, food supply, and kingdom laws.'
-  },
-  'Head Of Combat And War': {
-    trim: 'Redstone Flow', rank: 3, points: 2, color: 'text-red-300', nameHover: 'group-hover:text-red-200',
-    badge: 'border-red-400/30 bg-red-400/[0.08] text-red-200 group-hover:border-red-300/60 group-hover:bg-red-400/[0.16]',
-    accent: 'hover:border-red-400/70 hover:ring-red-400/20 hover:shadow-[0_0_32px_rgba(248,113,113,0.2)] focus-within:border-red-400/70 focus-within:ring-red-400/25',
-    line: 'from-rose-200 via-red-400/50 to-transparent',
-    wash: 'from-red-400/[0.12] via-red-400/[0.03] to-transparent',
-    icon: Swords, desc: 'Handles Enchants and protection of gear.'
-  },
-  'Head Of Medicinal Substances': {
-    trim: 'Emerald Flow', rank: 3, points: 2, color: 'text-emerald-300', nameHover: 'group-hover:text-emerald-200',
-    badge: 'border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-200 group-hover:border-emerald-300/60 group-hover:bg-emerald-400/[0.16]',
-    accent: 'hover:border-emerald-400/70 hover:ring-emerald-400/20 hover:shadow-[0_0_32px_rgba(52,211,153,0.2)] focus-within:border-emerald-400/70 focus-within:ring-emerald-400/25',
-    line: 'from-teal-100 via-emerald-400/50 to-transparent',
-    wash: 'from-emerald-400/[0.12] via-emerald-400/[0.03] to-transparent',
-    icon: FlaskConical, desc: 'Brewing and distributing potions.'
-  },
-  Prince: {
-    trim: 'Iron Flow Trim', rank: 4, points: 2, color: 'text-slate-300', nameHover: 'group-hover:text-slate-100',
-    badge: 'border-slate-300/30 bg-slate-300/[0.06] text-slate-200 group-hover:border-slate-200/60 group-hover:bg-slate-300/[0.12]',
-    accent: 'hover:border-slate-300/60 hover:ring-slate-300/15 hover:shadow-[0_0_30px_rgba(203,213,225,0.16)] focus-within:border-slate-300/60 focus-within:ring-slate-300/20',
-    line: 'from-slate-100 via-slate-300/40 to-transparent',
-    wash: 'from-slate-300/[0.10] via-slate-300/[0.02] to-transparent',
-    icon: Star, desc: 'Heir to the kingdom.'
-  },
-  Citizen: {
-    trim: 'None', rank: 5, points: 1, color: 'text-stone-400', nameHover: 'group-hover:text-stone-200',
-    badge: 'border-stone-500/30 bg-stone-400/[0.04] text-stone-300 group-hover:border-stone-400/50 group-hover:bg-stone-400/[0.08]',
-    accent: 'hover:border-stone-400/50 hover:ring-stone-400/10 hover:shadow-[0_0_24px_rgba(168,162,158,0.12)] focus-within:border-stone-400/50 focus-within:ring-stone-400/15',
-    line: 'from-stone-300/80 via-stone-500/30 to-transparent',
-    wash: 'from-stone-400/[0.08] via-stone-400/[0.02] to-transparent',
-    icon: User, desc: 'Standard member of the kingdom.'
-  }
-};
-
-const ROLE_NAMES = Object.keys(ROLE_CONFIG);
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 const RANK_ACCENTS = {
   1: 'text-blue-200 border-blue-400/25 bg-blue-400/[0.07]',
@@ -320,7 +245,7 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
                 tabIndex={0}
                 onClick={() => chooseOption(option)}
                 onKeyDown={event => handleOptionKeyDown(event, index)}
-                className={`flex min-h-9 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left font-sans text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
+                className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left font-sans text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
                   isSelected
                     ? 'bg-amber-400/[0.12] text-amber-100'
                     : 'text-stone-300 hover:bg-stone-800/80 hover:text-stone-100'
@@ -391,6 +316,19 @@ export default function KingdomHierarchy() {
       dialog.showModal();
     } else if (!selectedMember && dialog.open) {
       dialog.close();
+    }
+  }, [selectedMember]);
+
+  useEffect(() => {
+    const description = document.querySelector('meta[name="description"]');
+    document.title = selectedMember
+      ? `${selectedMember.name} | Kingdom Hierarchy`
+      : 'Kingdom Hierarchy';
+
+    if (description) {
+      description.content = selectedMember
+        ? `${selectedMember.name} is listed as ${selectedMember.role} in the Kingdom Hierarchy roster.`
+        : 'Explore the members, roles, and voting power of the kingdom.';
     }
   }, [selectedMember]);
 
@@ -623,7 +561,7 @@ export default function KingdomHierarchy() {
                       type="button"
                       aria-pressed={isActive}
                       onClick={() => setActiveFilter(value)}
-                      className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg border px-3 font-sans text-[11px] font-semibold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 motion-reduce:transition-none ${
+                      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border px-3 font-sans text-[11px] font-semibold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 motion-reduce:transition-none ${
                         isActive
                           ? 'border-amber-400/40 bg-gradient-to-b from-amber-300/[0.13] to-amber-500/[0.06] text-amber-100 shadow-[inset_0_1px_0_rgba(252,211,77,0.08)]'
                           : 'border-stone-700/70 bg-stone-900/45 text-stone-400 hover:border-amber-400/25 hover:bg-amber-400/[0.04] hover:text-stone-200'
@@ -683,7 +621,7 @@ export default function KingdomHierarchy() {
                         <article key={member.id} className={`group relative isolate overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
                           <div aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br ${config?.wash} opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none`} />
                           <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${config?.line} opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100`} />
-                          <div className="relative flex h-full flex-col p-5">
+                          <div className="relative flex h-full flex-col p-4 sm:p-5">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
                                 <MemberAvatar member={member} config={config} />
@@ -696,7 +634,7 @@ export default function KingdomHierarchy() {
                                       aria-label={`Copy ${member.mcName} Minecraft username`}
                                       title={`Copy ${member.mcName}`}
                                       onClick={() => copyUsername(member.mcName)}
-                                      className="shrink-0 rounded p-1 text-stone-500 transition hover:bg-stone-800 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-800 hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                                     >
                                       {copiedUsername === member.mcName && !copyFailed ? <Check size={12} /> : <Copy size={12} />}
                                     </button>
@@ -720,7 +658,7 @@ export default function KingdomHierarchy() {
                                   aria-label={`Filter roster by primary role ${member.role}`}
                                   aria-pressed={selectedRole === member.role}
                                   onClick={() => filterByRole(member.role)}
-                                  className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${config?.badge}`}
+                                  className={`inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${config?.badge}`}
                                 >
                                   <Icon aria-hidden="true" className={config?.color} size={13} /><span className="truncate"><HighlightedText text={member.role} query={normalizedQuery} /></span>
                                 </button>
@@ -733,7 +671,7 @@ export default function KingdomHierarchy() {
                                     aria-label={`Filter roster by secondary role ${member.secondaryRole}`}
                                     aria-pressed={selectedRole === member.secondaryRole}
                                     onClick={() => filterByRole(member.secondaryRole)}
-                                    className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${secCfg.badge}`}
+                                    className={`inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${secCfg.badge}`}
                                   >
                                     <SecIcon aria-hidden="true" className={secCfg.color} size={13} /><span className="truncate"><HighlightedText text={member.secondaryRole} query={normalizedQuery} /></span>
                                   </button>
@@ -774,7 +712,7 @@ export default function KingdomHierarchy() {
           onClick={event => {
             if (event.target === event.currentTarget) closeMemberProfile();
           }}
-          className="max-h-[min(85dvh,48rem)] w-[min(42rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm"
+          className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-[42rem] overscroll-contain overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm sm:max-h-[min(85dvh,48rem)] sm:w-[calc(100%-1.5rem)]"
         >
           {selectedMember && (() => {
             const config = ROLE_CONFIG[selectedMember.role];
@@ -787,7 +725,7 @@ export default function KingdomHierarchy() {
               <div className="relative overflow-hidden">
                 <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${config?.line}`} />
                 <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${config?.wash}`} />
-                <div className="relative p-4 sm:p-8">
+                <div className="relative p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-4">
                       <div className="scale-110 sm:scale-125"><MemberAvatar member={selectedMember} config={config} /></div>
@@ -801,7 +739,7 @@ export default function KingdomHierarchy() {
                       type="button"
                       aria-label="Close member profile"
                       onClick={closeMemberProfile}
-                      className="rounded-lg border border-stone-700 bg-stone-900/80 p-2 text-stone-400 transition hover:border-stone-500 hover:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-stone-700 bg-stone-900/80 p-2 text-stone-400 transition hover:border-stone-500 hover:text-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                     >
                       <X size={18} />
                     </button>
