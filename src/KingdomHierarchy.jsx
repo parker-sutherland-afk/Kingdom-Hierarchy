@@ -4,20 +4,90 @@ import MEMBERS from './data/members.json';
 import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
-  "King": { max: 1, trim: "Diamond Flow", rank: 1, points: 5, color: "text-blue-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(147,197,253,0.3)] hover:border-blue-400", icon: Crown, desc: "Absolute ruler of the realm." },
-  "Advisor": { max: 2, trim: "Netherite Dune", rank: 2, points: 3, color: "text-stone-300", border: "border-stone-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(168,162,158,0.3)] hover:border-stone-400", icon: Shield, desc: "Provides counsel to the King." },
-  "Head Of Resources and Projects": { max: 1, trim: "Amethyst Flow", rank: 3, points: 2, color: "text-purple-300", border: "border-purple-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(216,180,254,0.3)] hover:border-purple-400", icon: Pickaxe, desc: "Resource Management, Production Amount And Money." },
-  "Head Of General Purpose Resources": { max: 1, trim: "Amethyst Flow", rank: 3, points: 2, color: "text-purple-300", border: "border-purple-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(216,180,254,0.3)] hover:border-purple-400", icon: Hammer, desc: "Handles Armor and Gear PRODUCTION." },
-  "Head Of Agriculture and Justice": { max: 1, trim: "Gold Flow", rank: 3, points: 2, color: "text-amber-500", border: "border-amber-700", shadowGlow: "hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:border-amber-400", icon: Wheat, desc: "Oversees crops, food supply, and kingdom laws." },
-  "Head Of Combat And War": { max: 1, trim: "Redstone Flow", rank: 3, points: 2, color: "text-red-400", border: "border-red-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(248,113,113,0.3)] hover:border-red-400", icon: Swords, desc: "Handles Enchants and protection of gear." },
-  "Head Of Medicinal Substances": { max: 1, trim: "Emerald Flow", rank: 3, points: 2, color: "text-emerald-500", border: "border-emerald-800", shadowGlow: "hover:shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:border-emerald-400", icon: FlaskConical, desc: "Brewing and distributing potions." },
-  "Prince": { max: 1, trim: "Iron Flow Trim", rank: 4, points: 2, color: "text-slate-300", border: "border-slate-500", shadowGlow: "hover:shadow-[0_0_20px_rgba(203,213,225,0.3)] hover:border-slate-300", icon: Star, desc: "Heir to the kingdom." },
-  "Citizen": { max: Infinity, trim: "None", rank: 5, points: 1, color: "text-stone-400", border: "border-stone-700", shadowGlow: "hover:shadow-[0_0_15px_rgba(120,113,108,0.3)] hover:border-stone-500", icon: User, desc: "Standard member of the kingdom." }
+  King: {
+    max: 1, trim: 'Diamond Flow', rank: 1, points: 5, color: 'text-blue-300', nameHover: 'group-hover:text-blue-200',
+    badge: 'border-blue-400/30 bg-blue-400/10 text-blue-200 group-hover:border-blue-300/60 group-hover:bg-blue-400/20',
+    accent: 'hover:border-blue-300/70 hover:ring-blue-300/20 hover:shadow-[0_0_34px_rgba(96,165,250,0.24)] focus-within:border-blue-300/70 focus-within:ring-blue-300/25',
+    line: 'from-cyan-200 via-blue-400/50 to-transparent',
+    wash: 'from-blue-400/[0.13] via-blue-400/[0.03] to-transparent',
+    icon: Crown, desc: 'Absolute ruler of the realm.'
+  },
+  Advisor: {
+    max: 2, trim: 'Netherite Dune', rank: 2, points: 3, color: 'text-stone-300', nameHover: 'group-hover:text-stone-100',
+    badge: 'border-stone-400/30 bg-stone-300/[0.06] text-stone-200 group-hover:border-stone-300/60 group-hover:bg-stone-300/[0.12]',
+    accent: 'hover:border-stone-300/60 hover:ring-stone-300/15 hover:shadow-[0_0_30px_rgba(214,211,209,0.16)] focus-within:border-stone-300/60 focus-within:ring-stone-300/20',
+    line: 'from-stone-200 via-stone-400/40 to-transparent',
+    wash: 'from-stone-300/[0.10] via-stone-300/[0.02] to-transparent',
+    icon: Shield, desc: 'Provides counsel to the King.'
+  },
+  'Head Of Resources and Projects': {
+    max: 1, trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
+    badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
+    accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
+    line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
+    wash: 'from-purple-400/[0.12] via-purple-400/[0.03] to-transparent',
+    icon: Pickaxe, desc: 'Resource Management, Production Amount And Money.'
+  },
+  'Head Of General Purpose Resources': {
+    max: 1, trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
+    badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
+    accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
+    line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
+    wash: 'from-purple-400/[0.12] via-purple-400/[0.03] to-transparent',
+    icon: Hammer, desc: 'Handles Armor and Gear PRODUCTION.'
+  },
+  'Head Of Agriculture and Justice': {
+    max: 1, trim: 'Gold Flow', rank: 3, points: 2, color: 'text-amber-300', nameHover: 'group-hover:text-amber-200',
+    badge: 'border-amber-400/30 bg-amber-400/[0.08] text-amber-200 group-hover:border-amber-300/60 group-hover:bg-amber-400/[0.16]',
+    accent: 'hover:border-amber-400/70 hover:ring-amber-400/20 hover:shadow-[0_0_32px_rgba(251,191,36,0.2)] focus-within:border-amber-400/70 focus-within:ring-amber-400/25',
+    line: 'from-yellow-100 via-amber-400/50 to-transparent',
+    wash: 'from-amber-400/[0.12] via-amber-400/[0.03] to-transparent',
+    icon: Wheat, desc: 'Oversees crops, food supply, and kingdom laws.'
+  },
+  'Head Of Combat And War': {
+    max: 1, trim: 'Redstone Flow', rank: 3, points: 2, color: 'text-red-300', nameHover: 'group-hover:text-red-200',
+    badge: 'border-red-400/30 bg-red-400/[0.08] text-red-200 group-hover:border-red-300/60 group-hover:bg-red-400/[0.16]',
+    accent: 'hover:border-red-400/70 hover:ring-red-400/20 hover:shadow-[0_0_32px_rgba(248,113,113,0.2)] focus-within:border-red-400/70 focus-within:ring-red-400/25',
+    line: 'from-rose-200 via-red-400/50 to-transparent',
+    wash: 'from-red-400/[0.12] via-red-400/[0.03] to-transparent',
+    icon: Swords, desc: 'Handles Enchants and protection of gear.'
+  },
+  'Head Of Medicinal Substances': {
+    max: 1, trim: 'Emerald Flow', rank: 3, points: 2, color: 'text-emerald-300', nameHover: 'group-hover:text-emerald-200',
+    badge: 'border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-200 group-hover:border-emerald-300/60 group-hover:bg-emerald-400/[0.16]',
+    accent: 'hover:border-emerald-400/70 hover:ring-emerald-400/20 hover:shadow-[0_0_32px_rgba(52,211,153,0.2)] focus-within:border-emerald-400/70 focus-within:ring-emerald-400/25',
+    line: 'from-teal-100 via-emerald-400/50 to-transparent',
+    wash: 'from-emerald-400/[0.12] via-emerald-400/[0.03] to-transparent',
+    icon: FlaskConical, desc: 'Brewing and distributing potions.'
+  },
+  Prince: {
+    max: 1, trim: 'Iron Flow Trim', rank: 4, points: 2, color: 'text-slate-300', nameHover: 'group-hover:text-slate-100',
+    badge: 'border-slate-300/30 bg-slate-300/[0.06] text-slate-200 group-hover:border-slate-200/60 group-hover:bg-slate-300/[0.12]',
+    accent: 'hover:border-slate-300/60 hover:ring-slate-300/15 hover:shadow-[0_0_30px_rgba(203,213,225,0.16)] focus-within:border-slate-300/60 focus-within:ring-slate-300/20',
+    line: 'from-slate-100 via-slate-300/40 to-transparent',
+    wash: 'from-slate-300/[0.10] via-slate-300/[0.02] to-transparent',
+    icon: Star, desc: 'Heir to the kingdom.'
+  },
+  Citizen: {
+    max: Infinity, trim: 'None', rank: 5, points: 1, color: 'text-stone-400', nameHover: 'group-hover:text-stone-200',
+    badge: 'border-stone-500/30 bg-stone-400/[0.04] text-stone-300 group-hover:border-stone-400/50 group-hover:bg-stone-400/[0.08]',
+    accent: 'hover:border-stone-400/50 hover:ring-stone-400/10 hover:shadow-[0_0_24px_rgba(168,162,158,0.12)] focus-within:border-stone-400/50 focus-within:ring-stone-400/15',
+    line: 'from-stone-300/80 via-stone-500/30 to-transparent',
+    wash: 'from-stone-400/[0.08] via-stone-400/[0.02] to-transparent',
+    icon: User, desc: 'Standard member of the kingdom.'
+  }
 };
 
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
+const RANK_ACCENTS = {
+  1: 'text-blue-200 border-blue-400/25 bg-blue-400/[0.07]',
+  2: 'text-stone-200 border-stone-400/25 bg-stone-400/[0.05]',
+  3: 'text-purple-200 border-purple-400/25 bg-purple-400/[0.06]',
+  4: 'text-slate-200 border-slate-300/25 bg-slate-300/[0.05]',
+  5: 'text-stone-300 border-stone-600/50 bg-stone-800/60',
+};
 
-function MemberAvatar({ member }) {
+function MemberAvatar({ member, config }) {
   const [imageFailed, setImageFailed] = useState(false);
   const nameParts = member.name.trim().split(/\s+/);
   const initials = (nameParts.length > 1
@@ -29,7 +99,7 @@ function MemberAvatar({ member }) {
     <div
       role="img"
       aria-label={`${member.name}'s Minecraft avatar`}
-      className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold text-amber-200 shadow-md"
+      className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}
     >
       {imageFailed ? (
         <span aria-hidden="true">{initials}</span>
@@ -206,12 +276,12 @@ export default function KingdomHierarchy() {
             </div>
           ) : (
             rankSections.map(({ key, title, members: membersInRank }) => (
-                <section key={key} aria-labelledby={`rank-${key}`}>
+                <section key={key} aria-labelledby={`rank-${key}`} className="group/rank">
                   <div className="mb-5 flex items-center gap-4">
-                    <h2 id={`rank-${key}`} className="flex items-center gap-2 rounded-lg border border-stone-800 bg-stone-900 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-stone-300">
-                      {title}<span className="text-stone-600">/</span><span className="font-medium tracking-normal text-stone-500">{membersInRank.length}</span>
+                    <h2 id={`rank-${key}`} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black uppercase tracking-[0.18em] transition-colors group-hover/rank:brightness-125 ${key === 'power' ? 'border-sky-400/25 bg-sky-400/[0.06] text-sky-200' : RANK_ACCENTS[key]}`}>
+                      {title}<span className="opacity-50">/</span><span className="font-medium tracking-normal opacity-70">{membersInRank.length}</span>
                     </h2>
-                    <div className="h-px flex-1 bg-gradient-to-r from-stone-700 to-transparent" />
+                    <div className={`h-px flex-1 bg-gradient-to-r ${key === 'power' ? 'from-sky-400/60' : key === 1 ? 'from-blue-400/60' : key === 2 ? 'from-stone-300/50' : key === 3 ? 'from-purple-400/60' : key === 4 ? 'from-slate-300/50' : 'from-stone-600'} to-transparent transition-colors group-hover/rank:to-stone-800`} />
                   </div>
                   
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -224,14 +294,15 @@ export default function KingdomHierarchy() {
                       const displayDesc = member.customDesc || config?.desc;
                       
                       return (
-                        <article key={member.id} className={`group relative overflow-hidden rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] transition duration-300 hover:-translate-y-1 hover:border-stone-600 hover:shadow-xl ${config?.shadowGlow}`}>
-                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-amber-700/40 via-stone-700/40 to-transparent" />
-                          <div className="flex h-full flex-col p-5">
+                        <article key={member.id} className={`group relative isolate overflow-hidden rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] transition duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:ring-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
+                          <div aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br ${config?.wash} opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none`} />
+                          <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${config?.line} opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100`} />
+                          <div className="relative flex h-full flex-col p-5">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <MemberAvatar member={member} />
+                                <MemberAvatar member={member} config={config} />
                                 <div className="min-w-0">
-                                  <h3 className="truncate text-lg font-black tracking-wide text-stone-100">{member.name}</h3>
+                                  <h3 className={`truncate text-lg font-black tracking-wide text-stone-100 transition-colors ${config?.nameHover}`}>{member.name}</h3>
                                   <div className="mt-0.5 flex min-w-0 items-center gap-1 font-sans text-xs text-stone-500">
                                     <span className="truncate">@{member.mcName}</span>
                                     <button
@@ -246,26 +317,26 @@ export default function KingdomHierarchy() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="shrink-0 rounded-lg border border-stone-800 bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300">
+                              <div className={`shrink-0 rounded-lg border bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300 transition-colors ${config?.badge}`}>
                                 <div>{votingPower.points} pts</div>
                                 {votingPower.isCustom && <div className="mt-0.5 text-[9px] font-medium text-amber-300">Custom allocation</div>}
                               </div>
                             </div>
 
                             <div className="mt-4 flex flex-wrap items-center gap-2">
-                              <div className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-stone-800 bg-black/20 px-2 py-1 font-sans text-xs text-stone-300">
+                              <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${config?.badge}`}>
                                 <Icon className={config?.color} size={13} /><span className="truncate">{member.role}</span>
                               </div>
                               {member.secondaryRole && secCfg && SecIcon && (
-                                <div className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-stone-800 bg-black/20 px-2 py-1 font-sans text-xs text-stone-400">
+                                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${secCfg.badge}`}>
                                   <SecIcon className={secCfg.color} size={13} /><span className="truncate">{member.secondaryRole}</span>
                                 </div>
                               )}
                             </div>
 
                             <div className="mt-4 flex flex-wrap gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-wide">
-                              {config?.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${config?.color}`}>✦ {config?.trim}</span>}
-                              {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border border-stone-800 bg-black/20 px-2 py-1 ${secCfg.color}`}>✦ {secCfg.trim}</span>}
+                              {config?.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${config?.badge}`}>✦ {config?.trim}</span>}
+                              {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
                             </div>
                             <details className="mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs">
                               <summary className="cursor-pointer text-stone-400 transition hover:text-amber-200">Voting points breakdown</summary>
