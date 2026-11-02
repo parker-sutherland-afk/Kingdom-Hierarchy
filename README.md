@@ -32,4 +32,4 @@ The rank display groups department heads under Council and the King and Advisors
 
 Voting points add the primary and secondary role values unless `customPoints` is set; custom points replace that sum. Each member card has an expandable breakdown, and the sort menu can order the roster from highest to lowest voting power. Sorting does not change roles or points.
 
-The dashboard shows vacancies for roles with a seat limit; secondary roles count toward seat occupancy, while unlimited roles are omitted. Select a vacancy to filter the roster by that role. Rank voting totals count each member once under their primary role, so the rank totals add up to the realm total. Select **View full profile** on a member card for their roles, trims, description, and voting breakdown.
+Select **View full profile** on a member card for their roles, trims, description, and individual voting breakdown.
