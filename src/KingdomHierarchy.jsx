@@ -119,10 +119,12 @@ function MemberAvatar({ member, config }) {
 
 function ThemedDropdown({ id, label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
+  const [opensUpward, setOpensUpward] = useState(false);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
   const optionRefs = useRef([]);
   const focusIndex = useRef(null);
+  const typeahead = useRef({ query: '', time: 0 });
   const selectedIndex = Math.max(0, options.findIndex(option => option.value === value));
   const selectedOption = options[selectedIndex];
 
@@ -132,10 +134,29 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
     const closeOnOutsideClick = event => {
       if (!rootRef.current?.contains(event.target)) setOpen(false);
     };
+    const updatePlacement = () => {
+      const bounds = triggerRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+
+      const estimatedMenuHeight = Math.min(320, options.length * 40 + 12);
+      const spaceAbove = bounds.top;
+      const spaceBelow = window.innerHeight - bounds.bottom;
+      setOpensUpward(
+        spaceBelow < Math.min(estimatedMenuHeight, window.innerHeight * 0.5) &&
+        spaceAbove > spaceBelow
+      );
+    };
 
     document.addEventListener('pointerdown', closeOnOutsideClick);
-    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
-  }, [open]);
+    window.addEventListener('resize', updatePlacement);
+    window.addEventListener('scroll', updatePlacement, true);
+    updatePlacement();
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      window.removeEventListener('resize', updatePlacement);
+      window.removeEventListener('scroll', updatePlacement, true);
+    };
+  }, [open, options.length]);
 
   useEffect(() => {
     if (!open) return;
@@ -149,11 +170,38 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
     triggerRef.current?.focus();
   }
 
+  function findTypeaheadMatch(key, currentIndex = selectedIndex) {
+    const now = Date.now();
+    const previousQuery = now - typeahead.current.time < 700 ? typeahead.current.query : '';
+    const query = previousQuery + key.toLocaleLowerCase();
+    typeahead.current = { query, time: now };
+    const startIndex = Math.max(0, currentIndex + 1);
+    const orderedIndexes = [
+      ...options.map((_, index) => (startIndex + index) % options.length),
+    ];
+    const matchingIndex = orderedIndexes.find(index =>
+      options[index].label.toLocaleLowerCase().startsWith(query)
+    );
+
+    if (matchingIndex !== undefined) return matchingIndex;
+    typeahead.current = { query: key.toLocaleLowerCase(), time: now };
+    return options.findIndex(option =>
+      option.label.toLocaleLowerCase().startsWith(typeahead.current.query)
+    );
+  }
+
   function handleTriggerKeyDown(event) {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       focusIndex.current = event.key === 'ArrowUp' ? options.length - 1 : selectedIndex;
       setOpen(true);
+    } else if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      const match = findTypeaheadMatch(event.key, selectedIndex - 1);
+      if (match >= 0) {
+        event.preventDefault();
+        focusIndex.current = match;
+        setOpen(true);
+      }
     } else if (event.key === 'Escape' && open) {
       event.preventDefault();
       closeAndRestoreFocus();
@@ -166,7 +214,18 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
     else if (event.key === 'ArrowUp') nextIndex = (index - 1 + options.length) % options.length;
     else if (event.key === 'Home') nextIndex = 0;
     else if (event.key === 'End') nextIndex = options.length - 1;
-    else if (event.key === 'Escape') {
+    else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      chooseOption(options[index]);
+      return;
+    } else if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      const match = findTypeaheadMatch(event.key, index);
+      if (match >= 0) {
+        event.preventDefault();
+        optionRefs.current[match]?.focus();
+      }
+      return;
+    } else if (event.key === 'Escape') {
       event.preventDefault();
       closeAndRestoreFocus();
       return;
@@ -221,18 +280,19 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
           id={`${id}-options`}
           role="listbox"
           aria-label={label}
-          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-[min(20rem,50vh)] overflow-y-auto rounded-xl border border-stone-700 bg-[#151610] p-1.5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] ring-1 ring-amber-400/10"
+          className={`absolute left-0 right-0 z-50 max-h-[min(20rem,50vh)] overflow-y-auto rounded-xl border border-stone-700 bg-[#151610] p-1.5 shadow-[0_18px_45px_rgba(0,0,0,0.65)] ring-1 ring-amber-400/10 ${
+            opensUpward ? 'bottom-[calc(100%+0.5rem)]' : 'top-[calc(100%+0.5rem)]'
+          }`}
         >
           {options.map((option, index) => {
             const isSelected = option.value === value;
             return (
-              <button
+              <div
                 key={option.value}
                 ref={element => { optionRefs.current[index] = element; }}
-                type="button"
                 role="option"
                 aria-selected={isSelected}
-                tabIndex={-1}
+                tabIndex={0}
                 onClick={() => chooseOption(option)}
                 onKeyDown={event => handleOptionKeyDown(event, index)}
                 className={`flex min-h-9 w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left font-sans text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
@@ -243,7 +303,7 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
               >
                 <span className="min-w-0 break-words">{option.label}</span>
                 {isSelected && <Check aria-hidden="true" size={14} className="shrink-0 text-amber-300" />}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -536,7 +596,11 @@ export default function KingdomHierarchy() {
                                   </div>
                                 </div>
                               </div>
-                              <div className={`shrink-0 rounded-lg border bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300 transition-colors ${config?.badge}`}>
+                              <div
+                                aria-label={`${votingPower.points} voting point${votingPower.points === 1 ? '' : 's'} from ${member.role} primary role`}
+                                title={`Voting power from primary role: ${member.role}`}
+                                className={`shrink-0 rounded-lg border bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300 transition-colors ${config?.badge}`}
+                              >
                                 <div>{votingPower.points} pts</div>
                               </div>
                             </div>
@@ -563,10 +627,10 @@ export default function KingdomHierarchy() {
                               {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
                             </div>
                             <details className="mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs">
-                              <summary className="cursor-pointer text-stone-400 transition hover:text-amber-200">Primary-role voting points</summary>
+                              <summary className="min-h-10 cursor-pointer py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:text-amber-200 focus-visible:underline">Primary-role voting points</summary>
                               <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
                             </details>
-                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400">{displayDesc}</p>}
+                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3">{displayDesc}</p>}
                             <button
                               type="button"
                               onClick={() => setSelectedMember(member)}
@@ -588,7 +652,10 @@ export default function KingdomHierarchy() {
           aria-labelledby="member-profile-title"
           aria-describedby="member-profile-description"
           onClose={() => setSelectedMember(null)}
-          className="max-h-[85vh] w-[min(42rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm"
+          onClick={event => {
+            if (event.target === event.currentTarget) profileDialogRef.current?.close();
+          }}
+          className="max-h-[min(85dvh,48rem)] w-[min(42rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm"
         >
           {selectedMember && (() => {
             const config = ROLE_CONFIG[selectedMember.role];
@@ -601,10 +668,10 @@ export default function KingdomHierarchy() {
               <div className="relative overflow-hidden">
                 <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${config?.line}`} />
                 <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${config?.wash}`} />
-                <div className="relative p-6 sm:p-8">
+                <div className="relative p-4 sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-4">
-                      <div className="scale-125"><MemberAvatar member={selectedMember} config={config} /></div>
+                      <div className="scale-110 sm:scale-125"><MemberAvatar member={selectedMember} config={config} /></div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Member profile</p>
                         <h2 id="member-profile-title" className={`mt-1 truncate text-2xl font-black ${config?.color}`}>{selectedMember.name}</h2>
