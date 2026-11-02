@@ -29,7 +29,7 @@ export function matchesMemberFilter(member, filter) {
   return true;
 }
 
-export function filterMembers(members, searchQuery, activeFilter) {
+export function filterMembers(members, searchQuery, activeFilter, selectedRole = '') {
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   return members.filter(member => {
@@ -41,38 +41,38 @@ export function filterMembers(members, searchQuery, activeFilter) {
       member.customDesc,
     ].filter(Boolean).join(' ').toLowerCase();
 
+    const matchesRole = !selectedRole ||
+      member.role === selectedRole ||
+      member.secondaryRole === selectedRole;
+
     return searchableText.includes(normalizedQuery) &&
-      matchesMemberFilter(member, activeFilter);
+      matchesMemberFilter(member, activeFilter) &&
+      matchesRole;
   });
 }
 
 export function getVotingPowerBreakdown(member, roleConfig) {
-  const roles = memberRoles(member).map(role => ({
-    role,
-    points: roleConfig[role]?.points ?? 0,
-  }));
-  const roleTotal = roles.reduce((total, item) => total + item.points, 0);
-  const hasCustomPoints = member.customPoints !== undefined && member.customPoints !== null;
+  const roles = [{
+    role: member.role,
+    points: roleConfig[member.role]?.points ?? 0,
+  }];
 
   return {
-    points: hasCustomPoints ? member.customPoints : roleTotal,
-    roleTotal,
+    points: roles[0].points,
     roles,
-    isCustom: hasCustomPoints,
   };
 }
 
 export function describeVotingPower(member, roleConfig) {
   const breakdown = getVotingPowerBreakdown(member, roleConfig);
-  const roleDescription = breakdown.roles
-    .map(({ role, points }) => `${role}: ${points}`)
-    .join(' + ');
+  const primaryRole = breakdown.roles[0];
+  return `Primary role — ${primaryRole.role}: ${primaryRole.points} point${primaryRole.points === 1 ? '' : 's'}`;
+}
 
-  if (breakdown.isCustom) {
-    return `Custom allocation: ${breakdown.points} points (role total: ${breakdown.roleTotal}; ${roleDescription})`;
-  }
-
-  return roleDescription;
+export function sortByName(members) {
+  return [...members].sort((left, right) =>
+    left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
+  );
 }
 
 export function sortByVotingPower(members, roleConfig) {
