@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
-    max: 1, trim: 'Diamond Flow', rank: 1, points: 5, color: 'text-blue-300', nameHover: 'group-hover:text-blue-200',
+    trim: 'Diamond Flow', rank: 1, points: 5, color: 'text-blue-300', nameHover: 'group-hover:text-blue-200',
     badge: 'border-blue-400/30 bg-blue-400/10 text-blue-200 group-hover:border-blue-300/60 group-hover:bg-blue-400/20',
     accent: 'hover:border-blue-300/70 hover:ring-blue-300/20 hover:shadow-[0_0_34px_rgba(96,165,250,0.24)] focus-within:border-blue-300/70 focus-within:ring-blue-300/25',
     line: 'from-cyan-200 via-blue-400/50 to-transparent',
@@ -13,7 +13,7 @@ const ROLE_CONFIG = {
     icon: Crown, desc: 'Absolute ruler of the realm.'
   },
   Advisor: {
-    max: 2, trim: 'Netherite Dune', rank: 2, points: 3, color: 'text-stone-300', nameHover: 'group-hover:text-stone-100',
+    trim: 'Netherite Dune', rank: 2, points: 3, color: 'text-stone-300', nameHover: 'group-hover:text-stone-100',
     badge: 'border-stone-400/30 bg-stone-300/[0.06] text-stone-200 group-hover:border-stone-300/60 group-hover:bg-stone-300/[0.12]',
     accent: 'hover:border-stone-300/60 hover:ring-stone-300/15 hover:shadow-[0_0_30px_rgba(214,211,209,0.16)] focus-within:border-stone-300/60 focus-within:ring-stone-300/20',
     line: 'from-stone-200 via-stone-400/40 to-transparent',
@@ -21,7 +21,7 @@ const ROLE_CONFIG = {
     icon: Shield, desc: 'Provides counsel to the King.'
   },
   'Head Of Resources and Projects': {
-    max: 1, trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
+    trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
     badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
     accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
     line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
@@ -29,7 +29,7 @@ const ROLE_CONFIG = {
     icon: Pickaxe, desc: 'Resource Management, Production Amount And Money.'
   },
   'Head Of General Purpose Resources': {
-    max: 1, trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
+    trim: 'Amethyst Flow', rank: 3, points: 2, color: 'text-purple-300', nameHover: 'group-hover:text-purple-200',
     badge: 'border-purple-400/30 bg-purple-400/[0.08] text-purple-200 group-hover:border-purple-300/60 group-hover:bg-purple-400/[0.16]',
     accent: 'hover:border-purple-400/70 hover:ring-purple-400/20 hover:shadow-[0_0_32px_rgba(192,132,252,0.22)] focus-within:border-purple-400/70 focus-within:ring-purple-400/25',
     line: 'from-fuchsia-200 via-purple-400/50 to-transparent',
@@ -37,7 +37,7 @@ const ROLE_CONFIG = {
     icon: Hammer, desc: 'Handles Armor and Gear PRODUCTION.'
   },
   'Head Of Agriculture and Justice': {
-    max: 1, trim: 'Gold Flow', rank: 3, points: 2, color: 'text-amber-300', nameHover: 'group-hover:text-amber-200',
+    trim: 'Gold Flow', rank: 3, points: 2, color: 'text-amber-300', nameHover: 'group-hover:text-amber-200',
     badge: 'border-amber-400/30 bg-amber-400/[0.08] text-amber-200 group-hover:border-amber-300/60 group-hover:bg-amber-400/[0.16]',
     accent: 'hover:border-amber-400/70 hover:ring-amber-400/20 hover:shadow-[0_0_32px_rgba(251,191,36,0.2)] focus-within:border-amber-400/70 focus-within:ring-amber-400/25',
     line: 'from-yellow-100 via-amber-400/50 to-transparent',
@@ -45,7 +45,7 @@ const ROLE_CONFIG = {
     icon: Wheat, desc: 'Oversees crops, food supply, and kingdom laws.'
   },
   'Head Of Combat And War': {
-    max: 1, trim: 'Redstone Flow', rank: 3, points: 2, color: 'text-red-300', nameHover: 'group-hover:text-red-200',
+    trim: 'Redstone Flow', rank: 3, points: 2, color: 'text-red-300', nameHover: 'group-hover:text-red-200',
     badge: 'border-red-400/30 bg-red-400/[0.08] text-red-200 group-hover:border-red-300/60 group-hover:bg-red-400/[0.16]',
     accent: 'hover:border-red-400/70 hover:ring-red-400/20 hover:shadow-[0_0_32px_rgba(248,113,113,0.2)] focus-within:border-red-400/70 focus-within:ring-red-400/25',
     line: 'from-rose-200 via-red-400/50 to-transparent',
@@ -53,7 +53,7 @@ const ROLE_CONFIG = {
     icon: Swords, desc: 'Handles Enchants and protection of gear.'
   },
   'Head Of Medicinal Substances': {
-    max: 1, trim: 'Emerald Flow', rank: 3, points: 2, color: 'text-emerald-300', nameHover: 'group-hover:text-emerald-200',
+    trim: 'Emerald Flow', rank: 3, points: 2, color: 'text-emerald-300', nameHover: 'group-hover:text-emerald-200',
     badge: 'border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-200 group-hover:border-emerald-300/60 group-hover:bg-emerald-400/[0.16]',
     accent: 'hover:border-emerald-400/70 hover:ring-emerald-400/20 hover:shadow-[0_0_32px_rgba(52,211,153,0.2)] focus-within:border-emerald-400/70 focus-within:ring-emerald-400/25',
     line: 'from-teal-100 via-emerald-400/50 to-transparent',
@@ -61,7 +61,7 @@ const ROLE_CONFIG = {
     icon: FlaskConical, desc: 'Brewing and distributing potions.'
   },
   Prince: {
-    max: 1, trim: 'Iron Flow Trim', rank: 4, points: 2, color: 'text-slate-300', nameHover: 'group-hover:text-slate-100',
+    trim: 'Iron Flow Trim', rank: 4, points: 2, color: 'text-slate-300', nameHover: 'group-hover:text-slate-100',
     badge: 'border-slate-300/30 bg-slate-300/[0.06] text-slate-200 group-hover:border-slate-200/60 group-hover:bg-slate-300/[0.12]',
     accent: 'hover:border-slate-300/60 hover:ring-slate-300/15 hover:shadow-[0_0_30px_rgba(203,213,225,0.16)] focus-within:border-slate-300/60 focus-within:ring-slate-300/20',
     line: 'from-slate-100 via-slate-300/40 to-transparent',
@@ -69,7 +69,7 @@ const ROLE_CONFIG = {
     icon: Star, desc: 'Heir to the kingdom.'
   },
   Citizen: {
-    max: Infinity, trim: 'None', rank: 5, points: 1, color: 'text-stone-400', nameHover: 'group-hover:text-stone-200',
+    trim: 'None', rank: 5, points: 1, color: 'text-stone-400', nameHover: 'group-hover:text-stone-200',
     badge: 'border-stone-500/30 bg-stone-400/[0.04] text-stone-300 group-hover:border-stone-400/50 group-hover:bg-stone-400/[0.08]',
     accent: 'hover:border-stone-400/50 hover:ring-stone-400/10 hover:shadow-[0_0_24px_rgba(168,162,158,0.12)] focus-within:border-stone-400/50 focus-within:ring-stone-400/15',
     line: 'from-stone-300/80 via-stone-500/30 to-transparent',
@@ -120,12 +120,10 @@ export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortMode, setSortMode] = useState('rank');
-  const [selectedRoleFilter, setSelectedRoleFilter] = useState('');
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const profileDialogRef = useRef(null);
-  const rosterRef = useRef(null);
   const members = MEMBERS;
 
   useEffect(() => {
@@ -150,21 +148,11 @@ export default function KingdomHierarchy() {
     }
   }
 
-  function filterByRole(role) {
-    setSelectedRoleFilter(role);
-    setActiveFilter('All');
-    requestAnimationFrame(() => rosterRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  }
-
-  const filteredMembers = filterMembers(members, searchQuery, activeFilter, selectedRoleFilter);
+  const filteredMembers = filterMembers(members, searchQuery, activeFilter);
   const normalizedQuery = searchQuery.trim();
   const totalSouls = members.length;
   const highCouncilCount = members.filter(member => matchesMemberFilter(member, 'High Council')).length;
   const councilCount = members.filter(member => matchesMemberFilter(member, 'Council')).length;
-  const roleCoverage = getRoleCoverage(members, ROLE_CONFIG);
-  const vacantRoles = roleCoverage.filter(role => role.vacant > 0);
-  const openSeatCount = vacantRoles.reduce((total, role) => total + role.vacant, 0);
-  const rankVotingTotals = getRankVotingTotals(members, ROLE_CONFIG, RANK_TITLES);
   const totalVotingPower = members.reduce(
     (total, member) => total + getVotingPowerBreakdown(member, ROLE_CONFIG).points,
     0
@@ -215,12 +203,11 @@ export default function KingdomHierarchy() {
                   <p>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></p>
                 </div>
               </div>
-              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
                   { label: 'Council members', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
-                  { label: 'Open seats', value: openSeatCount, icon: DoorOpen, color: openSeatCount ? 'text-amber-300' : 'text-emerald-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="group/metric flex items-center gap-4 rounded-xl border border-stone-800/90 bg-gradient-to-br from-stone-900/80 to-black/30 p-4 shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:border-stone-700 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
                     <div className={`rounded-xl border border-white/5 bg-stone-800/80 p-3 transition duration-300 group-hover/metric:scale-105 ${color}`}><Icon size={20} /></div>
@@ -237,64 +224,6 @@ export default function KingdomHierarchy() {
               </p>
               <p className="mt-4 font-sans text-[11px] text-stone-500">Roster data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.</p>
             </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <section aria-labelledby="vacancies-title" className="rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/90 to-[#11120f]/90 p-5 shadow-xl shadow-black/10 md:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300/80">Realm staffing</p>
-                  <h2 id="vacancies-title" className="mt-1 text-lg font-bold text-stone-100">Open positions</h2>
-                </div>
-                <span className={`rounded-lg border px-2.5 py-1 text-xs font-bold ${openSeatCount ? 'border-amber-400/25 bg-amber-400/10 text-amber-200' : 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'}`}>
-                  {openSeatCount ? `${openSeatCount} open` : 'Fully staffed'}
-                </span>
-              </div>
-              {vacantRoles.length ? (
-                <ul className="mt-4 space-y-2">
-                  {vacantRoles.map(({ role, capacity, filled, vacant }) => (
-                    <li key={role}>
-                      <button
-                        type="button"
-                        aria-label={`Show members assigned as ${role}; ${vacant} seat${vacant === 1 ? '' : 's'} open`}
-                        aria-pressed={selectedRoleFilter === role}
-                        onClick={() => filterByRole(role)}
-                        className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-amber-400 ${selectedRoleFilter === role ? 'border-amber-400/50 bg-amber-400/[0.08]' : 'border-stone-800 bg-black/20 hover:border-amber-400/30 hover:bg-amber-400/[0.04]'}`}
-                      >
-                        <span className="text-sm text-stone-300">{role}</span>
-                        <span className="shrink-0 text-xs tabular-nums text-amber-200">{filled}/{capacity} filled <span className="text-stone-600">·</span> {vacant} open</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-4 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] px-3 py-3 text-sm text-stone-400">Every limited-seat role is currently filled.</p>
-              )}
-              <p className="mt-3 text-[11px] leading-relaxed text-stone-600">Secondary role assignments count toward that role’s seat limit. Unlimited roles are not listed.</p>
-            </section>
-
-            <section aria-labelledby="rank-power-title" className="rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/90 to-[#11120f]/90 p-5 shadow-xl shadow-black/10 md:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300/80">Voting overview</p>
-                  <h2 id="rank-power-title" className="mt-1 text-lg font-bold text-stone-100">Power by rank</h2>
-                </div>
-                <Scale className="mt-1 text-sky-300" size={18} />
-              </div>
-              <ul className="mt-4 space-y-2">
-                {rankVotingTotals.map(({ rank, title, memberCount, votingPower }) => (
-                  <li key={rank} className="flex items-center justify-between gap-3 rounded-lg border border-stone-800 bg-black/20 px-3 py-2.5">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${rank === 1 ? 'bg-blue-300' : rank === 2 ? 'bg-stone-300' : rank === 3 ? 'bg-purple-300' : rank === 4 ? 'bg-slate-300' : 'bg-stone-500'}`} />
-                      <span className="truncate text-sm text-stone-300">{title}</span>
-                      <span className="text-xs text-stone-600">{memberCount}</span>
-                    </div>
-                    <span className="shrink-0 text-sm font-bold tabular-nums text-sky-200">{votingPower} pts</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-3 text-[11px] leading-relaxed text-stone-600">Each member is counted once under their primary role’s rank; totals add up to realm voting power.</p>
-            </section>
           </div>
 
           <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/95 to-[#11120f]/95 p-3 shadow-xl shadow-black/10 sm:p-4 md:flex-row md:items-center md:justify-between md:p-5">
@@ -321,7 +250,7 @@ export default function KingdomHierarchy() {
                   key={value}
                   type="button"
                   aria-pressed={activeFilter === value}
-                  onClick={() => { setActiveFilter(value); setSelectedRoleFilter(''); }}
+                  onClick={() => setActiveFilter(value)}
                   className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                     activeFilter === value
                       ? 'border-amber-600/60 bg-amber-950/50 text-amber-200'
@@ -348,13 +277,7 @@ export default function KingdomHierarchy() {
           <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
-            {selectedRoleFilter && <> in role <span className="text-stone-300">{selectedRoleFilter}</span></>}
           </p>
-          {selectedRoleFilter && (
-            <button type="button" onClick={() => setSelectedRoleFilter('')} className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-400/10 focus:outline-none focus:ring-2 focus:ring-amber-400">
-              <X size={13} /> Clear role filter
-            </button>
-          )}
           {(copiedUsername || copyFailed) && (
             <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
               {copyFailed ? 'Could not copy username. Check clipboard permissions and try again.' : `Copied ${copiedUsername} to clipboard.`}
@@ -362,13 +285,13 @@ export default function KingdomHierarchy() {
           )}
         </header>
 
-        <main ref={rosterRef} id="member-roster" className="scroll-mt-6 flex flex-col gap-10">
+        <main id="member-roster" className="scroll-mt-6 flex flex-col gap-10">
           {filteredMembers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
-              <h2 className="text-lg font-semibold text-stone-200">{selectedRoleFilter ? 'No members assigned to this role' : 'No members found'}</h2>
-              <p className="mt-2 text-sm text-stone-500">{selectedRoleFilter ? `${selectedRoleFilter} is currently an open position.` : 'Try another search or clear the current filters.'}</p>
-              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRoleFilter(''); }} className="mt-5 min-h-11 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+              <h2 className="text-lg font-semibold text-stone-200">No members found</h2>
+              <p className="mt-2 text-sm text-stone-500">Try another search or clear the current filters.</p>
+              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); }} className="mt-5 min-h-11 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 Reset search and filters
               </button>
             </div>
