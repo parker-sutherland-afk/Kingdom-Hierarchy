@@ -29,7 +29,7 @@ export function matchesMemberFilter(member, filter) {
   return true;
 }
 
-export function filterMembers(members, searchQuery, activeFilter) {
+export function filterMembers(members, searchQuery, activeFilter, selectedRole = '') {
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   return members.filter(member => {
@@ -41,7 +41,12 @@ export function filterMembers(members, searchQuery, activeFilter) {
       member.customDesc,
     ].filter(Boolean).join(' ').toLowerCase();
 
-    return searchableText.includes(normalizedQuery) && matchesMemberFilter(member, activeFilter);
+    const matchesRole = !selectedRole ||
+      memberRoles(member).includes(selectedRole);
+
+    return searchableText.includes(normalizedQuery) &&
+      matchesMemberFilter(member, activeFilter) &&
+      matchesRole;
   });
 }
 
@@ -123,4 +128,64 @@ export function getRankVotingTotals(members, roleConfig, rankTitles) {
       };
     })
     .filter(section => section.memberCount > 0);
+}
+
+export function validateRoster(members, roleConfig) {
+  if (!Array.isArray(members)) return 'Roster data must be a list of members.';
+  if (members.length === 0) return 'Roster must include at least one member.';
+
+  const memberIds = new Set();
+  const roleAssignments = new Map();
+
+  for (const [index, member] of members.entries()) {
+    const position = `Member ${index + 1}`;
+
+    if (!member || typeof member !== 'object' || Array.isArray(member)) {
+      return `${position} must be a valid member record.`;
+    }
+
+    if (!Number.isSafeInteger(member.id) || member.id < 1 || memberIds.has(member.id)) {
+      return `${position} needs a unique positive whole-number ID.`;
+    }
+    memberIds.add(member.id);
+
+    if (typeof member.name !== 'string' || !member.name.trim()) {
+      return `${position} needs a display name.`;
+    }
+    if (typeof member.mcName !== 'string' || !member.mcName.trim()) {
+      return `${position} needs a Minecraft username.`;
+    }
+    if (!Object.hasOwn(roleConfig, member.role)) {
+      return `${member.name} has an unknown primary role.`;
+    }
+    if (member.secondaryRole && !Object.hasOwn(roleConfig, member.secondaryRole)) {
+      return `${member.name} has an unknown secondary role.`;
+    }
+    if (member.secondaryRole === member.role) {
+      return `${member.name} cannot have the same primary and secondary role.`;
+    }
+    if (
+      member.customPoints !== undefined &&
+      member.customPoints !== null &&
+      (!Number.isFinite(member.customPoints) || member.customPoints < 0)
+    ) {
+      return `${member.name} needs a non-negative number for custom voting points.`;
+    }
+    if (member.customDesc !== undefined && typeof member.customDesc !== 'string') {
+      return `${member.name}'s description must be text.`;
+    }
+
+    for (const role of memberRoles(member)) {
+      roleAssignments.set(role, (roleAssignments.get(role) ?? 0) + 1);
+    }
+  }
+
+  for (const [role, assigned] of roleAssignments) {
+    const capacity = roleConfig[role].max;
+    if (Number.isFinite(capacity) && assigned > capacity) {
+      return `${role} has ${assigned} assignments but only ${capacity} available seat${capacity === 1 ? '' : 's'}.`;
+    }
+  }
+
+  return null;
 }

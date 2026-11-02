@@ -9,6 +9,7 @@ import {
   getVotingPowerBreakdown,
   matchesMemberFilter,
   sortByVotingPower,
+  validateRoster,
 } from '../rosterUtils.js';
 
 const members = JSON.parse(
@@ -50,6 +51,17 @@ test('High Council and Military filters include matching secondary roles', () =>
 test('search includes Minecraft usernames and descriptions', () => {
   assert.deepEqual(filterMembers(members, 'eighthsea6218', 'All').map(member => member.name), ['Will']);
   assert.deepEqual(filterMembers(members, 'sovereign overlord', 'All').map(member => member.name), ['Will']);
+});
+
+test('a vacancy role filter returns only members assigned that role', () => {
+  assert.deepEqual(
+    filterMembers(members, '', 'All', 'Head Of Combat And War').map(member => member.name),
+    ['Darcy']
+  );
+  assert.deepEqual(
+    filterMembers(members, '', 'All', 'Head Of General Purpose Resources'),
+    []
+  );
 });
 
 test('voting power adds role points unless custom points override them', () => {
@@ -113,4 +125,19 @@ test('rank voting totals attribute each member once and sum to total power', () 
     { title: 'CITIZENS', memberCount: 3, votingPower: 3 },
   ]);
   assert.equal(totals.reduce((sum, section) => sum + section.votingPower, 0), 22);
+});
+
+test('roster validation accepts current data and rejects duplicate IDs and overfilled seats', () => {
+  assert.equal(validateRoster(members, roleConfig), null);
+  assert.match(validateRoster([], roleConfig), /at least one member/);
+  assert.match(validateRoster([members[0], { ...members[1], id: members[0].id }], roleConfig), /unique/);
+  assert.match(
+    validateRoster([
+      members[0],
+      members[1],
+      { ...members[2], id: 11 },
+      { ...members[1], id: 12, name: 'Extra Advisor' },
+    ], roleConfig),
+    /Advisor has 3 assignments but only 2 available seats/
+  );
 });
