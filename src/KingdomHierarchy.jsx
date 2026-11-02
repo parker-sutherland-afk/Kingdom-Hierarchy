@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
@@ -122,6 +122,19 @@ export default function KingdomHierarchy() {
   const [sortMode, setSortMode] = useState('rank');
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const profileDialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = profileDialogRef.current;
+    if (!dialog) return;
+
+    if (selectedMember && !dialog.open) {
+      dialog.showModal();
+    } else if (!selectedMember && dialog.open) {
+      dialog.close();
+    }
+  }, [selectedMember]);
 
   async function copyUsername(username) {
     try {
@@ -139,6 +152,10 @@ export default function KingdomHierarchy() {
   const totalSouls = MEMBERS.length;
   const highCouncilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'High Council')).length;
   const councilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'Council')).length;
+  const roleCoverage = getRoleCoverage(MEMBERS, ROLE_CONFIG);
+  const vacantRoles = roleCoverage.filter(role => role.vacant > 0);
+  const openSeatCount = vacantRoles.reduce((total, role) => total + role.vacant, 0);
+  const rankVotingTotals = getRankVotingTotals(MEMBERS, ROLE_CONFIG, RANK_TITLES);
   const totalVotingPower = MEMBERS.reduce(
     (total, member) => total + getVotingPowerBreakdown(member, ROLE_CONFIG).points,
     0
@@ -183,11 +200,12 @@ export default function KingdomHierarchy() {
                   <p>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></p>
                 </div>
               </div>
-              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
                   { label: 'Council members', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
+                  { label: 'Open seats', value: openSeatCount, icon: DoorOpen, color: openSeatCount ? 'text-amber-300' : 'text-emerald-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="flex items-center gap-4 rounded-xl border border-stone-800 bg-black/25 p-4">
                     <div className={`rounded-lg bg-stone-800/80 p-3 ${color}`}><Icon size={20} /></div>
@@ -203,6 +221,56 @@ export default function KingdomHierarchy() {
                 <span>Role points add across primary and secondary roles. A custom allocation replaces that total. Use the sort menu to compare members by voting power.</span>
               </p>
             </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <section aria-labelledby="vacancies-title" className="rounded-2xl border border-stone-800 bg-stone-900/60 p-5 md:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300/80">Realm staffing</p>
+                  <h2 id="vacancies-title" className="mt-1 text-lg font-bold text-stone-100">Open positions</h2>
+                </div>
+                <span className={`rounded-lg border px-2.5 py-1 text-xs font-bold ${openSeatCount ? 'border-amber-400/25 bg-amber-400/10 text-amber-200' : 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'}`}>
+                  {openSeatCount ? `${openSeatCount} open` : 'Fully staffed'}
+                </span>
+              </div>
+              {vacantRoles.length ? (
+                <ul className="mt-4 space-y-2">
+                  {vacantRoles.map(({ role, capacity, filled, vacant }) => (
+                    <li key={role} className="flex items-center justify-between gap-3 rounded-lg border border-stone-800 bg-black/20 px-3 py-2.5">
+                      <span className="text-sm text-stone-300">{role}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-amber-200">{filled}/{capacity} filled <span className="text-stone-600">·</span> {vacant} open</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] px-3 py-3 text-sm text-stone-400">Every limited-seat role is currently filled.</p>
+              )}
+              <p className="mt-3 text-[11px] leading-relaxed text-stone-600">Secondary role assignments count toward that role’s seat limit. Unlimited roles are not listed.</p>
+            </section>
+
+            <section aria-labelledby="rank-power-title" className="rounded-2xl border border-stone-800 bg-stone-900/60 p-5 md:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300/80">Voting overview</p>
+                  <h2 id="rank-power-title" className="mt-1 text-lg font-bold text-stone-100">Power by rank</h2>
+                </div>
+                <Scale className="mt-1 text-sky-300" size={18} />
+              </div>
+              <ul className="mt-4 space-y-2">
+                {rankVotingTotals.map(({ rank, title, memberCount, votingPower }) => (
+                  <li key={rank} className="flex items-center justify-between gap-3 rounded-lg border border-stone-800 bg-black/20 px-3 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${rank === 1 ? 'bg-blue-300' : rank === 2 ? 'bg-stone-300' : rank === 3 ? 'bg-purple-300' : rank === 4 ? 'bg-slate-300' : 'bg-stone-500'}`} />
+                      <span className="truncate text-sm text-stone-300">{title}</span>
+                      <span className="text-xs text-stone-600">{memberCount}</span>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold tabular-nums text-sky-200">{votingPower} pts</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[11px] leading-relaxed text-stone-600">Each member is counted once under their primary role’s rank; totals add up to realm voting power.</p>
+            </section>
           </div>
 
           <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-4 md:flex-row md:items-center md:justify-between md:p-5">
@@ -343,6 +411,13 @@ export default function KingdomHierarchy() {
                               <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
                             </details>
                             {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400">{displayDesc}</p>}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedMember(member)}
+                              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
+                            >
+                              View full profile <span aria-hidden="true">→</span>
+                            </button>
                           </div>
                         </article>
                       );
@@ -352,6 +427,78 @@ export default function KingdomHierarchy() {
               ))
           )}
         </main>
+        <dialog
+          ref={profileDialogRef}
+          aria-labelledby="member-profile-title"
+          aria-describedby="member-profile-description"
+          onClose={() => setSelectedMember(null)}
+          className="max-h-[85vh] w-[min(42rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm"
+        >
+          {selectedMember && (() => {
+            const config = ROLE_CONFIG[selectedMember.role];
+            const secondaryConfig = selectedMember.secondaryRole
+              ? ROLE_CONFIG[selectedMember.secondaryRole]
+              : null;
+            const votingPower = getVotingPowerBreakdown(selectedMember, ROLE_CONFIG);
+
+            return (
+              <div className="relative overflow-hidden">
+                <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${config?.line}`} />
+                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${config?.wash}`} />
+                <div className="relative p-6 sm:p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="scale-125"><MemberAvatar member={selectedMember} config={config} /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Member profile</p>
+                        <h2 id="member-profile-title" className={`mt-1 truncate text-2xl font-black ${config?.color}`}>{selectedMember.name}</h2>
+                        <p className="mt-1 truncate font-sans text-sm text-stone-400">@{selectedMember.mcName}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Close member profile"
+                      onClick={() => profileDialogRef.current?.close()}
+                      className="rounded-lg border border-stone-700 bg-stone-900/80 p-2 text-stone-400 transition hover:border-stone-500 hover:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className={`rounded-xl border p-4 ${config?.badge}`}>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">Primary role</p>
+                      <p className="mt-1 text-sm font-semibold">{selectedMember.role}</p>
+                      {config?.trim !== 'None' && <p className="mt-1 text-xs opacity-80">✦ {config?.trim}</p>}
+                    </div>
+                    {selectedMember.secondaryRole && (
+                      <div className={`rounded-xl border p-4 ${secondaryConfig?.badge}`}>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">Secondary role</p>
+                        <p className="mt-1 text-sm font-semibold">{selectedMember.secondaryRole}</p>
+                        {secondaryConfig?.trim && secondaryConfig.trim !== 'None' && <p className="mt-1 text-xs opacity-80">✦ {secondaryConfig.trim}</p>}
+                      </div>
+                    )}
+                  </div>
+
+                  <section className="mt-4 rounded-xl border border-sky-400/20 bg-sky-400/[0.04] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-bold text-sky-100">Voting power</h3>
+                      <span className="text-lg font-black tabular-nums text-sky-200">{votingPower.points} pts</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-stone-400">{describeVotingPower(selectedMember, ROLE_CONFIG)}</p>
+                  </section>
+
+                  <section className="mt-5">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">About</h3>
+                    <p id="member-profile-description" className="mt-2 text-sm leading-relaxed text-stone-300">
+                      {selectedMember.customDesc || config?.desc}
+                    </p>
+                  </section>
+                </div>
+              </div>
+            );
+          })()}
+        </dialog>
       </div>
     </div>
   );
