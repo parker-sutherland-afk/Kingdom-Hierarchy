@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2 } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
@@ -87,6 +87,31 @@ const RANK_ACCENTS = {
   4: 'text-slate-200 border-slate-300/25 bg-slate-300/[0.05]',
   5: 'text-stone-300 border-stone-600/50 bg-stone-800/60',
 };
+
+function getMemberFromUrl(members) {
+  const requestedId = new URLSearchParams(window.location.search).get('member');
+  if (!requestedId || !/^\d+$/.test(requestedId)) return null;
+  return members.find(member => member.id === Number(requestedId)) ?? null;
+}
+
+function updateMemberUrl(memberId, method = 'push') {
+  const url = new URL(window.location.href);
+  if (memberId === null) url.searchParams.delete('member');
+  else url.searchParams.set('member', String(memberId));
+
+  const nextState = { ...(window.history.state ?? {}) };
+  if (memberId === null) delete nextState.memberProfileId;
+  else nextState.memberProfileId = memberId;
+  window.history[`${method}State`](nextState, '', url);
+}
+
+function HighlightedText({ text, query }) {
+  return splitSearchHighlights(text, query).map((part, index) => (
+    part.matched
+      ? <mark key={index} className="rounded-sm bg-amber-300/20 px-0.5 text-amber-100">{part.text}</mark>
+      : <React.Fragment key={index}>{part.text}</React.Fragment>
+  ));
+}
 
 function MemberAvatar({ member, config }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -319,9 +344,44 @@ export default function KingdomHierarchy() {
   const [selectedRole, setSelectedRole] = useState('');
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [profileLinkStatus, setProfileLinkStatus] = useState('');
+  const [selectedMember, setSelectedMember] = useState(() => getMemberFromUrl(MEMBERS));
   const profileDialogRef = useRef(null);
+  const searchInputRef = useRef(null);
   const members = MEMBERS;
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setProfileLinkStatus('');
+      setSelectedMember(getMemberFromUrl(members));
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    if (new URLSearchParams(window.location.search).has('member') && !getMemberFromUrl(members)) {
+      updateMemberUrl(null, 'replace');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [members]);
+
+  useEffect(() => {
+    function handleSearchShortcut(event) {
+      if (event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (profileDialogRef.current?.open) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      ) return;
+
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    }
+
+    window.addEventListener('keydown', handleSearchShortcut);
+    return () => window.removeEventListener('keydown', handleSearchShortcut);
+  }, []);
 
   useEffect(() => {
     const dialog = profileDialogRef.current;
@@ -343,6 +403,41 @@ export default function KingdomHierarchy() {
       setCopiedUsername('');
       setCopyFailed(true);
     }
+  }
+
+  function openMemberProfile(member) {
+    if (selectedMember?.id === member.id) return;
+    updateMemberUrl(member.id);
+    setProfileLinkStatus('');
+    setSelectedMember(member);
+  }
+
+  function closeMemberProfile() {
+    profileDialogRef.current?.close();
+  }
+
+  function handleProfileDialogClose() {
+    if (new URLSearchParams(window.location.search).has('member')) updateMemberUrl(null, 'replace');
+    setSelectedMember(null);
+  }
+
+  async function copyMemberProfileLink() {
+    const url = new URL(window.location.href);
+    if (selectedMember) url.searchParams.set('member', String(selectedMember.id));
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setProfileLinkStatus('Profile link copied.');
+    } catch (error) {
+      setProfileLinkStatus(
+        `Could not copy the profile link: ${error instanceof Error ? error.message : 'clipboard access is unavailable.'}`
+      );
+    }
+  }
+
+  function filterByRole(role) {
+    setSelectedRole(role);
+    setActiveFilter('All');
   }
 
   const filteredMembers = filterMembers(members, searchQuery, activeFilter, selectedRole);
@@ -382,6 +477,9 @@ export default function KingdomHierarchy() {
   return (
     <div className="min-h-screen bg-[#0b0d0b] text-stone-200 font-serif selection:bg-amber-900/70 selection:text-amber-50 pb-16">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,34,0.13),_transparent_55%)]" />
+      <a href="#member-roster" className="sr-only z-[100] rounded-lg bg-amber-300 px-4 py-3 font-sans font-bold text-stone-950 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+        Skip to member roster
+      </a>
       <div className="relative mx-auto max-w-6xl px-3 py-6 sm:px-4 md:px-8 md:py-12">
         <header className="mb-10">
           <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-4 py-6 shadow-2xl sm:px-6 sm:py-8 md:px-10 md:py-10">
@@ -446,17 +544,26 @@ export default function KingdomHierarchy() {
 
               <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.85fr)_minmax(0,0.85fr)]">
                 <div>
-                  <label htmlFor="member-search" className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Search the roster</label>
+                  <label htmlFor="member-search" className="mb-1.5 flex items-center justify-between font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">
+                    Search the roster
+                    <span className="hidden items-center gap-1 font-medium normal-case tracking-normal text-stone-400 sm:inline-flex">
+                      <kbd className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-[9px]">/</kbd> to focus
+                    </span>
+                  </label>
                   <div className="relative">
                     <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-amber-500/70" size={16} />
                     <input
+                      ref={searchInputRef}
                       id="member-search"
                       type="search"
                       placeholder="Name, username, or role..."
+                      aria-keyshortcuts="/"
+                      aria-describedby="search-shortcut-hint"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       className="h-11 w-full rounded-xl border border-stone-700/90 bg-black/30 py-2.5 pl-10 pr-10 font-sans text-sm text-stone-100 placeholder:text-stone-600 transition placeholder:transition-colors hover:border-stone-600 hover:placeholder:text-stone-500 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
                     />
+                    <span id="search-shortcut-hint" className="sr-only">Press slash to focus search. The shortcut is ignored while typing in a text field.</span>
                     {searchQuery && (
                       <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-stone-500 transition hover:bg-stone-800 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
                         <X size={14} />
@@ -465,7 +572,7 @@ export default function KingdomHierarchy() {
                   </div>
                 </div>
                 <div className="block min-w-0">
-                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Position</span>
+                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Position</span>
                   <ThemedDropdown
                     id="role-filter"
                     label="Filter by exact role"
@@ -478,7 +585,7 @@ export default function KingdomHierarchy() {
                   />
                 </div>
                 <div className="block min-w-0">
-                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Arrange by</span>
+                  <span className="mb-1.5 block font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Arrange by</span>
                   <ThemedDropdown
                     id="member-sort"
                     label="Sort members"
@@ -496,7 +603,7 @@ export default function KingdomHierarchy() {
 
             <div className="border-t border-stone-800/80 bg-black/15 px-4 py-3 sm:px-5">
               <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">Browse by group</p>
+                <p className="font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Browse by group</p>
                 {(activeFilter !== 'All' || selectedRole || searchQuery) && (
                   <button
                     type="button"
@@ -531,7 +638,7 @@ export default function KingdomHierarchy() {
               </div>
             </div>
           </section>
-          <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
+          <p className="mt-3 px-1 text-xs text-stone-400" role="status" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
             {selectedRole && <> with role <span className="text-stone-300">{selectedRole}</span></>}
@@ -543,7 +650,7 @@ export default function KingdomHierarchy() {
           )}
         </header>
 
-        <main id="member-roster" className="scroll-mt-6 flex flex-col gap-10">
+        <main id="member-roster" tabIndex={-1} aria-label="Kingdom member roster" className="scroll-mt-6 flex flex-col gap-10 focus:outline-none">
           {filteredMembers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
@@ -581,9 +688,9 @@ export default function KingdomHierarchy() {
                               <div className="flex min-w-0 items-center gap-3">
                                 <MemberAvatar member={member} config={config} />
                                 <div className="min-w-0">
-                                  <h3 className={`truncate text-lg font-black tracking-wide text-stone-100 transition-colors ${config?.nameHover}`}>{member.name}</h3>
+                                  <h3 className={`truncate text-lg font-black tracking-wide text-stone-100 transition-colors ${config?.nameHover}`}><HighlightedText text={member.name} query={normalizedQuery} /></h3>
                                   <div className="mt-0.5 flex min-w-0 items-center gap-1 font-sans text-xs text-stone-500">
-                                    <span className="truncate">@{member.mcName}</span>
+                                    <span className="truncate">@<HighlightedText text={member.mcName} query={normalizedQuery} /></span>
                                     <button
                                       type="button"
                                       aria-label={`Copy ${member.mcName} Minecraft username`}
@@ -608,16 +715,28 @@ export default function KingdomHierarchy() {
                             <div className="mt-4 grid gap-2">
                               <div className="flex min-w-0 flex-wrap items-center gap-2">
                                 <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Primary</span>
-                                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${config?.badge}`}>
-                                  <Icon className={config?.color} size={13} /><span className="truncate">{member.role}</span>
-                                </div>
+                                <button
+                                  type="button"
+                                  aria-label={`Filter roster by primary role ${member.role}`}
+                                  aria-pressed={selectedRole === member.role}
+                                  onClick={() => filterByRole(member.role)}
+                                  className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${config?.badge}`}
+                                >
+                                  <Icon aria-hidden="true" className={config?.color} size={13} /><span className="truncate"><HighlightedText text={member.role} query={normalizedQuery} /></span>
+                                </button>
                               </div>
                               {member.secondaryRole && secCfg && SecIcon && (
                                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                                   <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Secondary</span>
-                                  <div className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors ${secCfg.badge}`}>
-                                    <SecIcon className={secCfg.color} size={13} /><span className="truncate">{member.secondaryRole}</span>
-                                  </div>
+                                  <button
+                                    type="button"
+                                    aria-label={`Filter roster by secondary role ${member.secondaryRole}`}
+                                    aria-pressed={selectedRole === member.secondaryRole}
+                                    onClick={() => filterByRole(member.secondaryRole)}
+                                    className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${secCfg.badge}`}
+                                  >
+                                    <SecIcon aria-hidden="true" className={secCfg.color} size={13} /><span className="truncate"><HighlightedText text={member.secondaryRole} query={normalizedQuery} /></span>
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -630,10 +749,10 @@ export default function KingdomHierarchy() {
                               <summary className="min-h-10 cursor-pointer py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:text-amber-200 focus-visible:underline">Primary-role voting points</summary>
                               <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
                             </details>
-                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3">{displayDesc}</p>}
+                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3"><HighlightedText text={displayDesc} query={normalizedQuery} /></p>}
                             <button
                               type="button"
-                              onClick={() => setSelectedMember(member)}
+                              onClick={() => openMemberProfile(member)}
                               className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
                             >
                               View full profile <span aria-hidden="true">→</span>
@@ -651,9 +770,9 @@ export default function KingdomHierarchy() {
           ref={profileDialogRef}
           aria-labelledby="member-profile-title"
           aria-describedby="member-profile-description"
-          onClose={() => setSelectedMember(null)}
+          onClose={handleProfileDialogClose}
           onClick={event => {
-            if (event.target === event.currentTarget) profileDialogRef.current?.close();
+            if (event.target === event.currentTarget) closeMemberProfile();
           }}
           className="max-h-[min(85dvh,48rem)] w-[min(42rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-stone-700 bg-[#11120f] p-0 text-stone-200 shadow-2xl backdrop:bg-black/75 backdrop:backdrop-blur-sm"
         >
@@ -681,7 +800,7 @@ export default function KingdomHierarchy() {
                     <button
                       type="button"
                       aria-label="Close member profile"
-                      onClick={() => profileDialogRef.current?.close()}
+                      onClick={closeMemberProfile}
                       className="rounded-lg border border-stone-700 bg-stone-900/80 p-2 text-stone-400 transition hover:border-stone-500 hover:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
                       <X size={18} />
@@ -717,6 +836,22 @@ export default function KingdomHierarchy() {
                       {selectedMember.customDesc || config?.desc}
                     </p>
                   </section>
+
+                  <div className="mt-6 border-t border-stone-800/80 pt-4">
+                    <button
+                      type="button"
+                      onClick={copyMemberProfileLink}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-stone-700 bg-stone-900/70 px-4 py-2 font-sans text-xs font-semibold text-stone-200 transition hover:border-amber-500/50 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+                    >
+                      <Link2 aria-hidden="true" size={15} />
+                      Copy profile link
+                    </button>
+                    {profileLinkStatus && (
+                      <p className={`mt-2 text-xs ${profileLinkStatus.startsWith('Could not') ? 'text-rose-300' : 'text-emerald-300'}`} role="status" aria-live="polite">
+                        {profileLinkStatus}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             );

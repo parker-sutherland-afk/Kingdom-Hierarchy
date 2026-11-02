@@ -5,6 +5,19 @@ function memberRoles(member) {
   return [member.role, member.secondaryRole].filter(Boolean);
 }
 
+export function splitSearchHighlights(text, query) {
+  const normalizedQuery = query.trim();
+  if (!normalizedQuery) return [{ text, matched: false }];
+
+  const escapedQuery = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escapedQuery})`, 'gi')).filter(Boolean);
+
+  return parts.map(part => ({
+    text: part,
+    matched: part.toLocaleLowerCase() === normalizedQuery.toLocaleLowerCase(),
+  }));
+}
+
 export function matchesMemberFilter(member, filter) {
   const roles = memberRoles(member);
 

@@ -6,6 +6,7 @@ import {
   filterMembers,
   getVotingPowerBreakdown,
   matchesMemberFilter,
+  splitSearchHighlights,
   sortByName,
   sortByVotingPower,
 } from '../rosterUtils.js';
@@ -49,6 +50,20 @@ test('High Council and Military filters include matching secondary roles', () =>
 test('search includes Minecraft usernames and descriptions', () => {
   assert.deepEqual(filterMembers(members, 'eighthsea6218', 'All').map(member => member.name), ['Will']);
   assert.deepEqual(filterMembers(members, 'sovereign overlord', 'All').map(member => member.name), ['Will']);
+});
+
+test('search highlighting safely matches case-insensitive text and literal regex characters', () => {
+  assert.deepEqual(splitSearchHighlights('Darcy Advisor', 'advisor'), [
+    { text: 'Darcy ', matched: false },
+    { text: 'Advisor', matched: true },
+  ]);
+  assert.deepEqual(splitSearchHighlights('A.B and Axb', 'a.b'), [
+    { text: 'A.B', matched: true },
+    { text: ' and Axb', matched: false },
+  ]);
+  assert.deepEqual(splitSearchHighlights('Parker', ''), [
+    { text: 'Parker', matched: false },
+  ]);
 });
 
 test('exact role filtering matches primary and secondary role assignments', () => {
