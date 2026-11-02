@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen, Pencil } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import RosterEditor from './RosterEditor.jsx';
-import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower, validateRoster } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
@@ -88,34 +87,6 @@ const RANK_ACCENTS = {
   5: 'text-stone-300 border-stone-600/50 bg-stone-800/60',
 };
 
-const ROSTER_STORAGE_KEY = 'kingdom-hierarchy.roster.v1';
-const ROLE_NAMES = Object.keys(ROLE_CONFIG);
-
-function readRosterState() {
-  try {
-    const savedRoster = window.localStorage.getItem(ROSTER_STORAGE_KEY);
-    if (savedRoster === null) return { members: MEMBERS, isModified: false, error: '' };
-
-    const parsedRoster = JSON.parse(savedRoster);
-    const validationError = validateRoster(parsedRoster, ROLE_CONFIG);
-    if (validationError) {
-      return {
-        members: MEMBERS,
-        isModified: false,
-        error: `Saved browser roster was invalid and has not been loaded: ${validationError}`,
-      };
-    }
-
-    return { members: parsedRoster, isModified: true, error: '' };
-  } catch (error) {
-    return {
-      members: MEMBERS,
-      isModified: false,
-      error: `Could not read the saved browser roster: ${error instanceof Error ? error.message : 'unknown storage error'}`,
-    };
-  }
-}
-
 function MemberAvatar({ member, config }) {
   const [imageFailed, setImageFailed] = useState(false);
   const nameParts = member.name.trim().split(/\s+/);
@@ -150,14 +121,12 @@ export default function KingdomHierarchy() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortMode, setSortMode] = useState('rank');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState('');
-  const [rosterState, setRosterState] = useState(readRosterState);
-  const [editorOpen, setEditorOpen] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const profileDialogRef = useRef(null);
   const rosterRef = useRef(null);
-  const members = rosterState.members;
+  const members = MEMBERS;
 
   useEffect(() => {
     const dialog = profileDialogRef.current;
@@ -179,32 +148,6 @@ export default function KingdomHierarchy() {
       setCopiedUsername('');
       setCopyFailed(true);
     }
-  }
-
-  function saveRoster(nextMembers) {
-    const validationError = validateRoster(nextMembers, ROLE_CONFIG);
-    if (validationError) throw new Error(validationError);
-
-    try {
-      window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(nextMembers));
-    } catch (error) {
-      throw new Error(`Could not save roster in this browser: ${error instanceof Error ? error.message : 'storage unavailable'}`);
-    }
-
-    setRosterState({ members: nextMembers, isModified: true, error: '' });
-  }
-
-  function resetRoster() {
-    try {
-      window.localStorage.removeItem(ROSTER_STORAGE_KEY);
-    } catch (error) {
-      throw new Error(`Could not reset the saved roster: ${error instanceof Error ? error.message : 'storage unavailable'}`);
-    }
-
-    setRosterState({ members: MEMBERS, isModified: false, error: '' });
-    setSelectedRoleFilter('');
-    setActiveFilter('All');
-    setSearchQuery('');
   }
 
   function filterByRole(role) {
@@ -253,18 +196,14 @@ export default function KingdomHierarchy() {
           <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-4 py-6 shadow-2xl sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="absolute -right-10 -top-14 text-amber-100/[0.035]"><Crown size={260} strokeWidth={0.7} /></div>
             <div className="relative">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditorOpen(true)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:border-amber-300/60 hover:bg-amber-400/20 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                >
-                  <Pencil size={14} /> Edit roster
-                  {rosterState.isModified && <span className="rounded-full bg-amber-300 px-1.5 py-0.5 text-[9px] font-black text-stone-950">SAVED HERE</span>}
-                </button>
+                <div className="inline-flex items-center gap-2 rounded-full border border-stone-700/70 bg-black/20 px-3 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Live roster viewer
+                </div>
               </div>
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                 <div>
@@ -283,8 +222,8 @@ export default function KingdomHierarchy() {
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
                   { label: 'Open seats', value: openSeatCount, icon: DoorOpen, color: openSeatCount ? 'text-amber-300' : 'text-emerald-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="flex items-center gap-4 rounded-xl border border-stone-800 bg-black/25 p-4">
-                    <div className={`rounded-lg bg-stone-800/80 p-3 ${color}`}><Icon size={20} /></div>
+                  <div key={label} className="group/metric flex items-center gap-4 rounded-xl border border-stone-800/90 bg-gradient-to-br from-stone-900/80 to-black/30 p-4 shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:border-stone-700 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
+                    <div className={`rounded-xl border border-white/5 bg-stone-800/80 p-3 transition duration-300 group-hover/metric:scale-105 ${color}`}><Icon size={20} /></div>
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">{label}</div>
                       <div className="mt-0.5 text-2xl font-black text-stone-100">{value}</div>
@@ -296,12 +235,12 @@ export default function KingdomHierarchy() {
                 <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
                 <span>Role points add across primary and secondary roles. A custom allocation replaces that total. Use the sort menu to compare members by voting power.</span>
               </p>
-              {rosterState.error && <p className="mt-3 rounded-lg border border-rose-400/25 bg-rose-400/[0.06] px-4 py-3 text-xs leading-relaxed text-rose-200" role="alert">{rosterState.error}</p>}
+              <p className="mt-4 font-sans text-[11px] text-stone-500">Roster data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.</p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <section aria-labelledby="vacancies-title" className="rounded-2xl border border-stone-800 bg-stone-900/60 p-5 md:p-6">
+            <section aria-labelledby="vacancies-title" className="rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/90 to-[#11120f]/90 p-5 shadow-xl shadow-black/10 md:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300/80">Realm staffing</p>
@@ -334,7 +273,7 @@ export default function KingdomHierarchy() {
               <p className="mt-3 text-[11px] leading-relaxed text-stone-600">Secondary role assignments count toward that role’s seat limit. Unlimited roles are not listed.</p>
             </section>
 
-            <section aria-labelledby="rank-power-title" className="rounded-2xl border border-stone-800 bg-stone-900/60 p-5 md:p-6">
+            <section aria-labelledby="rank-power-title" className="rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/90 to-[#11120f]/90 p-5 shadow-xl shadow-black/10 md:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300/80">Voting overview</p>
@@ -358,7 +297,7 @@ export default function KingdomHierarchy() {
             </section>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-3 sm:p-4 md:flex-row md:items-center md:justify-between md:p-5">
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/95 to-[#11120f]/95 p-3 shadow-xl shadow-black/10 sm:p-4 md:flex-row md:items-center md:justify-between md:p-5">
             <div className="relative w-full md:max-w-md">
               <label htmlFor="member-search" className="sr-only">Search members</label>
               <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
@@ -453,7 +392,7 @@ export default function KingdomHierarchy() {
                       const displayDesc = member.customDesc || config?.desc;
                       
                       return (
-                        <article key={member.id} className={`group relative isolate overflow-hidden rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] transition duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:ring-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
+                        <article key={member.id} className={`group relative isolate overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
                           <div aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br ${config?.wash} opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none`} />
                           <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${config?.line} opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100`} />
                           <div className="relative flex h-full flex-col p-5">
@@ -590,16 +529,6 @@ export default function KingdomHierarchy() {
             );
           })()}
         </dialog>
-        <RosterEditor
-          open={editorOpen}
-          members={members}
-          publishedMembers={MEMBERS}
-          roleNames={ROLE_NAMES}
-          roleConfig={ROLE_CONFIG}
-          onClose={() => setEditorOpen(false)}
-          onSave={saveRoster}
-          onReset={resetRoster}
-        />
       </div>
     </div>
   );

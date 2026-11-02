@@ -24,13 +24,9 @@ npm run preview
 npm test
 ```
 
-## Editing the roster
+## Roster data
 
-Use **Edit roster** on the site to add, update, or remove members. Changes can be saved in the current browser, undone while editing, or reset to the published roster. Browser-saved edits are private to that browser and do not update the live site for other visitors.
-
-To publish changes for everyone, use **Download JSON**, replace [`src/data/members.json`](./src/data/members.json) with the downloaded file, and deploy the project. Each member needs a unique `id`, a display `name`, a Minecraft `mcName`, and a role defined by `ROLE_CONFIG` in `src/KingdomHierarchy.jsx`. `secondaryRole`, `customPoints`, and `customDesc` are optional.
-
-The editor validates required fields, unique IDs, role names, point values, and limited role capacity before saving or exporting.
+The site is a read-only viewer. To change the published roster, edit [`src/data/members.json`](./src/data/members.json) directly and deploy the project. Each member needs a unique `id`, a display `name`, a Minecraft `mcName`, and a role defined by `ROLE_CONFIG` in [`src/KingdomHierarchy.jsx`](./src/KingdomHierarchy.jsx). `secondaryRole`, `customPoints`, and `customDesc` are optional.
 
 The rank display groups department heads under Council and the King and Advisors under High Council. The Council filter includes both High Council and department heads, while the High Council filter shows only the King and Advisors. Both filters include matching secondary roles.
 
