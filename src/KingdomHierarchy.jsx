@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen } from 'lucide-react';
+import { Crown, Shield, Pickaxe, Wheat, Swords, FlaskConical, User, Star, Info, Hammer, Search, Users, Scale, X, Copy, Check, DoorOpen, Pencil } from 'lucide-react';
 import MEMBERS from './data/members.json';
-import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower } from './rosterUtils.js';
+import RosterEditor from './RosterEditor.jsx';
+import { describeVotingPower, filterMembers, getRankVotingTotals, getRoleCoverage, getVotingPowerBreakdown, matchesMemberFilter, sortByVotingPower, validateRoster } from './rosterUtils.js';
 
 const ROLE_CONFIG = {
   King: {
@@ -87,6 +88,34 @@ const RANK_ACCENTS = {
   5: 'text-stone-300 border-stone-600/50 bg-stone-800/60',
 };
 
+const ROSTER_STORAGE_KEY = 'kingdom-hierarchy.roster.v1';
+const ROLE_NAMES = Object.keys(ROLE_CONFIG);
+
+function readRosterState() {
+  try {
+    const savedRoster = window.localStorage.getItem(ROSTER_STORAGE_KEY);
+    if (savedRoster === null) return { members: MEMBERS, isModified: false, error: '' };
+
+    const parsedRoster = JSON.parse(savedRoster);
+    const validationError = validateRoster(parsedRoster, ROLE_CONFIG);
+    if (validationError) {
+      return {
+        members: MEMBERS,
+        isModified: false,
+        error: `Saved browser roster was invalid and has not been loaded: ${validationError}`,
+      };
+    }
+
+    return { members: parsedRoster, isModified: true, error: '' };
+  } catch (error) {
+    return {
+      members: MEMBERS,
+      isModified: false,
+      error: `Could not read the saved browser roster: ${error instanceof Error ? error.message : 'unknown storage error'}`,
+    };
+  }
+}
+
 function MemberAvatar({ member, config }) {
   const [imageFailed, setImageFailed] = useState(false);
   const nameParts = member.name.trim().split(/\s+/);
@@ -120,10 +149,15 @@ export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortMode, setSortMode] = useState('rank');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('');
+  const [rosterState, setRosterState] = useState(readRosterState);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const profileDialogRef = useRef(null);
+  const rosterRef = useRef(null);
+  const members = rosterState.members;
 
   useEffect(() => {
     const dialog = profileDialogRef.current;
@@ -147,16 +181,48 @@ export default function KingdomHierarchy() {
     }
   }
 
-  const filteredMembers = filterMembers(MEMBERS, searchQuery, activeFilter);
+  function saveRoster(nextMembers) {
+    const validationError = validateRoster(nextMembers, ROLE_CONFIG);
+    if (validationError) throw new Error(validationError);
+
+    try {
+      window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(nextMembers));
+    } catch (error) {
+      throw new Error(`Could not save roster in this browser: ${error instanceof Error ? error.message : 'storage unavailable'}`);
+    }
+
+    setRosterState({ members: nextMembers, isModified: true, error: '' });
+  }
+
+  function resetRoster() {
+    try {
+      window.localStorage.removeItem(ROSTER_STORAGE_KEY);
+    } catch (error) {
+      throw new Error(`Could not reset the saved roster: ${error instanceof Error ? error.message : 'storage unavailable'}`);
+    }
+
+    setRosterState({ members: MEMBERS, isModified: false, error: '' });
+    setSelectedRoleFilter('');
+    setActiveFilter('All');
+    setSearchQuery('');
+  }
+
+  function filterByRole(role) {
+    setSelectedRoleFilter(role);
+    setActiveFilter('All');
+    requestAnimationFrame(() => rosterRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+
+  const filteredMembers = filterMembers(members, searchQuery, activeFilter, selectedRoleFilter);
   const normalizedQuery = searchQuery.trim();
-  const totalSouls = MEMBERS.length;
-  const highCouncilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'High Council')).length;
-  const councilCount = MEMBERS.filter(member => matchesMemberFilter(member, 'Council')).length;
-  const roleCoverage = getRoleCoverage(MEMBERS, ROLE_CONFIG);
+  const totalSouls = members.length;
+  const highCouncilCount = members.filter(member => matchesMemberFilter(member, 'High Council')).length;
+  const councilCount = members.filter(member => matchesMemberFilter(member, 'Council')).length;
+  const roleCoverage = getRoleCoverage(members, ROLE_CONFIG);
   const vacantRoles = roleCoverage.filter(role => role.vacant > 0);
   const openSeatCount = vacantRoles.reduce((total, role) => total + role.vacant, 0);
-  const rankVotingTotals = getRankVotingTotals(MEMBERS, ROLE_CONFIG, RANK_TITLES);
-  const totalVotingPower = MEMBERS.reduce(
+  const rankVotingTotals = getRankVotingTotals(members, ROLE_CONFIG, RANK_TITLES);
+  const totalVotingPower = members.reduce(
     (total, member) => total + getVotingPowerBreakdown(member, ROLE_CONFIG).points,
     0
   );
@@ -175,24 +241,34 @@ export default function KingdomHierarchy() {
     { label: 'All members', value: 'All', count: totalSouls },
     { label: 'High council', value: 'High Council', count: highCouncilCount },
     { label: 'Council', value: 'Council', count: councilCount },
-    { label: 'Military', value: 'Military', count: MEMBERS.filter(member => matchesMemberFilter(member, 'Military')).length },
-    { label: 'Citizens', value: 'Citizens', count: MEMBERS.filter(member => matchesMemberFilter(member, 'Citizens')).length },
+    { label: 'Military', value: 'Military', count: members.filter(member => matchesMemberFilter(member, 'Military')).length },
+    { label: 'Citizens', value: 'Citizens', count: members.filter(member => matchesMemberFilter(member, 'Citizens')).length },
   ];
 
   return (
     <div className="min-h-screen bg-[#0b0d0b] text-stone-200 font-serif selection:bg-amber-900/70 selection:text-amber-50 pb-16">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,34,0.13),_transparent_55%)]" />
-      <div className="relative max-w-6xl mx-auto px-4 py-8 md:px-8 md:py-12">
+      <div className="relative mx-auto max-w-6xl px-3 py-6 sm:px-4 md:px-8 md:py-12">
         <header className="mb-10">
-          <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-6 py-8 shadow-2xl md:px-10 md:py-10">
+          <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-4 py-6 shadow-2xl sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="absolute -right-10 -top-14 text-amber-100/[0.035]"><Crown size={260} strokeWidth={0.7} /></div>
             <div className="relative">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditorOpen(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100 transition hover:border-amber-300/60 hover:bg-amber-400/20 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  <Pencil size={14} /> Edit roster
+                  {rosterState.isModified && <span className="rounded-full bg-amber-300 px-1.5 py-0.5 text-[9px] font-black text-stone-950">SAVED HERE</span>}
+                </button>
               </div>
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                 <div>
-                  <h1 className="text-4xl font-black uppercase tracking-[0.08em] text-stone-100 md:text-6xl">Kingdom<br className="sm:hidden" /> Hierarchy</h1>
+                  <h1 className="text-3xl font-black uppercase tracking-[0.06em] text-stone-100 sm:text-4xl md:text-6xl">Kingdom<br className="sm:hidden" /> Hierarchy</h1>
                   <p className="mt-3 text-base italic text-stone-400 md:text-lg">The people, positions, and power that shape our realm.</p>
                 </div>
                 <div className="flex max-w-sm items-start gap-3 rounded-xl border border-stone-700/70 bg-black/20 p-4 text-sm leading-relaxed text-stone-400">
@@ -220,6 +296,7 @@ export default function KingdomHierarchy() {
                 <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
                 <span>Role points add across primary and secondary roles. A custom allocation replaces that total. Use the sort menu to compare members by voting power.</span>
               </p>
+              {rosterState.error && <p className="mt-3 rounded-lg border border-rose-400/25 bg-rose-400/[0.06] px-4 py-3 text-xs leading-relaxed text-rose-200" role="alert">{rosterState.error}</p>}
             </div>
           </div>
 
@@ -237,9 +314,17 @@ export default function KingdomHierarchy() {
               {vacantRoles.length ? (
                 <ul className="mt-4 space-y-2">
                   {vacantRoles.map(({ role, capacity, filled, vacant }) => (
-                    <li key={role} className="flex items-center justify-between gap-3 rounded-lg border border-stone-800 bg-black/20 px-3 py-2.5">
-                      <span className="text-sm text-stone-300">{role}</span>
-                      <span className="shrink-0 text-xs tabular-nums text-amber-200">{filled}/{capacity} filled <span className="text-stone-600">·</span> {vacant} open</span>
+                    <li key={role}>
+                      <button
+                        type="button"
+                        aria-label={`Show members assigned as ${role}; ${vacant} seat${vacant === 1 ? '' : 's'} open`}
+                        aria-pressed={selectedRoleFilter === role}
+                        onClick={() => filterByRole(role)}
+                        className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition focus:outline-none focus:ring-2 focus:ring-amber-400 ${selectedRoleFilter === role ? 'border-amber-400/50 bg-amber-400/[0.08]' : 'border-stone-800 bg-black/20 hover:border-amber-400/30 hover:bg-amber-400/[0.04]'}`}
+                      >
+                        <span className="text-sm text-stone-300">{role}</span>
+                        <span className="shrink-0 text-xs tabular-nums text-amber-200">{filled}/{capacity} filled <span className="text-stone-600">·</span> {vacant} open</span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -273,7 +358,7 @@ export default function KingdomHierarchy() {
             </section>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-4 md:flex-row md:items-center md:justify-between md:p-5">
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-3 sm:p-4 md:flex-row md:items-center md:justify-between md:p-5">
             <div className="relative w-full md:max-w-md">
               <label htmlFor="member-search" className="sr-only">Search members</label>
               <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
@@ -297,7 +382,7 @@ export default function KingdomHierarchy() {
                   key={value}
                   type="button"
                   aria-pressed={activeFilter === value}
-                  onClick={() => setActiveFilter(value)}
+                  onClick={() => { setActiveFilter(value); setSelectedRoleFilter(''); }}
                   className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                     activeFilter === value
                       ? 'border-amber-600/60 bg-amber-950/50 text-amber-200'
@@ -324,7 +409,13 @@ export default function KingdomHierarchy() {
           <p className="mt-3 px-1 text-xs text-stone-500" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
+            {selectedRoleFilter && <> in role <span className="text-stone-300">{selectedRoleFilter}</span></>}
           </p>
+          {selectedRoleFilter && (
+            <button type="button" onClick={() => setSelectedRoleFilter('')} className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-400/10 focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <X size={13} /> Clear role filter
+            </button>
+          )}
           {(copiedUsername || copyFailed) && (
             <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
               {copyFailed ? 'Could not copy username. Check clipboard permissions and try again.' : `Copied ${copiedUsername} to clipboard.`}
@@ -332,13 +423,13 @@ export default function KingdomHierarchy() {
           )}
         </header>
 
-        <main className="flex flex-col gap-10">
+        <main ref={rosterRef} id="member-roster" className="scroll-mt-6 flex flex-col gap-10">
           {filteredMembers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
-              <h2 className="text-lg font-semibold text-stone-200">No members found</h2>
-              <p className="mt-2 text-sm text-stone-500">Try another search or clear the current filters.</p>
-              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); }} className="mt-5 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+              <h2 className="text-lg font-semibold text-stone-200">{selectedRoleFilter ? 'No members assigned to this role' : 'No members found'}</h2>
+              <p className="mt-2 text-sm text-stone-500">{selectedRoleFilter ? `${selectedRoleFilter} is currently an open position.` : 'Try another search or clear the current filters.'}</p>
+              <button type="button" onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRoleFilter(''); }} className="mt-5 min-h-11 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-300 transition hover:border-amber-600/60 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 Reset search and filters
               </button>
             </div>
@@ -499,6 +590,16 @@ export default function KingdomHierarchy() {
             );
           })()}
         </dialog>
+        <RosterEditor
+          open={editorOpen}
+          members={members}
+          publishedMembers={MEMBERS}
+          roleNames={ROLE_NAMES}
+          roleConfig={ROLE_CONFIG}
+          onClose={() => setEditorOpen(false)}
+          onSave={saveRoster}
+          onReset={resetRoster}
+        />
       </div>
     </div>
   );
