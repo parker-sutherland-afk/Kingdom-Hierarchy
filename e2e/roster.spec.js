@@ -1,5 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
+
+async function mockAvatarProviders(page, handleAvatar, requests) {
+  for (const host of avatarProviderHosts) {
+    await page.route(`https://${host}/**`, async route => {
+      const requestUrl = route.request().url();
+      if (requestUrl.includes('/EighthSea6218/')) requests.push(requestUrl);
+      await handleAvatar(route, host, requestUrl);
+    });
+  }
+}
+
 test('role guide explains each role and its primary-role points', async ({ page }) => {
   await page.goto('/');
   await page.getByText('Role guide and primary-role voting points').click();
@@ -51,29 +63,51 @@ test('filter state survives opening a member profile and browser back/forward', 
   await expect(page.getByRole('dialog').getByRole('heading', { name: 'Darcy' })).toBeVisible();
 });
 
-test('local avatars need no external image and failed remote skins can be retried', async ({ page }) => {
-  let avatarRequests = 0;
-  await page.route('https://minotar.net/**', async route => {
-    avatarRequests += 1;
-    await route.abort();
-  });
+test('Minecraft avatars fall back through providers until a skin loads', async ({ page }) => {
+  const avatarRequests = [];
+  await mockAvatarProviders(page, async (route, host) => {
+    if (host === 'mineskin.eu') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+      });
+    } else {
+      await route.abort();
+    }
+  }, avatarRequests);
   await page.goto('/');
 
-  await expect(page.getByRole('group', { name: "Will's Minecraft avatar" })).toContainText('WI');
-  await expect(page.locator('img[src*="minotar.net"]')).toHaveCount(0);
+  const avatar = page.getByRole('group', { name: "Will's Minecraft avatar" });
+  await expect(avatar.locator('img[src*="mineskin.eu"]')).toBeVisible();
+  await expect.poll(() => avatarRequests.map(url => new URL(url).hostname)).toEqual([
+    'minotar.net',
+    'cravatar.eu',
+    'mineskin.eu',
+  ]);
+  expect(await avatar.locator('img').evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+});
 
-  await page.getByRole('button', { name: 'Minecraft', exact: true }).click();
+test('all failed skin providers show initials, allow retry, and keep local mode available', async ({ page }) => {
+  const avatarRequests = [];
+  await mockAvatarProviders(page, route => route.abort(), avatarRequests);
+  await page.goto('/');
+
   const retryButton = page.getByRole('button', { name: "Retry loading Will's avatar" });
   await expect(retryButton).toBeVisible();
-  const failedRequestCount = avatarRequests;
+  await expect(page.getByRole('group', { name: "Will's Minecraft avatar" })).toContainText('WI');
+  await expect.poll(() => avatarRequests.map(url => new URL(url).hostname)).toEqual(avatarProviderHosts);
+
   await retryButton.click();
-  await expect.poll(() => avatarRequests).toBeGreaterThan(failedRequestCount);
+  await expect.poll(() => avatarRequests).toHaveLength(8);
+  expect(avatarRequests.slice(4).map(url => new URL(url).hostname)).toEqual(avatarProviderHosts);
+  expect(avatarRequests[4]).toContain('?retry=1');
   await expect(retryButton).toBeVisible();
 
   await page.getByRole('button', { name: 'Local', exact: true }).click();
   await expect(page.getByRole('group', { name: "Will's Minecraft avatar" })).toContainText('WI');
   await expect(page.getByRole('button', { name: "Retry loading Will's avatar" })).toBeHidden();
-  await expect(page.locator('img[src*="minotar.net"]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Local', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('compact layout fits a phone width and profile dialog stays in the viewport', async ({ page }) => {

@@ -13,6 +13,7 @@ import {
 import ROLE_CONFIG from '../roleConfig.js';
 import { validateRoster } from '../rosterValidation.js';
 import { createRosterUrl, readRosterUrl } from '../rosterUrl.js';
+import { getMinecraftAvatarSources } from '../avatarSources.js';
 
 const members = JSON.parse(
   readFileSync(new URL('../data/members.json', import.meta.url), 'utf8')
@@ -219,4 +220,20 @@ test('roster metadata rejects impossible calendar dates', () => {
   assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), {
     lastUpdated: '2026-02-31',
   }), ['Roster metadata lastUpdated must be a valid YYYY-MM-DD date.']);
+});
+
+test('Minecraft avatar sources use four independent HTTPS providers in fallback order', () => {
+  assert.deepEqual(
+    getMinecraftAvatarSources('Player Name').map(({ provider, src }) => [provider, src]),
+    [
+      ['Minotar', 'https://minotar.net/helm/Player%20Name/64.png'],
+      ['Cravatar', 'https://cravatar.eu/helmavatar/Player%20Name/64.png'],
+      ['MineSkin', 'https://mineskin.eu/helm/Player%20Name/64.png'],
+      ['MC-Heads', 'https://mc-heads.net/avatar/Player%20Name/64'],
+    ]
+  );
+});
+
+test('avatar retries bypass provider image caches', () => {
+  assert.ok(getMinecraftAvatarSources('Player', 2).every(({ src }) => src.endsWith('?retry=2')));
 });
