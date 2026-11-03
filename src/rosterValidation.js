@@ -1,4 +1,4 @@
-export function validateRoster(members, roleNames) {
+export function validateRoster(members, roleNames, metadata) {
   const errors = [];
   const knownRoles = new Set(roleNames);
 
@@ -53,6 +53,19 @@ export function validateRoster(members, roleNames) {
       errors.push(`${label} customDesc must be a string when it is provided.`);
     }
   });
+
+  if (metadata !== undefined) {
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+      errors.push('Roster metadata must be an object.');
+    } else if (
+      typeof metadata.lastUpdated !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(metadata.lastUpdated) ||
+      Number.isNaN(Date.parse(`${metadata.lastUpdated}T00:00:00Z`)) ||
+      new Date(`${metadata.lastUpdated}T00:00:00Z`).toISOString().slice(0, 10) !== metadata.lastUpdated
+    ) {
+      errors.push('Roster metadata lastUpdated must be a valid YYYY-MM-DD date.');
+    }
+  }
 
   return errors;
 }
