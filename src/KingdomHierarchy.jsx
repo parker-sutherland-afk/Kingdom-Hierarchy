@@ -5,6 +5,7 @@ import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
 import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
 import { createRosterUrl, readRosterUrl } from './rosterUrl.js';
+import { getMinecraftAvatarSources } from './avatarSources.js';
 
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 const RANK_ACCENTS = {
@@ -37,11 +38,20 @@ function HighlightedText({ text, query }) {
 function MemberAvatar({ member, config, avatarMode }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [providerIndex, setProviderIndex] = useState(0);
+  const avatarSources = getMinecraftAvatarSources(member.mcName, retryCount);
+  const currentSource = avatarSources[providerIndex];
   const nameParts = member.name.trim().split(/\s+/);
   const initials = (nameParts.length > 1
     ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
     : nameParts[0].slice(0, 2)
   ).toUpperCase();
+
+  useEffect(() => {
+    setImageFailed(false);
+    setRetryCount(0);
+    setProviderIndex(0);
+  }, [member.mcName, avatarMode]);
 
   return (
     <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className="relative h-12 w-12 shrink-0">
@@ -50,12 +60,18 @@ function MemberAvatar({ member, config, avatarMode }) {
           <span aria-hidden="true">{initials}</span>
         ) : (
           <img
-            key={retryCount}
-            src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png${retryCount ? `?retry=${retryCount}` : ''}`}
-            alt=""
+            key={`${currentSource.src}`}
+            src={currentSource.src}
+            alt={`${member.name}'s Minecraft skin`}
             loading="lazy"
             className="h-full w-full object-cover"
-            onError={() => setImageFailed(true)}
+            onError={() => {
+              if (providerIndex < avatarSources.length - 1) {
+                setProviderIndex(providerIndex + 1);
+              } else {
+                setImageFailed(true);
+              }
+            }}
           />
         )}
       </div>
@@ -67,6 +83,7 @@ function MemberAvatar({ member, config, avatarMode }) {
           onClick={() => {
             setImageFailed(false);
             setRetryCount(count => count + 1);
+            setProviderIndex(0);
           }}
           className="absolute -bottom-1 -right-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-stone-600 bg-stone-900 text-amber-300 shadow-lg transition hover:bg-stone-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 print:hidden"
         >
@@ -281,7 +298,7 @@ export default function KingdomHierarchy() {
   const [activeFilter, setActiveFilter] = useState(initialUrlState.current.activeFilter);
   const [sortMode, setSortMode] = useState(initialUrlState.current.sortMode);
   const [viewMode, setViewMode] = useState(initialUrlState.current.viewMode);
-  const [avatarMode, setAvatarMode] = useState('local');
+  const [avatarMode, setAvatarMode] = useState('minecraft');
   const [selectedRole, setSelectedRole] = useState(initialUrlState.current.selectedRole);
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
