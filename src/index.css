@@ -42,3 +42,132 @@ input {
     transition-duration: 0.01ms !important;
   }
 }
+
+@page {
+  margin: 14mm;
+}
+
+@media print {
+  html,
+  body {
+    min-width: 0;
+    min-height: 0;
+    background: #fff !important;
+    color: #111 !important;
+    font-family: Arial, sans-serif;
+    print-color-adjust: economy;
+    -webkit-print-color-adjust: economy;
+  }
+
+  body * {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body > #root > div > .pointer-events-none,
+  a[href="#member-roster"],
+  section[aria-labelledby="roster-controls-title"],
+  dialog,
+  #member-roster button:not([aria-label^="Filter roster"]),
+  header [role="status"] {
+    display: none !important;
+  }
+
+  .relative.mx-auto {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  header {
+    margin-bottom: 1.5rem !important;
+  }
+
+  header > div {
+    border: 0 !important;
+    background: #fff !important;
+    padding: 0 0 1rem !important;
+  }
+
+  header h1,
+  header h2,
+  header p,
+  header strong,
+  header code {
+    color: #111 !important;
+  }
+
+  header h1 {
+    font-size: 30pt !important;
+  }
+
+  header > div > div > div.mb-6,
+  header [class*="group/metric"] > div:first-child {
+    display: none !important;
+  }
+
+  header svg {
+    display: none !important;
+  }
+
+  #member-roster {
+    gap: 1.25rem !important;
+  }
+
+  #member-roster .grid.grid-cols-1 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #member-roster > section {
+    break-inside: avoid;
+  }
+
+  #member-roster h2 {
+    border: 0 !important;
+    background: transparent !important;
+    color: #111 !important;
+    padding: 0 !important;
+  }
+
+  #member-roster article {
+    break-inside: avoid;
+    border: 1px solid #aaa !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    color: #111 !important;
+    padding: 12px !important;
+  }
+
+  #member-roster article *,
+  #member-roster article [class*="text-"] {
+    color: #111 !important;
+  }
+
+  #member-roster article [role="group"] {
+    display: none !important;
+  }
+
+  #member-roster article [aria-label^="Filter roster"] {
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    text-align: left;
+  }
+
+  #member-roster article .line-clamp-3 {
+    display: block !important;
+    overflow: visible !important;
+    -webkit-box-orient: initial !important;
+    -webkit-line-clamp: unset !important;
+  }
+
+  #member-roster details:not([open]) > :not(summary) {
+    display: block !important;
+  }
+
+  #member-roster summary {
+    min-height: 0 !important;
+  }
+}

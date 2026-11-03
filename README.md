@@ -38,6 +38,10 @@ Select **View full profile** on a member card for their roles, trims, descriptio
 
 Profile links are shareable: open a member profile and select **Copy profile link**. Opening or closing a profile also keeps the browser URL in sync, so direct links and browser back/forward navigation work. Press `/` anywhere outside a text field to focus roster search; matching text is highlighted, and selecting a role badge filters the roster to that exact role.
 
+Searches, group/role filters, and sort order are reflected in the URL. Select **Share view** to copy a link that restores those exact browsing settings. Update `lastUpdated` in [`src/data/rosterMetadata.json`](./src/data/rosterMetadata.json) when you change the roster.
+
+Select **Print roster** or use your browser’s print command for a clean, ink-friendly roster layout.
+
 ## Phone preview
 
 To preview a phone-sized layout on your computer, run `npm run dev`, open the printed URL in Chrome or Edge, open Developer Tools (`F12`), then toggle the device toolbar with `Ctrl+Shift+M` (Windows/Linux) or `Cmd+Shift+M` (Mac). Choose a phone preset or enter a custom width.
