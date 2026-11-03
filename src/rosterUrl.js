@@ -3,6 +3,7 @@ const DEFAULT_VIEW = {
   activeFilter: 'All',
   selectedRole: '',
   sortMode: 'rank',
+  viewMode: 'comfortable',
 };
 
 export function readRosterUrl(search, members, roleNames) {
@@ -21,6 +22,7 @@ export function readRosterUrl(search, members, roleNames) {
     sortMode: ['rank', 'name', 'power'].includes(params.get('sort'))
       ? params.get('sort')
       : DEFAULT_VIEW.sortMode,
+    viewMode: params.get('view') === 'compact' ? 'compact' : DEFAULT_VIEW.viewMode,
     selectedMember: members.find(member => member.id === parsedMemberId) ?? null,
   };
 }
@@ -33,6 +35,7 @@ export function createRosterUrl(currentUrl, state, { includeMember = true } = {}
     ['group', state.activeFilter === 'All' ? '' : state.activeFilter],
     ['role', state.selectedRole],
     ['sort', state.sortMode === 'rank' ? '' : state.sortMode],
+    ['view', state.viewMode === 'compact' ? 'compact' : ''],
     ['member', includeMember && state.selectedMember ? String(state.selectedMember.id) : ''],
   ];
 

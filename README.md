@@ -24,6 +24,15 @@ npm run preview
 npm test
 ```
 
+Browser-level tests run the app in Chromium. Install the browser once, then run them with:
+
+```sh
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+Run both the unit and browser tests with `npm run test:all`.
+
 ## Roster data
 
 The site is a read-only viewer. To change the published roster, edit [`src/data/members.json`](./src/data/members.json) directly and deploy the project. Each member needs a unique `id`, a display `name`, a Minecraft `mcName`, and a role defined in [`src/roleConfig.js`](./src/roleConfig.js). `secondaryRole` and `customDesc` are optional.
@@ -41,6 +50,8 @@ Profile links are shareable: open a member profile and select **Copy profile lin
 Searches, group/role filters, and sort order are reflected in the URL. Select **Share view** to copy a link that restores those exact browsing settings. Update `lastUpdated` in [`src/data/rosterMetadata.json`](./src/data/rosterMetadata.json) when you change the roster.
 
 Select **Print roster** or use your browser’s print command for a clean, ink-friendly roster layout.
+
+Open **Role guide and primary-role voting points** to review each defined role. Use **Compact** to fit more member cards on screen; the selected density is included in shared links. Avatars use local initials by default. Choose **Minecraft** in the avatar source control to load external skins instead.
 
 ## Phone preview
 
