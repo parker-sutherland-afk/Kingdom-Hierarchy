@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
@@ -34,7 +34,7 @@ function HighlightedText({ text, query }) {
   ));
 }
 
-function MemberAvatar({ member, config }) {
+function MemberAvatar({ member, config, avatarMode }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const nameParts = member.name.trim().split(/\s+/);
@@ -46,7 +46,7 @@ function MemberAvatar({ member, config }) {
   return (
     <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className="relative h-12 w-12 shrink-0">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}>
-        {imageFailed ? (
+        {avatarMode === 'local' || imageFailed ? (
           <span aria-hidden="true">{initials}</span>
         ) : (
           <img
@@ -59,7 +59,7 @@ function MemberAvatar({ member, config }) {
           />
         )}
       </div>
-      {imageFailed && (
+      {imageFailed && avatarMode === 'minecraft' && (
         <button
           type="button"
           aria-label={`Retry loading ${member.name}'s avatar`}
@@ -280,6 +280,8 @@ export default function KingdomHierarchy() {
   const [searchQuery, setSearchQuery] = useState(initialUrlState.current.searchQuery);
   const [activeFilter, setActiveFilter] = useState(initialUrlState.current.activeFilter);
   const [sortMode, setSortMode] = useState(initialUrlState.current.sortMode);
+  const [viewMode, setViewMode] = useState(initialUrlState.current.viewMode);
+  const [avatarMode, setAvatarMode] = useState('local');
   const [selectedRole, setSelectedRole] = useState(initialUrlState.current.selectedRole);
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
@@ -296,6 +298,7 @@ export default function KingdomHierarchy() {
       setSearchQuery(state.searchQuery);
       setActiveFilter(state.activeFilter);
       setSortMode(state.sortMode);
+      setViewMode(state.viewMode);
       setSelectedRole(state.selectedRole);
       setProfileLinkStatus('');
       setViewLinkStatus('');
@@ -310,6 +313,7 @@ export default function KingdomHierarchy() {
       searchQuery,
       activeFilter,
       sortMode,
+      viewMode,
       selectedRole,
       selectedMember,
     });
@@ -317,7 +321,7 @@ export default function KingdomHierarchy() {
     if (selectedMember) nextState.memberProfileId = selectedMember.id;
     else delete nextState.memberProfileId;
     window.history.replaceState(nextState, '', url);
-  }, [searchQuery, activeFilter, sortMode, selectedRole, selectedMember]);
+  }, [searchQuery, activeFilter, sortMode, viewMode, selectedRole, selectedMember]);
 
   useEffect(() => {
     function handleSearchShortcut(event) {
@@ -379,6 +383,7 @@ export default function KingdomHierarchy() {
       searchQuery,
       activeFilter,
       sortMode,
+      viewMode,
       selectedRole,
     });
     setProfileLinkStatus('');
@@ -395,6 +400,7 @@ export default function KingdomHierarchy() {
         searchQuery,
         activeFilter,
         sortMode,
+        viewMode,
         selectedRole,
       });
     }
@@ -406,6 +412,7 @@ export default function KingdomHierarchy() {
       searchQuery,
       activeFilter,
       sortMode,
+      viewMode,
       selectedRole,
       selectedMember,
     });
@@ -425,6 +432,7 @@ export default function KingdomHierarchy() {
       searchQuery,
       activeFilter,
       sortMode,
+      viewMode,
       selectedRole,
       selectedMember: null,
     }, { includeMember: false });
@@ -538,10 +546,36 @@ export default function KingdomHierarchy() {
             </div>
           </div>
 
+          <details className="group/guide mt-4 overflow-hidden rounded-xl border border-stone-800 bg-stone-900/45 print:hidden">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 font-sans text-xs font-semibold text-stone-300 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
+              <BookOpen aria-hidden="true" size={15} className="text-amber-400" />
+              Role guide and primary-role voting points
+              <ChevronDown aria-hidden="true" size={14} className="ml-auto text-stone-500 transition-transform group-open/guide:rotate-180 motion-reduce:transition-none" />
+            </summary>
+            <div className="grid gap-2 border-t border-stone-800 p-3 sm:grid-cols-2 lg:grid-cols-3">
+              {ROLE_NAMES.map(role => {
+                const config = ROLE_CONFIG[role];
+                const Icon = config.icon;
+                return (
+                  <div key={role} className={`flex min-w-0 items-start gap-3 rounded-lg border p-3 ${config.badge}`}>
+                    <Icon aria-hidden="true" size={16} className={`mt-0.5 shrink-0 ${config.color}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold">{role}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed opacity-80">{config.desc}</p>
+                      <p className="mt-1 font-sans text-[10px] font-semibold opacity-80">
+                        {config.points} primary-role point{config.points === 1 ? '' : 's'} · {config.trim}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+
           <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
             <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
             <div className="p-4 sm:p-5">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <span className="rounded-xl border border-amber-400/20 bg-amber-400/[0.07] p-2.5 text-amber-300">
                     <SlidersHorizontal size={17} />
@@ -549,6 +583,44 @@ export default function KingdomHierarchy() {
                   <div>
                     <h2 id="roster-controls-title" className="text-sm font-bold text-stone-100">Find a member</h2>
                     <p className="mt-0.5 font-sans text-[11px] text-stone-500">Search, filter, or arrange the realm roster.</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 font-sans text-[10px]">
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Card density">
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === 'comfortable'}
+                      onClick={() => setViewMode('comfortable')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'comfortable' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <Rows3 aria-hidden="true" size={13} /> Comfortable
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === 'compact'}
+                      onClick={() => setViewMode('compact')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'compact' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <LayoutGrid aria-hidden="true" size={13} /> Compact
+                    </button>
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Avatar source">
+                    <button
+                      type="button"
+                      aria-pressed={avatarMode === 'local'}
+                      onClick={() => setAvatarMode('local')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'local' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <User aria-hidden="true" size={13} /> Local
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={avatarMode === 'minecraft'}
+                      onClick={() => setAvatarMode('minecraft')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'minecraft' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      Minecraft
+                    </button>
                   </div>
                 </div>
               </div>
@@ -665,6 +737,15 @@ export default function KingdomHierarchy() {
               </div>
             </div>
           </section>
+          <div className="print-roster-summary hidden" data-testid="print-roster-summary">
+            <h2>Kingdom Hierarchy — Roster</h2>
+            <p>Showing {filteredMembers.length} of {totalSouls} members.</p>
+            {normalizedQuery && <p>Search: “{searchQuery.trim()}”</p>}
+            {activeFilter !== 'All' && <p>Group: {activeFilter}</p>}
+            {selectedRole && <p>Role: {selectedRole}</p>}
+            <p>Sorted by: {sortMode === 'rank' ? 'Rank order' : sortMode === 'name' ? 'Name (A–Z)' : 'Voting power'}</p>
+            <p>View: {viewMode === 'compact' ? 'Compact' : 'Comfortable'}</p>
+          </div>
           <p className="mt-3 px-1 text-xs text-stone-400" role="status" aria-live="polite">
             Showing <span className="font-semibold text-stone-300">{filteredMembers.length}</span> of {totalSouls} members
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
@@ -682,7 +763,7 @@ export default function KingdomHierarchy() {
           )}
         </header>
 
-        <main id="member-roster" tabIndex={-1} aria-label="Kingdom member roster" className="scroll-mt-6 flex flex-col gap-10 focus:outline-none">
+        <main id="member-roster" data-view-mode={viewMode} tabIndex={-1} aria-label="Kingdom member roster" className="scroll-mt-6 flex flex-col gap-10 focus:outline-none">
           {filteredMembers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
@@ -702,7 +783,7 @@ export default function KingdomHierarchy() {
                     <div className={`h-px flex-1 bg-gradient-to-r ${key === 'power' ? 'from-sky-400/60' : key === 'name' ? 'from-amber-400/60' : key === 1 ? 'from-blue-400/60' : key === 2 ? 'from-stone-300/50' : key === 3 ? 'from-purple-400/60' : key === 4 ? 'from-slate-300/50' : 'from-stone-600'} to-transparent transition-colors group-hover/rank:to-stone-800`} />
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className={`grid gap-4 ${viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
                     {membersInRank.map((member) => {
                       const config = ROLE_CONFIG[member.role];
                       const Icon = config?.icon || User;
@@ -712,16 +793,16 @@ export default function KingdomHierarchy() {
                       const displayDesc = member.customDesc || config?.desc;
                       
                       return (
-                        <article key={member.id} className={`group relative isolate overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
+                        <article key={member.id} data-view-mode={viewMode} className={`group relative isolate overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-[#0b0d0b] motion-reduce:transform-none motion-reduce:transition-none ${config?.accent}`}>
                           <div aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br ${config?.wash} opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none`} />
                           <div aria-hidden="true" className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${config?.line} opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100`} />
-                          <div className="relative flex h-full flex-col p-4 sm:p-5">
+                          <div className={`relative flex h-full flex-col ${viewMode === 'compact' ? 'p-3' : 'p-4 sm:p-5'}`}>
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <MemberAvatar member={member} config={config} />
+                                <MemberAvatar member={member} config={config} avatarMode={avatarMode} />
                                 <div className="min-w-0">
-                                  <h3 className={`truncate text-lg font-black tracking-wide text-stone-100 transition-colors ${config?.nameHover}`}><HighlightedText text={member.name} query={normalizedQuery} /></h3>
-                                  <div className="mt-0.5 flex min-w-0 items-center gap-1 font-sans text-xs text-stone-500">
+                                  <h3 className={`truncate font-black tracking-wide text-stone-100 transition-colors ${viewMode === 'compact' ? 'text-sm' : 'text-lg'} ${config?.nameHover}`}><HighlightedText text={member.name} query={normalizedQuery} /></h3>
+                                  <div className={`mt-0.5 min-w-0 items-center gap-1 font-sans text-xs text-stone-500 ${viewMode === 'compact' ? 'hidden' : 'flex'}`}>
                                     <span className="truncate">@<HighlightedText text={member.mcName} query={normalizedQuery} /></span>
                                     <button
                                       type="button"
@@ -738,7 +819,7 @@ export default function KingdomHierarchy() {
                               <div
                                 aria-label={`${votingPower.points} voting point${votingPower.points === 1 ? '' : 's'} from ${member.role} primary role`}
                                 title={`Voting power from primary role: ${member.role}`}
-                                className={`shrink-0 rounded-lg border bg-stone-950/80 px-2.5 py-1.5 text-right text-xs font-bold text-stone-300 transition-colors ${config?.badge}`}
+                                className={`shrink-0 rounded-lg border bg-stone-950/80 text-right text-xs font-bold text-stone-300 transition-colors ${viewMode === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1.5'} ${config?.badge}`}
                               >
                                 <div>{votingPower.points} pts</div>
                               </div>
@@ -746,7 +827,7 @@ export default function KingdomHierarchy() {
 
                             <div className="mt-4 grid gap-2">
                               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Primary</span>
+                                <span className={`w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500 ${viewMode === 'compact' ? 'sr-only' : ''}`}>Primary</span>
                                 <button
                                   type="button"
                                   aria-label={`Filter roster by primary role ${member.role}`}
@@ -759,7 +840,7 @@ export default function KingdomHierarchy() {
                               </div>
                               {member.secondaryRole && secCfg && SecIcon && (
                                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                  <span className="w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Secondary</span>
+                                  <span className={`w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500 ${viewMode === 'compact' ? 'sr-only' : ''}`}>Secondary</span>
                                   <button
                                     type="button"
                                     aria-label={`Filter roster by secondary role ${member.secondaryRole}`}
@@ -773,21 +854,21 @@ export default function KingdomHierarchy() {
                               )}
                             </div>
 
-                            <div className="mt-4 flex flex-wrap gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-wide">
+                            <div className={`mt-4 flex flex-wrap gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-wide ${viewMode === 'compact' ? 'hidden' : ''}`}>
                               {config?.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${config?.badge}`}>✦ {config?.trim}</span>}
                               {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
                             </div>
-                            <details className="mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs">
+                            <details className={`mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs ${viewMode === 'compact' ? 'hidden' : ''}`}>
                               <summary className="min-h-10 cursor-pointer py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:text-amber-200 focus-visible:underline">Primary-role voting points</summary>
                               <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
                             </details>
-                            {displayDesc && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3"><HighlightedText text={displayDesc} query={normalizedQuery} /></p>}
+                            {displayDesc && viewMode !== 'compact' && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3"><HighlightedText text={displayDesc} query={normalizedQuery} /></p>}
                             <button
                               type="button"
                               onClick={() => openMemberProfile(member)}
                               className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
                             >
-                              View full profile <span aria-hidden="true">→</span>
+                              {viewMode === 'compact' ? 'Profile' : 'View full profile'} <span aria-hidden="true">→</span>
                             </button>
                           </div>
                         </article>
@@ -822,7 +903,7 @@ export default function KingdomHierarchy() {
                 <div className="relative p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-4">
-                      <div className="scale-110 sm:scale-125"><MemberAvatar member={selectedMember} config={config} /></div>
+                      <div className="scale-110 sm:scale-125"><MemberAvatar member={selectedMember} config={config} avatarMode={avatarMode} /></div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Member profile</p>
                         <h2 id="member-profile-title" className={`mt-1 truncate text-2xl font-black ${config?.color}`}>{selectedMember.name}</h2>

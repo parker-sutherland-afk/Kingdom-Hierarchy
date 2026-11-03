@@ -147,6 +147,7 @@ test('roster links preserve search, group, role, sort, and member profile state'
     activeFilter: 'Council',
     selectedRole: 'Advisor',
     sortMode: 'name',
+    viewMode: 'comfortable',
     selectedMember: members[2],
   };
   const url = createRosterUrl('https://example.test/roster?campaign=summer#members', state);
@@ -158,6 +159,7 @@ test('roster links preserve search, group, role, sort, and member profile state'
     activeFilter: 'Council',
     selectedRole: 'Advisor',
     sortMode: 'name',
+    viewMode: 'comfortable',
     selectedMember: members[2],
   });
 });
@@ -168,6 +170,7 @@ test('share-view links preserve filters but omit an open profile', () => {
     activeFilter: 'High Council',
     selectedRole: '',
     sortMode: 'power',
+    viewMode: 'comfortable',
     selectedMember: members[2],
   }, { includeMember: false });
 
@@ -190,8 +193,26 @@ test('roster links safely fall back from invalid view and profile parameters', (
     activeFilter: 'All',
     selectedRole: '',
     sortMode: 'rank',
+    viewMode: 'comfortable',
     selectedMember: null,
   });
+});
+
+test('compact roster view is preserved in shareable links', () => {
+  const url = createRosterUrl('https://example.test/roster', {
+    searchQuery: '',
+    activeFilter: 'All',
+    selectedRole: '',
+    sortMode: 'rank',
+    viewMode: 'compact',
+    selectedMember: null,
+  });
+
+  assert.equal(url.searchParams.get('view'), 'compact');
+  assert.equal(
+    readRosterUrl(url.search, members, Object.keys(ROLE_CONFIG)).viewMode,
+    'compact'
+  );
 });
 
 test('roster metadata rejects impossible calendar dates', () => {
