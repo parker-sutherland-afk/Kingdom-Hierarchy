@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2 } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer } from 'lucide-react';
 import MEMBERS from './data/members.json';
+import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
 import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
+import { createRosterUrl, readRosterUrl } from './rosterUrl.js';
 
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
 const RANK_ACCENTS = {
@@ -13,17 +15,11 @@ const RANK_ACCENTS = {
   5: 'text-stone-300 border-stone-600/50 bg-stone-800/60',
 };
 
-function getMemberFromUrl(members) {
-  const requestedId = new URLSearchParams(window.location.search).get('member');
-  if (!requestedId || !/^\d+$/.test(requestedId)) return null;
-  return members.find(member => member.id === Number(requestedId)) ?? null;
-}
-
-function updateMemberUrl(memberId, method = 'push') {
-  const url = new URL(window.location.href);
-  if (memberId === null) url.searchParams.delete('member');
-  else url.searchParams.set('member', String(memberId));
-
+function updateMemberUrl(memberId, method, viewState) {
+  const url = createRosterUrl(window.location.href, {
+    ...viewState,
+    selectedMember: memberId === null ? null : { id: memberId },
+  });
   const nextState = { ...(window.history.state ?? {}) };
   if (memberId === null) delete nextState.memberProfileId;
   else nextState.memberProfileId = memberId;
@@ -40,6 +36,7 @@ function HighlightedText({ text, query }) {
 
 function MemberAvatar({ member, config }) {
   const [imageFailed, setImageFailed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const nameParts = member.name.trim().split(/\s+/);
   const initials = (nameParts.length > 1
     ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
@@ -47,21 +44,34 @@ function MemberAvatar({ member, config }) {
   ).toUpperCase();
 
   return (
-    <div
-      role="img"
-      aria-label={`${member.name}'s Minecraft avatar`}
-      className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}
-    >
-      {imageFailed ? (
-        <span aria-hidden="true">{initials}</span>
-      ) : (
-        <img
-          src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png`}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
-        />
+    <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className="relative h-12 w-12 shrink-0">
+      <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}>
+        {imageFailed ? (
+          <span aria-hidden="true">{initials}</span>
+        ) : (
+          <img
+            key={retryCount}
+            src={`https://minotar.net/helm/${encodeURIComponent(member.mcName)}/64.png${retryCount ? `?retry=${retryCount}` : ''}`}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={() => setImageFailed(true)}
+          />
+        )}
+      </div>
+      {imageFailed && (
+        <button
+          type="button"
+          aria-label={`Retry loading ${member.name}'s avatar`}
+          title="Retry avatar"
+          onClick={() => {
+            setImageFailed(false);
+            setRetryCount(count => count + 1);
+          }}
+          className="absolute -bottom-1 -right-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-stone-600 bg-stone-900 text-amber-300 shadow-lg transition hover:bg-stone-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 print:hidden"
+        >
+          <RefreshCw aria-hidden="true" size={12} />
+        </button>
       )}
     </div>
   );
@@ -263,31 +273,51 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
 }
 
 export default function KingdomHierarchy() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [sortMode, setSortMode] = useState('rank');
-  const [selectedRole, setSelectedRole] = useState('');
+  const initialUrlState = useRef(null);
+  if (!initialUrlState.current) {
+    initialUrlState.current = readRosterUrl(window.location.search, MEMBERS, ROLE_NAMES);
+  }
+  const [searchQuery, setSearchQuery] = useState(initialUrlState.current.searchQuery);
+  const [activeFilter, setActiveFilter] = useState(initialUrlState.current.activeFilter);
+  const [sortMode, setSortMode] = useState(initialUrlState.current.sortMode);
+  const [selectedRole, setSelectedRole] = useState(initialUrlState.current.selectedRole);
   const [copiedUsername, setCopiedUsername] = useState('');
   const [copyFailed, setCopyFailed] = useState(false);
   const [profileLinkStatus, setProfileLinkStatus] = useState('');
-  const [selectedMember, setSelectedMember] = useState(() => getMemberFromUrl(MEMBERS));
+  const [viewLinkStatus, setViewLinkStatus] = useState('');
+  const [selectedMember, setSelectedMember] = useState(initialUrlState.current.selectedMember);
   const profileDialogRef = useRef(null);
   const searchInputRef = useRef(null);
   const members = MEMBERS;
 
   useEffect(() => {
     const handlePopState = () => {
+      const state = readRosterUrl(window.location.search, members, ROLE_NAMES);
+      setSearchQuery(state.searchQuery);
+      setActiveFilter(state.activeFilter);
+      setSortMode(state.sortMode);
+      setSelectedRole(state.selectedRole);
       setProfileLinkStatus('');
-      setSelectedMember(getMemberFromUrl(members));
+      setViewLinkStatus('');
+      setSelectedMember(state.selectedMember);
     };
     window.addEventListener('popstate', handlePopState);
-
-    if (new URLSearchParams(window.location.search).has('member') && !getMemberFromUrl(members)) {
-      updateMemberUrl(null, 'replace');
-    }
-
     return () => window.removeEventListener('popstate', handlePopState);
   }, [members]);
+
+  useEffect(() => {
+    const url = createRosterUrl(window.location.href, {
+      searchQuery,
+      activeFilter,
+      sortMode,
+      selectedRole,
+      selectedMember,
+    });
+    const nextState = { ...(window.history.state ?? {}) };
+    if (selectedMember) nextState.memberProfileId = selectedMember.id;
+    else delete nextState.memberProfileId;
+    window.history.replaceState(nextState, '', url);
+  }, [searchQuery, activeFilter, sortMode, selectedRole, selectedMember]);
 
   useEffect(() => {
     function handleSearchShortcut(event) {
@@ -345,7 +375,12 @@ export default function KingdomHierarchy() {
 
   function openMemberProfile(member) {
     if (selectedMember?.id === member.id) return;
-    updateMemberUrl(member.id);
+    updateMemberUrl(member.id, 'push', {
+      searchQuery,
+      activeFilter,
+      sortMode,
+      selectedRole,
+    });
     setProfileLinkStatus('');
     setSelectedMember(member);
   }
@@ -355,20 +390,51 @@ export default function KingdomHierarchy() {
   }
 
   function handleProfileDialogClose() {
-    if (new URLSearchParams(window.location.search).has('member')) updateMemberUrl(null, 'replace');
+    if (new URLSearchParams(window.location.search).has('member')) {
+      updateMemberUrl(null, 'replace', {
+        searchQuery,
+        activeFilter,
+        sortMode,
+        selectedRole,
+      });
+    }
     setSelectedMember(null);
   }
 
   async function copyMemberProfileLink() {
-    const url = new URL(window.location.href);
-    if (selectedMember) url.searchParams.set('member', String(selectedMember.id));
+    const url = createRosterUrl(window.location.href, {
+      searchQuery,
+      activeFilter,
+      sortMode,
+      selectedRole,
+      selectedMember,
+    });
 
     try {
-      await navigator.clipboard.writeText(url.toString());
+      await navigator.clipboard.writeText(url.href);
       setProfileLinkStatus('Profile link copied.');
     } catch (error) {
       setProfileLinkStatus(
         `Could not copy the profile link: ${error instanceof Error ? error.message : 'clipboard access is unavailable.'}`
+      );
+    }
+  }
+
+  async function copyViewLink() {
+    const url = createRosterUrl(window.location.href, {
+      searchQuery,
+      activeFilter,
+      sortMode,
+      selectedRole,
+      selectedMember: null,
+    }, { includeMember: false });
+
+    try {
+      await navigator.clipboard.writeText(url.href);
+      setViewLinkStatus('Filtered view link copied.');
+    } catch (error) {
+      setViewLinkStatus(
+        `Could not copy the view link: ${error instanceof Error ? error.message : 'clipboard access is unavailable.'}`
       );
     }
   }
@@ -380,6 +446,12 @@ export default function KingdomHierarchy() {
 
   const filteredMembers = filterMembers(members, searchQuery, activeFilter, selectedRole);
   const normalizedQuery = searchQuery.trim();
+  const lastUpdatedDate = new Date(`${ROSTER_METADATA.lastUpdated}T00:00:00Z`).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
   const totalSouls = members.length;
   const highCouncilCount = members.filter(member => matchesMemberFilter(member, 'High Council')).length;
   const councilCount = members.filter(member => matchesMemberFilter(member, 'Council')).length;
@@ -462,6 +534,7 @@ export default function KingdomHierarchy() {
                 <span>Voting power comes from each member’s primary role only. Secondary roles do not add voting points.</span>
               </p>
               <p className="mt-4 font-sans text-[11px] text-stone-500">Roster data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.</p>
+              <p className="mt-1 font-sans text-[11px] text-stone-400">Roster last updated <time dateTime={ROSTER_METADATA.lastUpdated}>{lastUpdatedDate}</time>.</p>
             </div>
           </div>
 
@@ -540,17 +613,33 @@ export default function KingdomHierarchy() {
             </div>
 
             <div className="border-t border-stone-800/80 bg-black/15 px-4 py-3 sm:px-5">
-              <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="font-sans text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400">Browse by group</p>
-                {(activeFilter !== 'All' || selectedRole || searchQuery) && (
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRole(''); }}
-                    className="font-sans text-[10px] font-semibold text-amber-400/80 transition hover:text-amber-200 focus:outline-none focus-visible:underline"
+                    onClick={copyViewLink}
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
-                    Clear filters
+                    <Link2 aria-hidden="true" size={13} /> Share view
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+                  >
+                    <Printer aria-hidden="true" size={13} /> Print roster
+                  </button>
+                  {(activeFilter !== 'All' || selectedRole || searchQuery || sortMode !== 'rank') && (
+                    <button
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setActiveFilter('All'); setSelectedRole(''); setSortMode('rank'); }}
+                      className="min-h-10 px-2 font-sans text-[10px] font-semibold text-amber-400/80 transition hover:text-amber-200 focus:outline-none focus-visible:underline"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:flex-wrap md:overflow-visible" role="group" aria-label="Filter member groups">
                 {filterOptions.map(({ label, value, count }) => {
@@ -584,6 +673,11 @@ export default function KingdomHierarchy() {
           {(copiedUsername || copyFailed) && (
             <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
               {copyFailed ? 'Could not copy username. Check clipboard permissions and try again.' : `Copied ${copiedUsername} to clipboard.`}
+            </p>
+          )}
+          {viewLinkStatus && (
+            <p className={`mt-1 px-1 text-xs ${viewLinkStatus.startsWith('Could not') ? 'text-rose-300' : 'text-emerald-300'}`} role="status" aria-live="polite">
+              {viewLinkStatus}
             </p>
           )}
         </header>

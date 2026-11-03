@@ -12,9 +12,13 @@ import {
 } from '../rosterUtils.js';
 import ROLE_CONFIG from '../roleConfig.js';
 import { validateRoster } from '../rosterValidation.js';
+import { createRosterUrl, readRosterUrl } from '../rosterUrl.js';
 
 const members = JSON.parse(
   readFileSync(new URL('../data/members.json', import.meta.url), 'utf8')
+);
+const rosterMetadata = JSON.parse(
+  readFileSync(new URL('../data/rosterMetadata.json', import.meta.url), 'utf8')
 );
 
 const roleConfig = {
@@ -118,7 +122,7 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
 });
 
 test('published roster passes structural and role validation', () => {
-  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG)), []);
+  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), rosterMetadata), []);
 });
 
 test('roster validation reports duplicate identities, invalid roles, and missing fields', () => {
@@ -135,4 +139,63 @@ test('roster validation reports duplicate identities, invalid roles, and missing
     'Member at index 1 uses unknown primary role "Unknown".',
     'Member at index 2 cannot have the same primary and secondary role.',
   ]);
+});
+
+test('roster links preserve search, group, role, sort, and member profile state', () => {
+  const state = {
+    searchQuery: '  Darcy  ',
+    activeFilter: 'Council',
+    selectedRole: 'Advisor',
+    sortMode: 'name',
+    selectedMember: members[2],
+  };
+  const url = createRosterUrl('https://example.test/roster?campaign=summer#members', state);
+
+  assert.equal(url.searchParams.get('campaign'), 'summer');
+  assert.equal(url.hash, '#members');
+  assert.deepEqual(readRosterUrl(url.search, members, Object.keys(ROLE_CONFIG)), {
+    searchQuery: 'Darcy',
+    activeFilter: 'Council',
+    selectedRole: 'Advisor',
+    sortMode: 'name',
+    selectedMember: members[2],
+  });
+});
+
+test('share-view links preserve filters but omit an open profile', () => {
+  const url = createRosterUrl('https://example.test/roster?member=3', {
+    searchQuery: 'advisor',
+    activeFilter: 'High Council',
+    selectedRole: '',
+    sortMode: 'power',
+    selectedMember: members[2],
+  }, { includeMember: false });
+
+  assert.equal(url.searchParams.get('q'), 'advisor');
+  assert.equal(url.searchParams.get('group'), 'High Council');
+  assert.equal(url.searchParams.get('sort'), 'power');
+  assert.equal(url.searchParams.has('member'), false);
+  assert.equal(readRosterUrl(url.search, members, Object.keys(ROLE_CONFIG)).selectedMember, null);
+});
+
+test('roster links safely fall back from invalid view and profile parameters', () => {
+  const state = readRosterUrl(
+    '?group=unknown&role=Unknown&sort=invalid&member=999',
+    members,
+    Object.keys(ROLE_CONFIG)
+  );
+
+  assert.deepEqual(state, {
+    searchQuery: '',
+    activeFilter: 'All',
+    selectedRole: '',
+    sortMode: 'rank',
+    selectedMember: null,
+  });
+});
+
+test('roster metadata rejects impossible calendar dates', () => {
+  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), {
+    lastUpdated: '2026-02-31',
+  }), ['Roster metadata lastUpdated must be a valid YYYY-MM-DD date.']);
 });
