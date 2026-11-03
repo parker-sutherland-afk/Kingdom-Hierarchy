@@ -47,6 +47,10 @@ input {
   margin: 14mm;
 }
 
+.print-roster-summary {
+  display: none;
+}
+
 @media print {
   html,
   body {
@@ -113,6 +117,26 @@ input {
 
   #member-roster {
     gap: 1.25rem !important;
+  }
+
+  .print-roster-summary {
+    display: block !important;
+    margin: 0 0 1.25rem;
+    border-bottom: 1px solid #999;
+    padding-bottom: 0.75rem;
+    color: #111 !important;
+    font: 10pt/1.45 Arial, sans-serif;
+  }
+
+  .print-roster-summary h2 {
+    margin: 0 0 0.25rem;
+    font-size: 15pt;
+    font-weight: 700;
+  }
+
+  .print-roster-summary p {
+    display: inline;
+    margin-right: 1rem;
   }
 
   #member-roster .grid.grid-cols-1 {
