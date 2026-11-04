@@ -45,6 +45,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await page.goto('/');
   await page.getByRole('searchbox', { name: 'Search the roster' }).fill('Darcy');
   await page.getByRole('button', { name: /Military/ }).click();
+  await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await page.getByRole('button', { name: 'Compact', exact: true }).click();
 
   await expect(page.getByRole('button', { name: 'Compact', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -63,6 +64,7 @@ test('compact mode is shareable and the copied view restores the active filters'
 
   await page.goto(sharedUrl.href);
   await expect(page.getByRole('searchbox', { name: 'Search the roster' })).toHaveValue('Darcy');
+  await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await expect(page.getByRole('button', { name: 'Compact', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
 });
@@ -122,6 +124,7 @@ test('all failed skin providers show initials, allow retry, and keep local mode 
   expect(avatarRequests[4]).toContain('?retry=1');
   await expect(retryButton).toBeVisible();
 
+  await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await page.getByRole('button', { name: 'Local', exact: true }).click();
   await expect(page.getByRole('group', { name: "Will's Minecraft avatar" })).toContainText('WI');
   await expect(page.getByRole('button', { name: "Retry loading Will's avatar" })).toBeHidden();
@@ -131,6 +134,7 @@ test('all failed skin providers show initials, allow retry, and keep local mode 
 test('compact layout fits a phone width and profile dialog stays in the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await page.getByRole('button', { name: 'Compact', exact: true }).click();
 
   const dimensions = await page.evaluate(() => ({

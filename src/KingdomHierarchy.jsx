@@ -524,13 +524,9 @@ export default function KingdomHierarchy() {
           <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-4 py-6 shadow-2xl sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="absolute -right-10 -top-14 text-amber-100/[0.035]"><Crown size={260} strokeWidth={0.7} /></div>
             <div className="relative">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-stone-700/70 bg-black/20 px-3 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Live roster viewer
                 </div>
               </div>
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
@@ -543,17 +539,17 @@ export default function KingdomHierarchy() {
                   <p>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></p>
                 </div>
               </div>
-              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
                   { label: 'Council members', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="group/metric flex items-center gap-4 rounded-xl border border-stone-800/90 bg-gradient-to-br from-stone-900/80 to-black/30 p-4 shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:border-stone-700 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
-                    <div className={`rounded-xl border border-white/5 bg-stone-800/80 p-3 transition duration-300 group-hover/metric:scale-105 ${color}`}><Icon size={20} /></div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">{label}</div>
-                      <div className="mt-0.5 text-2xl font-black text-stone-100">{value}</div>
+                  <div key={label} className="group/metric min-w-0 rounded-lg border border-stone-800/80 bg-black/15 px-2.5 py-3 sm:flex sm:items-center sm:gap-3 sm:px-4">
+                    <Icon aria-hidden="true" size={15} className={`mb-1.5 sm:mb-0 ${color}`} />
+                    <div className="min-w-0">
+                      <div className="truncate font-sans text-[8px] font-bold uppercase tracking-[0.12em] text-stone-500 sm:text-[10px] sm:tracking-[0.18em]">{label}</div>
+                      <div className="mt-0.5 truncate text-lg font-black text-stone-100 sm:text-xl">{value}</div>
                     </div>
                   </div>
                 ))}
@@ -575,40 +571,8 @@ export default function KingdomHierarchy() {
                   </p>
                 </section>
               )}
-              <p className="mt-4 flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-4 py-3 font-sans text-xs leading-relaxed text-stone-400">
-                <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
-                <span>Voting power comes from each member’s primary role only. Secondary roles do not add voting points.</span>
-              </p>
-              <p className="mt-4 font-sans text-[11px] text-stone-500">Roster data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.</p>
-              <p className="mt-1 font-sans text-[11px] text-stone-400">Roster last updated <time dateTime={ROSTER_METADATA.lastUpdated}>{lastUpdatedDate}</time>.</p>
             </div>
           </div>
-
-          <details className="group/guide mt-4 overflow-hidden rounded-xl border border-stone-800 bg-stone-900/45 print:hidden">
-            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 font-sans text-xs font-semibold text-stone-300 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
-              <BookOpen aria-hidden="true" size={15} className="text-amber-400" />
-              Role guide and primary-role voting points
-              <ChevronDown aria-hidden="true" size={14} className="ml-auto text-stone-500 transition-transform group-open/guide:rotate-180 motion-reduce:transition-none" />
-            </summary>
-            <div className="grid gap-2 border-t border-stone-800 p-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ROLE_NAMES.map(role => {
-                const config = ROLE_CONFIG[role];
-                const Icon = config.icon;
-                return (
-                  <div key={role} className={`flex min-w-0 items-start gap-3 rounded-lg border p-3 ${config.badge}`}>
-                    <Icon aria-hidden="true" size={16} className={`mt-0.5 shrink-0 ${config.color}`} />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold">{role}</p>
-                      <p className="mt-1 text-[11px] leading-relaxed opacity-80">{config.desc}</p>
-                      <p className="mt-1 font-sans text-[10px] font-semibold opacity-80">
-                        {config.points} primary-role point{config.points === 1 ? '' : 's'} · {config.trim}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </details>
 
           <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
             <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
@@ -621,44 +585,6 @@ export default function KingdomHierarchy() {
                   <div>
                     <h2 id="roster-controls-title" className="text-sm font-bold text-stone-100">Find a member</h2>
                     <p className="mt-0.5 font-sans text-[11px] text-stone-500">Search, filter, or arrange the realm roster.</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 font-sans text-[10px]">
-                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Card density">
-                    <button
-                      type="button"
-                      aria-pressed={viewMode === 'comfortable'}
-                      onClick={() => setViewMode('comfortable')}
-                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'comfortable' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
-                    >
-                      <Rows3 aria-hidden="true" size={13} /> Comfortable
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={viewMode === 'compact'}
-                      onClick={() => setViewMode('compact')}
-                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'compact' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
-                    >
-                      <LayoutGrid aria-hidden="true" size={13} /> Compact
-                    </button>
-                  </div>
-                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Avatar source">
-                    <button
-                      type="button"
-                      aria-pressed={avatarMode === 'local'}
-                      onClick={() => setAvatarMode('local')}
-                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'local' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
-                    >
-                      <User aria-hidden="true" size={13} /> Local
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={avatarMode === 'minecraft'}
-                      onClick={() => setAvatarMode('minecraft')}
-                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'minecraft' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
-                    >
-                      Minecraft
-                    </button>
                   </div>
                 </div>
               </div>
@@ -720,6 +646,52 @@ export default function KingdomHierarchy() {
                   />
                 </div>
               </div>
+              <details className="group/display mt-3 rounded-lg border border-stone-800/80 bg-black/15 font-sans text-xs">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
+                  <SlidersHorizontal aria-hidden="true" size={13} className="text-stone-500" />
+                  Display options
+                  <span className="text-stone-600">· {viewMode === 'compact' ? 'Compact cards' : 'Comfortable cards'} · {avatarMode === 'minecraft' ? 'Minecraft avatars' : 'Initials'}</span>
+                  <ChevronDown aria-hidden="true" size={14} className="ml-auto shrink-0 text-stone-500 transition-transform group-open/display:rotate-180 motion-reduce:transition-none" />
+                </summary>
+                <div className="flex flex-wrap gap-3 border-t border-stone-800/80 px-3 py-3">
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Card density">
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === 'comfortable'}
+                      onClick={() => setViewMode('comfortable')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'comfortable' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <Rows3 aria-hidden="true" size={13} /> Comfortable
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === 'compact'}
+                      onClick={() => setViewMode('compact')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${viewMode === 'compact' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <LayoutGrid aria-hidden="true" size={13} /> Compact
+                    </button>
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1" role="group" aria-label="Avatar source">
+                    <button
+                      type="button"
+                      aria-pressed={avatarMode === 'local'}
+                      onClick={() => setAvatarMode('local')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'local' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      <User aria-hidden="true" size={13} /> Local
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={avatarMode === 'minecraft'}
+                      onClick={() => setAvatarMode('minecraft')}
+                      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${avatarMode === 'minecraft' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                    >
+                      Minecraft
+                    </button>
+                  </div>
+                </div>
+              </details>
             </div>
 
             <div className="border-t border-stone-800/80 bg-black/15 px-4 py-3 sm:px-5">
@@ -862,15 +834,15 @@ export default function KingdomHierarchy() {
                               <div
                                 aria-label={`${votingPower.points} voting point${votingPower.points === 1 ? '' : 's'} from ${member.role} primary role`}
                                 title={`Voting power from primary role: ${member.role}`}
-                                className={`shrink-0 rounded-lg border bg-stone-950/80 text-right text-xs font-bold text-stone-300 transition-colors ${viewMode === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1.5'} ${config?.badge}`}
+                                className={`shrink-0 rounded-lg border border-stone-700/70 bg-black/20 text-right font-sans text-[10px] font-semibold text-stone-400 ${viewMode === 'compact' ? 'px-2 py-1' : 'px-2.5 py-1.5'}`}
                               >
                                 <div>{votingPower.points} pts</div>
                               </div>
                             </div>
 
-                            <div className="mt-4 grid gap-2">
+                            <div className="mt-3">
                               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <span className={`w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500 ${viewMode === 'compact' ? 'sr-only' : ''}`}>Primary</span>
+                                <span className="font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Primary role</span>
                                 <button
                                   type="button"
                                   aria-label={`Filter roster by primary role ${member.role}`}
@@ -881,29 +853,34 @@ export default function KingdomHierarchy() {
                                   <Icon aria-hidden="true" className={config?.color} size={13} /><span className="truncate"><HighlightedText text={member.role} query={normalizedQuery} /></span>
                                 </button>
                               </div>
-                              {member.secondaryRole && secCfg && SecIcon && (
-                                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                  <span className={`w-[4.5rem] shrink-0 font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500 ${viewMode === 'compact' ? 'sr-only' : ''}`}>Secondary</span>
-                                  <button
-                                    type="button"
-                                    aria-label={`Filter roster by secondary role ${member.secondaryRole}`}
-                                    aria-pressed={selectedRole === member.secondaryRole}
-                                    onClick={() => filterByRole(member.secondaryRole)}
-                                    className={`inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${secCfg.badge}`}
-                                  >
-                                    <SecIcon aria-hidden="true" className={secCfg.color} size={13} /><span className="truncate"><HighlightedText text={member.secondaryRole} query={normalizedQuery} /></span>
-                                  </button>
-                                </div>
-                              )}
                             </div>
-
-                            <div className={`mt-4 flex flex-wrap gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-wide ${viewMode === 'compact' ? 'hidden' : ''}`}>
-                              {config?.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${config?.badge}`}>✦ {config?.trim}</span>}
-                              {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 transition-colors ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
-                            </div>
-                            <details className={`mt-3 border-t border-stone-800/80 pt-3 font-sans text-xs ${viewMode === 'compact' ? 'hidden' : ''}`}>
-                              <summary className="min-h-10 cursor-pointer py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:text-amber-200 focus-visible:underline">Primary-role voting points</summary>
-                              <p className="mt-2 leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
+                            <details className={`mt-3 border-t border-stone-800/80 pt-2 font-sans text-xs ${viewMode === 'compact' ? 'hidden' : ''}`}>
+                              <summary className="min-h-10 cursor-pointer py-2 text-stone-500 transition hover:text-amber-200 focus:outline-none focus-visible:text-amber-200 focus-visible:underline">
+                                More about {member.name}
+                              </summary>
+                              <div className="grid gap-3 pb-2">
+                                {member.secondaryRole && secCfg && SecIcon && (
+                                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                    <span className="w-[4.5rem] shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Secondary</span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Filter roster by secondary role ${member.secondaryRole}`}
+                                      aria-pressed={selectedRole === member.secondaryRole}
+                                      onClick={() => filterByRole(member.secondaryRole)}
+                                      className={`inline-flex min-h-10 max-w-full items-center gap-1.5 rounded-md border px-2 py-1 font-sans text-xs transition-colors hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${secCfg.badge}`}
+                                    >
+                                      <SecIcon aria-hidden="true" className={secCfg.color} size={13} /><span className="truncate"><HighlightedText text={member.secondaryRole} query={normalizedQuery} /></span>
+                                    </button>
+                                  </div>
+                                )}
+                                {(config?.trim !== 'None' || (secCfg?.trim && secCfg.trim !== 'None')) && (
+                                  <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+                                    {config?.trim !== 'None' && <span className={`rounded-full border px-2 py-1 ${config?.badge}`}>✦ {config?.trim}</span>}
+                                    {secCfg?.trim && secCfg.trim !== 'None' && <span className={`rounded-full border px-2 py-1 ${secCfg.badge}`}>✦ {secCfg.trim}</span>}
+                                  </div>
+                                )}
+                                <p className="leading-relaxed text-stone-500">{describeVotingPower(member, ROLE_CONFIG)}</p>
+                              </div>
                             </details>
                             {displayDesc && viewMode !== 'compact' && <p className="mt-4 flex-1 border-t border-stone-800/80 pt-4 text-sm leading-relaxed text-stone-400 line-clamp-3"><HighlightedText text={displayDesc} query={normalizedQuery} /></p>}
                             <button
@@ -922,6 +899,46 @@ export default function KingdomHierarchy() {
               ))
           )}
         </main>
+        <details className="group/guide mt-8 overflow-hidden rounded-xl border border-stone-800 bg-stone-900/45 print:hidden">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 font-sans text-xs font-semibold text-stone-300 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
+            <BookOpen aria-hidden="true" size={15} className="text-amber-400" />
+            Role guide and primary-role voting points
+            <ChevronDown aria-hidden="true" size={14} className="ml-auto text-stone-500 transition-transform group-open/guide:rotate-180 motion-reduce:transition-none" />
+          </summary>
+          <div className="border-t border-stone-800 p-3">
+            <div className="mb-3 grid gap-2 sm:grid-cols-2">
+              <p className="flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-3 py-2.5 text-xs leading-relaxed text-stone-400">
+                <Scale aria-hidden="true" className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
+                <span>Voting power comes from each member’s primary role only. Secondary roles do not add voting points.</span>
+              </p>
+              <p className="flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-3 py-2.5 text-xs leading-relaxed text-stone-400">
+                <Info aria-hidden="true" className="mt-0.5 shrink-0 text-amber-400/80" size={15} />
+                <span>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></span>
+              </p>
+            </div>
+            <p className="mb-3 font-sans text-[11px] text-stone-500">
+              Roster last updated <time dateTime={ROSTER_METADATA.lastUpdated}>{lastUpdatedDate}</time>. Data is maintained in <code className="rounded border border-stone-700 bg-black/30 px-1.5 py-0.5 text-amber-200/80">src/data/members.json</code>.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {ROLE_NAMES.map(role => {
+                const config = ROLE_CONFIG[role];
+                const Icon = config.icon;
+                return (
+                  <div key={role} className={`flex min-w-0 items-start gap-3 rounded-lg border p-3 ${config.badge}`}>
+                    <Icon aria-hidden="true" size={16} className={`mt-0.5 shrink-0 ${config.color}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold">{role}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed opacity-80">{config.desc}</p>
+                      <p className="mt-1 font-sans text-[10px] font-semibold opacity-80">
+                        {config.points} primary-role point{config.points === 1 ? '' : 's'} · {config.trim}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </details>
         <dialog
           ref={profileDialogRef}
           aria-labelledby="member-profile-title"
