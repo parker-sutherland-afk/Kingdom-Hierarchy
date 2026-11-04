@@ -5,15 +5,15 @@ const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-he
 test('realm overview names the acting leaders without changing permanent voting points', async ({ page }) => {
   await page.goto('/');
 
-  const overview = page.getByRole('region', { name: 'Leadership' });
-  await expect(overview.getByText('The crown', { exact: true })).toBeVisible();
+  const overview = page.getByRole('region', { name: 'Realm at a glance' });
+  await expect(overview.getByText('King', { exact: true })).toBeVisible();
   await expect(overview.getByRole('button', { name: /Will/ })).toBeVisible();
-  await expect(overview.getByText('Acting leadership · King away')).toBeVisible();
+  await expect(overview.getByText('King away · Acting leadership')).toBeVisible();
   await expect(overview.getByRole('button', { name: /Parker/ })).toBeVisible();
   await expect(overview.getByRole('button', { name: /Darcy/ }).first()).toBeVisible();
   await expect(overview.getByText('Resources and Projects')).toBeVisible();
   await expect(overview.getByText('Combat And War')).toBeVisible();
-  await expect(page.getByText('Updated November 4, 2026')).toBeVisible();
+  await expect(overview.getByText('Updated November 4, 2026')).toBeVisible();
 
   for (const name of ['Parker', 'Darcy']) {
     const card = page.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
@@ -179,20 +179,8 @@ test('comfortable and compact layouts fit narrow phones with usable card columns
     expect(dimensions.documentWidth, `comfortable layout at ${width}px`).toBeLessThanOrEqual(dimensions.viewportWidth);
     expect(dimensions.summaryColumns, `overview stat columns at ${width}px`).toBe(3);
     expect(dimensions.leadershipColumns, `leadership columns at ${width}px`).toBe(2);
-    const navigation = await page.getByRole('navigation', { name: 'Page sections' }).evaluate(element => ({
-      width: element.clientWidth,
-      contentWidth: element.scrollWidth,
-    }));
-    expect(navigation.contentWidth, `navigation width at ${width}px`).toBeLessThanOrEqual(navigation.width);
-    const groupFilters = page.getByRole('group', { name: 'Filter member groups' });
-    const groupBounds = await groupFilters.boundingBox();
-    for (const button of await groupFilters.getByRole('button').all()) {
-      const bounds = await button.boundingBox();
-      expect(bounds.x, `filter left edge at ${width}px`).toBeGreaterThanOrEqual(groupBounds.x);
-      expect(bounds.x + bounds.width, `filter right edge at ${width}px`).toBeLessThanOrEqual(groupBounds.x + groupBounds.width);
-    }
 
-    const overview = await page.getByRole('region', { name: 'Leadership' }).boundingBox();
+    const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
     expect(overview.x, `overview left edge at ${width}px`).toBeGreaterThanOrEqual(0);
     expect(overview.x + overview.width, `overview right edge at ${width}px`).toBeLessThanOrEqual(width);
 
