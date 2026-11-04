@@ -39,7 +39,7 @@ The site is a read-only viewer. To change the published roster, edit [`src/data/
 
 Run `npm run validate:data` to check the roster for missing fields, duplicate IDs or Minecraft usernames, and unknown roles. The production build runs this validation automatically. Role definitions live in [`src/roleConfig.js`](./src/roleConfig.js).
 
-To publish a temporary King-away notice, set `kingAway` in [`src/data/rosterMetadata.json`](./src/data/rosterMetadata.json) to `true`; set it back to `false` when the King returns. While enabled, the viewer lists members whose primary role is Advisor as acting leaders and labels their cards. This does not change anyone’s permanent role or voting points. Commit and deploy the metadata change to update the shared site.
+To publish a temporary King-away notice, set `kingAway` in [`src/data/rosterMetadata.json`](./src/data/rosterMetadata.json) to `true`; set it back to `false` when the King returns. While enabled, the Realm at a glance panel names the Advisors as acting leaders and labels their cards. This does not change anyone’s permanent role or voting points. Update `lastUpdated` in the same file whenever you change roster or leadership information, then commit and deploy the metadata change to update the shared site.
 
 The rank display groups department heads under Council and the King and Advisors under High Council. The Council filter includes both High Council and department heads, while the High Council filter shows only the King and Advisors. Both filters include matching secondary roles.
 

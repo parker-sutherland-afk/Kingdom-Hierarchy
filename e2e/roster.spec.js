@@ -2,12 +2,18 @@ import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
 
-test('king-away status names the acting leaders without changing permanent voting points', async ({ page }) => {
+test('realm overview names the acting leaders without changing permanent voting points', async ({ page }) => {
   await page.goto('/');
 
-  const status = page.getByRole('status', { name: 'Leadership status' });
-  await expect(status).toContainText('King away');
-  await expect(status).toContainText('Acting leadership: Parker and Darcy.');
+  const overview = page.getByRole('region', { name: 'Realm at a glance' });
+  await expect(overview.getByText('King', { exact: true })).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Will/ })).toBeVisible();
+  await expect(overview.getByText('King away · Acting leadership')).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Parker/ })).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Darcy/ }).first()).toBeVisible();
+  await expect(overview.getByText('Resources and Projects')).toBeVisible();
+  await expect(overview.getByText('Combat And War')).toBeVisible();
+  await expect(overview.getByText('Updated November 4, 2026')).toBeVisible();
 
   for (const name of ['Parker', 'Darcy']) {
     const card = page.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
@@ -138,6 +144,10 @@ test('compact layout fits a phone width and profile dialog stays in the viewport
     viewportWidth: document.documentElement.clientWidth,
   }));
   expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+  const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
+  expect(overview.x).toBeGreaterThanOrEqual(0);
+  expect(overview.x + overview.width).toBeLessThanOrEqual(390);
+  await expect(page.getByRole('region', { name: 'Realm at a glance' }).getByText('King away · Acting leadership')).toBeVisible();
 
   await page.getByRole('button', { name: 'Profile', exact: true }).first().click();
   const dialog = page.getByRole('dialog');
