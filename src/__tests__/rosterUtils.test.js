@@ -222,6 +222,21 @@ test('roster metadata rejects impossible calendar dates', () => {
   }), ['Roster metadata lastUpdated must be a valid YYYY-MM-DD date.']);
 });
 
+test('king-away status requires a boolean and a listed King and Advisor', () => {
+  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), {
+    lastUpdated: '2026-11-03',
+    kingAway: true,
+  }), []);
+  assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), {
+    lastUpdated: '2026-11-03',
+    kingAway: 'true',
+  }), ['Roster metadata kingAway must be a boolean when it is provided.']);
+  assert.deepEqual(validateRoster(members.filter(member => member.role !== 'Advisor'), Object.keys(ROLE_CONFIG), {
+    lastUpdated: '2026-11-03',
+    kingAway: true,
+  }), ['Roster metadata cannot mark the King away when no Advisors are listed.']);
+});
+
 test('Minecraft avatar sources use four independent HTTPS providers in fallback order', () => {
   assert.deepEqual(
     getMinecraftAvatarSources('Player Name').map(({ provider, src }) => [provider, src]),
