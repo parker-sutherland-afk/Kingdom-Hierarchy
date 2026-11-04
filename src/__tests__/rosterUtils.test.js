@@ -149,6 +149,7 @@ test('roster links preserve search, group, role, sort, and member profile state'
     selectedRole: 'Advisor',
     sortMode: 'name',
     viewMode: 'comfortable',
+    layoutMode: 'roster',
     selectedMember: members[2],
   };
   const url = createRosterUrl('https://example.test/roster?campaign=summer#members', state);
@@ -161,6 +162,7 @@ test('roster links preserve search, group, role, sort, and member profile state'
     selectedRole: 'Advisor',
     sortMode: 'name',
     viewMode: 'comfortable',
+    layoutMode: 'roster',
     selectedMember: members[2],
   });
 });
@@ -172,6 +174,7 @@ test('share-view links preserve filters but omit an open profile', () => {
     selectedRole: '',
     sortMode: 'power',
     viewMode: 'comfortable',
+    layoutMode: 'roster',
     selectedMember: members[2],
   }, { includeMember: false });
 
@@ -195,6 +198,7 @@ test('roster links safely fall back from invalid view and profile parameters', (
     selectedRole: '',
     sortMode: 'rank',
     viewMode: 'comfortable',
+    layoutMode: 'roster',
     selectedMember: null,
   });
 });
@@ -206,6 +210,7 @@ test('compact roster view is preserved in shareable links', () => {
     selectedRole: '',
     sortMode: 'rank',
     viewMode: 'compact',
+    layoutMode: 'roster',
     selectedMember: null,
   });
 
@@ -213,6 +218,28 @@ test('compact roster view is preserved in shareable links', () => {
   assert.equal(
     readRosterUrl(url.search, members, Object.keys(ROLE_CONFIG)).viewMode,
     'compact'
+  );
+});
+
+test('hierarchy layout is preserved in shareable roster links', () => {
+  const url = createRosterUrl('https://example.test/roster', {
+    searchQuery: '',
+    activeFilter: 'All',
+    selectedRole: '',
+    sortMode: 'rank',
+    viewMode: 'comfortable',
+    layoutMode: 'hierarchy',
+    selectedMember: null,
+  });
+
+  assert.equal(url.searchParams.get('layout'), 'hierarchy');
+  assert.equal(
+    readRosterUrl(url.search, members, Object.keys(ROLE_CONFIG)).layoutMode,
+    'hierarchy'
+  );
+  assert.equal(
+    readRosterUrl('?layout=unknown', members, Object.keys(ROLE_CONFIG)).layoutMode,
+    'roster'
   );
 });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen, Network } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
@@ -298,6 +298,7 @@ export default function KingdomHierarchy() {
   const [activeFilter, setActiveFilter] = useState(initialUrlState.current.activeFilter);
   const [sortMode, setSortMode] = useState(initialUrlState.current.sortMode);
   const [viewMode, setViewMode] = useState(initialUrlState.current.viewMode);
+  const [layoutMode, setLayoutMode] = useState(initialUrlState.current.layoutMode);
   const [avatarMode, setAvatarMode] = useState('minecraft');
   const [selectedRole, setSelectedRole] = useState(initialUrlState.current.selectedRole);
   const [copiedUsername, setCopiedUsername] = useState('');
@@ -320,6 +321,7 @@ export default function KingdomHierarchy() {
       setActiveFilter(state.activeFilter);
       setSortMode(state.sortMode);
       setViewMode(state.viewMode);
+      setLayoutMode(state.layoutMode);
       setSelectedRole(state.selectedRole);
       setProfileLinkStatus('');
       setViewLinkStatus('');
@@ -335,6 +337,7 @@ export default function KingdomHierarchy() {
       activeFilter,
       sortMode,
       viewMode,
+      layoutMode,
       selectedRole,
       selectedMember,
     });
@@ -342,7 +345,7 @@ export default function KingdomHierarchy() {
     if (selectedMember) nextState.memberProfileId = selectedMember.id;
     else delete nextState.memberProfileId;
     window.history.replaceState(nextState, '', url);
-  }, [searchQuery, activeFilter, sortMode, viewMode, selectedRole, selectedMember]);
+  }, [searchQuery, activeFilter, sortMode, viewMode, layoutMode, selectedRole, selectedMember]);
 
   useEffect(() => {
     function handleSearchShortcut(event) {
@@ -405,6 +408,7 @@ export default function KingdomHierarchy() {
       activeFilter,
       sortMode,
       viewMode,
+      layoutMode,
       selectedRole,
     });
     setProfileLinkStatus('');
@@ -422,6 +426,7 @@ export default function KingdomHierarchy() {
         activeFilter,
         sortMode,
         viewMode,
+        layoutMode,
         selectedRole,
       });
     }
@@ -434,6 +439,7 @@ export default function KingdomHierarchy() {
       activeFilter,
       sortMode,
       viewMode,
+      layoutMode,
       selectedRole,
       selectedMember,
     });
@@ -454,6 +460,7 @@ export default function KingdomHierarchy() {
       activeFilter,
       sortMode,
       viewMode,
+      layoutMode,
       selectedRole,
       selectedMember: null,
     }, { includeMember: false });
@@ -504,6 +511,18 @@ export default function KingdomHierarchy() {
       title: sortMode === 'power' ? 'VOTING POWER' : 'A–Z',
       members: displayMembers,
     }];
+  const hierarchySections = [1, 2, 3, 4, 5].map(rank => ({
+    key: rank,
+    title: RANK_TITLES[rank],
+    members: filteredMembers.filter(member => ROLE_CONFIG[member.role]?.rank === rank),
+  })).filter(section => section.members.length > 0).map(section => ({
+    ...section,
+    members: sortMode === 'power'
+      ? sortByVotingPower(section.members, ROLE_CONFIG)
+      : sortMode === 'name'
+        ? sortByName(section.members)
+        : section.members,
+  }));
 
   const filterOptions = [
     { label: 'All members', value: 'All', count: totalSouls },
@@ -587,6 +606,24 @@ export default function KingdomHierarchy() {
                     <p className="mt-0.5 font-sans text-[11px] text-stone-500">Search, filter, or arrange the realm roster.</p>
                   </div>
                 </div>
+                <div className="inline-flex w-fit items-center gap-1 rounded-lg border border-stone-700/80 bg-black/20 p-1 font-sans text-[10px]" role="group" aria-label="Roster display">
+                  <button
+                    type="button"
+                    aria-pressed={layoutMode === 'roster'}
+                    onClick={() => setLayoutMode('roster')}
+                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${layoutMode === 'roster' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                  >
+                    <Rows3 aria-hidden="true" size={13} /> Roster
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={layoutMode === 'hierarchy'}
+                    onClick={() => setLayoutMode('hierarchy')}
+                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 ${layoutMode === 'hierarchy' ? 'bg-amber-400/15 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+                  >
+                    <Network aria-hidden="true" size={13} /> Hierarchy
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.85fr)_minmax(0,0.85fr)]">
@@ -646,7 +683,7 @@ export default function KingdomHierarchy() {
                   />
                 </div>
               </div>
-              <details className="group/display mt-3 rounded-lg border border-stone-800/80 bg-black/15 font-sans text-xs">
+              <details className={`group/display mt-3 rounded-lg border border-stone-800/80 bg-black/15 font-sans text-xs ${layoutMode === 'hierarchy' ? 'hidden' : ''}`}>
                 <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
                   <SlidersHorizontal aria-hidden="true" size={13} className="text-stone-500" />
                   Display options
@@ -754,6 +791,7 @@ export default function KingdomHierarchy() {
             {activeFilter !== 'All' && <p>Group: {activeFilter}</p>}
             {selectedRole && <p>Role: {selectedRole}</p>}
             <p>Sorted by: {sortMode === 'rank' ? 'Rank order' : sortMode === 'name' ? 'Name (A–Z)' : 'Voting power'}</p>
+            <p>Layout: {layoutMode === 'hierarchy' ? 'Hierarchy' : 'Roster'}</p>
             <p>View: {viewMode === 'compact' ? 'Compact' : 'Comfortable'}</p>
           </div>
           <p className="mt-3 px-1 text-xs text-stone-400" role="status" aria-live="polite">
@@ -773,7 +811,7 @@ export default function KingdomHierarchy() {
           )}
         </header>
 
-        <main id="member-roster" data-view-mode={viewMode} tabIndex={-1} aria-label="Kingdom member roster" className="scroll-mt-6 flex flex-col gap-10 focus:outline-none">
+        <main id="member-roster" data-view-mode={viewMode} data-layout-mode={layoutMode} tabIndex={-1} aria-label="Kingdom member roster" className="scroll-mt-6 flex flex-col gap-10 focus:outline-none">
           {filteredMembers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-stone-700 bg-stone-900/30 px-6 py-16 text-center font-sans">
               <Search className="mx-auto mb-4 text-stone-600" size={28} />
@@ -783,6 +821,54 @@ export default function KingdomHierarchy() {
                 Reset search and filters
               </button>
             </div>
+          ) : layoutMode === 'hierarchy' ? (
+            hierarchySections.map(({ key, title, members: membersInRank }) => {
+              const tierWidth = {
+                1: 'max-w-md',
+                2: 'max-w-2xl',
+                3: 'max-w-4xl',
+                4: 'max-w-3xl',
+                5: 'max-w-5xl',
+              }[key];
+              return (
+                <section key={key} aria-labelledby={`hierarchy-rank-${key}`} className={`mx-auto w-full ${tierWidth}`}>
+                  <div className={`mb-3 flex items-center justify-between border-b px-1 pb-2 ${key === 1 ? 'border-blue-400/25' : key === 2 ? 'border-stone-400/20' : key === 3 ? 'border-purple-400/20' : key === 4 ? 'border-slate-300/20' : 'border-stone-700/70'}`}>
+                    <h2 id={`hierarchy-rank-${key}`} className={`text-[10px] font-black uppercase tracking-[0.2em] ${RANK_ACCENTS[key].split(' ')[0]}`}>
+                      {title}
+                    </h2>
+                    <span className="font-sans text-[10px] tabular-nums text-stone-500">{membersInRank.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
+                    {membersInRank.map(member => {
+                      const config = ROLE_CONFIG[member.role];
+                      const Icon = config?.icon || User;
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          aria-label={`Open ${member.name}'s profile`}
+                          onClick={() => openMemberProfile(member)}
+                          className={`flex min-h-[4.5rem] w-full items-center gap-3 rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] px-3 py-2.5 text-left shadow-md shadow-black/10 transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 sm:w-auto sm:min-w-48 sm:max-w-full ${config?.accent}`}
+                        >
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/5 bg-stone-800/80 ${config?.color}`}>
+                            <Icon aria-hidden="true" size={16} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-bold text-stone-100">{member.name}</span>
+                            <span className={`mt-0.5 block truncate font-sans text-[10px] ${config?.color}`}>{member.role}</span>
+                          </span>
+                          {actingLeaderIds.has(member.id) && (
+                            <span className="shrink-0 rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2 py-1 font-sans text-[8px] font-bold uppercase tracking-wide text-amber-200">
+                              Acting
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })
           ) : (
             rankSections.map(({ key, title, members: membersInRank }) => (
                 <section key={key} aria-labelledby={`rank-${key}`} className="group/rank">
