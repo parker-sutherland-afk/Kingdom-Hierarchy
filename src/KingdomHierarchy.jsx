@@ -884,7 +884,7 @@ export default function KingdomHierarchy() {
                     <div className={`h-px flex-1 bg-gradient-to-r ${key === 'power' ? 'from-sky-400/60' : key === 'name' ? 'from-amber-400/60' : key === 1 ? 'from-blue-400/60' : key === 2 ? 'from-stone-300/50' : key === 3 ? 'from-purple-400/60' : key === 4 ? 'from-slate-300/50' : 'from-stone-600'} to-transparent transition-colors group-hover/rank:to-stone-800`} />
                   </div>
                   
-                  <div className={`grid gap-4 ${viewMode === 'compact' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+                  <div className={`grid gap-4 ${viewMode === 'compact' ? 'grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
                     {membersInRank.map((member) => {
                       const config = ROLE_CONFIG[member.role];
                       const Icon = config?.icon || User;
@@ -972,7 +972,7 @@ export default function KingdomHierarchy() {
                             <button
                               type="button"
                               onClick={() => openMemberProfile(member)}
-                              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
+                              className={`mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
                             >
                               {viewMode === 'compact' ? 'Profile' : 'View full profile'} <span aria-hidden="true">→</span>
                             </button>

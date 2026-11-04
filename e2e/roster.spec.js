@@ -134,28 +134,44 @@ test('all failed skin providers show initials, allow retry, and keep local mode 
   await expect(page.getByRole('button', { name: 'Local', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('compact layout fits a phone width and profile dialog stays in the viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('comfortable and compact layouts fit narrow phones with usable card columns', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Compact', exact: true }).click();
 
-  const dimensions = await page.evaluate(() => ({
-    documentWidth: document.documentElement.scrollWidth,
-    viewportWidth: document.documentElement.clientWidth,
-  }));
-  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
-  const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
-  expect(overview.x).toBeGreaterThanOrEqual(0);
-  expect(overview.x + overview.width).toBeLessThanOrEqual(390);
-  await expect(page.getByRole('region', { name: 'Realm at a glance' }).getByText('King away · Acting leadership')).toBeVisible();
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    const dimensions = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(dimensions.documentWidth, `comfortable layout at ${width}px`).toBeLessThanOrEqual(dimensions.viewportWidth);
 
-  await page.getByRole('button', { name: 'Profile', exact: true }).first().click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  const bounds = await dialog.boundingBox();
-  expect(bounds.x).toBeGreaterThanOrEqual(0);
-  expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
-  expect(bounds.height).toBeLessThanOrEqual(844);
+    const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
+    expect(overview.x, `overview left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(overview.x + overview.width, `overview right edge at ${width}px`).toBeLessThanOrEqual(width);
+
+    await page.getByRole('button', { name: 'Compact', exact: true }).click();
+    const compactDimensions = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      highCouncilColumns: getComputedStyle(
+        document.querySelector('#rank-2')?.closest('section')?.querySelector(':scope > div.grid')
+      ).gridTemplateColumns.split(' ').length,
+    }));
+    expect(compactDimensions.documentWidth, `compact layout at ${width}px`).toBeLessThanOrEqual(compactDimensions.viewportWidth);
+    expect(compactDimensions.highCouncilColumns, `compact columns at ${width}px`).toBe(width < 420 ? 1 : 2);
+
+    const profileButton = page.getByRole('button', { name: 'Profile', exact: true }).first();
+    await expect(profileButton).toHaveCSS('min-height', '40px');
+    await profileButton.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    const bounds = await dialog.boundingBox();
+    expect(bounds.x, `profile left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width, `profile right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(bounds.height, `profile height at ${width}px`).toBeLessThanOrEqual(844);
+    await page.getByRole('button', { name: 'Close member profile' }).click();
+    await page.getByRole('button', { name: 'Comfortable', exact: true }).click();
+  }
 });
 
 test('print view includes active search and filters but hides interactive controls', async ({ page }) => {
