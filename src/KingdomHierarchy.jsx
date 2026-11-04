@@ -573,24 +573,24 @@ export default function KingdomHierarchy() {
                   <p>Citizens are <strong className="font-semibold text-stone-200">not permitted to wear armor trims.</strong></p>
                 </div>
               </div>
-              <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-3">
                 {[
                   { label: 'Realm members', value: totalSouls, icon: Users, color: 'text-stone-300' },
                   { label: 'Council members', value: councilCount, icon: Pickaxe, color: 'text-purple-300' },
                   { label: 'Voting power', value: `${totalVotingPower} pts`, icon: Scale, color: 'text-sky-300' },
                 ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="group/metric flex items-center gap-4 rounded-xl border border-stone-800/90 bg-gradient-to-br from-stone-900/80 to-black/30 p-4 shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-0.5 hover:border-stone-700 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
-                    <div className={`rounded-xl border border-white/5 bg-stone-800/80 p-3 transition duration-300 group-hover/metric:scale-105 ${color}`}><Icon size={20} /></div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500">{label}</div>
-                      <div className="mt-0.5 text-2xl font-black text-stone-100">{value}</div>
+                  <div key={label} className="group/metric flex min-w-0 flex-col items-start gap-2 rounded-xl border border-stone-800/90 bg-gradient-to-br from-stone-900/80 to-black/30 p-2.5 shadow-lg shadow-black/10 transition duration-300 hover:border-stone-700 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                    <div className={`rounded-lg border border-white/5 bg-stone-800/80 p-2 transition duration-300 group-hover/metric:scale-105 sm:rounded-xl sm:p-3 ${color}`}><Icon size={16} className="sm:h-5 sm:w-5" /></div>
+                    <div className="min-w-0">
+                      <div className="min-h-[1.4rem] text-[8px] font-bold uppercase leading-tight tracking-[0.12em] text-stone-500 sm:min-h-0 sm:text-[10px] sm:tracking-[0.18em]">{label}</div>
+                      <div className="mt-0.5 text-lg font-black leading-none text-stone-100 sm:text-2xl">{value}</div>
                     </div>
                   </div>
                 ))}
               </div>
               <section
                 aria-labelledby="realm-glance-title"
-                className="mt-4 rounded-2xl border border-stone-700/80 bg-gradient-to-br from-[#1b1b16] via-[#131410] to-[#10110f] p-4 shadow-lg shadow-black/20 sm:p-5"
+                className="mt-3 rounded-2xl border border-stone-700/80 bg-gradient-to-br from-[#1b1b16] via-[#131410] to-[#10110f] p-3.5 shadow-lg shadow-black/20 sm:mt-4 sm:p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -606,7 +606,7 @@ export default function KingdomHierarchy() {
                     Updated <time dateTime={ROSTER_METADATA.lastUpdated}>{lastUpdatedDate}</time>
                   </p>
                 </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3 md:grid-cols-3">
                   <div className="min-w-0 rounded-xl border border-blue-400/20 bg-blue-400/[0.04] p-3.5">
                     <p className="font-sans text-[9px] font-bold uppercase tracking-[0.16em] text-blue-200/70">King</p>
                     {king ? (
@@ -643,9 +643,9 @@ export default function KingdomHierarchy() {
                       </p>
                     )}
                   </div>
-                  <div className="min-w-0 rounded-xl border border-purple-400/20 bg-purple-400/[0.04] p-3.5">
+                  <div className="col-span-2 min-w-0 rounded-xl border border-purple-400/20 bg-purple-400/[0.04] p-3.5 md:col-span-1">
                     <p className="font-sans text-[9px] font-bold uppercase tracking-[0.16em] text-purple-200/70">Council leads</p>
-                    <ul className="mt-1 space-y-0.5">
+                    <ul className="mt-1 grid grid-cols-2 gap-x-3">
                       {councilLeads.map(({ member, role }) => (
                         <li key={`${member.id}-${role}`} className="flex min-w-0 items-baseline justify-between gap-2 font-sans text-[10px] leading-5">
                           <span className="truncate text-stone-400">{role.replace(/^Head Of /, '')}</span>

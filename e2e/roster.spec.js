@@ -169,8 +169,16 @@ test('comfortable and compact layouts fit narrow phones with usable card columns
     const dimensions = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,
+      summaryColumns: getComputedStyle(
+        document.querySelector('#realm-overview .grid.grid-cols-3')
+      ).gridTemplateColumns.split(' ').length,
+      leadershipColumns: getComputedStyle(
+        document.querySelector('[aria-labelledby="realm-glance-title"] .grid.grid-cols-2')
+      ).gridTemplateColumns.split(' ').length,
     }));
     expect(dimensions.documentWidth, `comfortable layout at ${width}px`).toBeLessThanOrEqual(dimensions.viewportWidth);
+    expect(dimensions.summaryColumns, `overview stat columns at ${width}px`).toBe(3);
+    expect(dimensions.leadershipColumns, `leadership columns at ${width}px`).toBe(2);
 
     const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
     expect(overview.x, `overview left edge at ${width}px`).toBeGreaterThanOrEqual(0);
