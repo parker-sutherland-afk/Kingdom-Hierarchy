@@ -2,12 +2,18 @@ import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
 
-test('king-away status names the acting leaders without changing permanent voting points', async ({ page }) => {
+test('realm overview names the acting leaders without changing permanent voting points', async ({ page }) => {
   await page.goto('/');
 
-  const status = page.getByRole('status', { name: 'Leadership status' });
-  await expect(status).toContainText('King away');
-  await expect(status).toContainText('Acting leadership: Parker and Darcy.');
+  const overview = page.getByRole('region', { name: 'Realm at a glance' });
+  await expect(overview.getByText('King', { exact: true })).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Will/ })).toBeVisible();
+  await expect(overview.getByText('King away · Acting leadership')).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Parker/ })).toBeVisible();
+  await expect(overview.getByRole('button', { name: /Darcy/ }).first()).toBeVisible();
+  await expect(overview.getByText('Resources and Projects')).toBeVisible();
+  await expect(overview.getByText('Combat And War')).toBeVisible();
+  await expect(overview.getByText('Updated November 4, 2026')).toBeVisible();
 
   for (const name of ['Parker', 'Darcy']) {
     const card = page.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
@@ -32,13 +38,40 @@ async function mockAvatarProviders(page, handleAvatar, requests) {
 
 test('role guide explains each role and its primary-role points', async ({ page }) => {
   await page.goto('/');
-  await page.getByText('Role guide and primary-role voting points').click();
+  await page.getByRole('navigation', { name: 'Page sections' }).getByRole('button', { name: 'Roles & points' }).click();
 
   const guide = page.locator('details.group\\/guide');
+  await expect(guide).toHaveAttribute('open', '');
   await expect(guide.getByText('King', { exact: true })).toBeVisible();
   await expect(guide.getByText('5 primary-role points')).toBeVisible();
   await expect(guide.getByText('Advisor', { exact: true })).toBeVisible();
   await expect(guide.getByText('3 primary-role points')).toBeVisible();
+});
+
+test('sticky section navigation opens the role guide and jumps to roster areas', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  const navigation = page.getByRole('navigation', { name: 'Page sections' });
+  await navigation.getByRole('button', { name: 'Roles & points' }).click();
+  await expect(page.locator('#role-guide')).toHaveAttribute('open', '');
+  await expect(page.locator('#role-guide')).toBeInViewport();
+
+  await navigation.getByRole('link', { name: 'Find members' }).click();
+  await expect(page).toHaveURL(/#roster-controls$/);
+  await expect(page.locator('#roster-controls')).toBeInViewport();
+
+  await navigation.getByRole('link', { name: 'Roster', exact: true }).click();
+  await expect(page).toHaveURL(/#member-roster$/);
+  await expect(page.locator('#member-roster')).toBeInViewport();
+  const navBounds = await navigation.boundingBox();
+  expect(navBounds.y).toBeLessThan(30);
+
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
 });
 
 test('compact mode is shareable and the copied view restores the active filters', async ({ page }) => {
@@ -128,24 +161,52 @@ test('all failed skin providers show initials, allow retry, and keep local mode 
   await expect(page.getByRole('button', { name: 'Local', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('compact layout fits a phone width and profile dialog stays in the viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('comfortable and compact layouts fit narrow phones with usable card columns', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Compact', exact: true }).click();
 
-  const dimensions = await page.evaluate(() => ({
-    documentWidth: document.documentElement.scrollWidth,
-    viewportWidth: document.documentElement.clientWidth,
-  }));
-  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    const dimensions = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      summaryColumns: getComputedStyle(
+        document.querySelector('#realm-overview .grid.grid-cols-3')
+      ).gridTemplateColumns.split(' ').length,
+      leadershipColumns: getComputedStyle(
+        document.querySelector('[aria-labelledby="realm-glance-title"] .grid.grid-cols-2')
+      ).gridTemplateColumns.split(' ').length,
+    }));
+    expect(dimensions.documentWidth, `comfortable layout at ${width}px`).toBeLessThanOrEqual(dimensions.viewportWidth);
+    expect(dimensions.summaryColumns, `overview stat columns at ${width}px`).toBe(3);
+    expect(dimensions.leadershipColumns, `leadership columns at ${width}px`).toBe(2);
 
-  await page.getByRole('button', { name: 'Profile', exact: true }).first().click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  const bounds = await dialog.boundingBox();
-  expect(bounds.x).toBeGreaterThanOrEqual(0);
-  expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
-  expect(bounds.height).toBeLessThanOrEqual(844);
+    const overview = await page.getByRole('region', { name: 'Realm at a glance' }).boundingBox();
+    expect(overview.x, `overview left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(overview.x + overview.width, `overview right edge at ${width}px`).toBeLessThanOrEqual(width);
+
+    await page.getByRole('button', { name: 'Compact', exact: true }).click();
+    const compactDimensions = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      highCouncilColumns: getComputedStyle(
+        document.querySelector('#rank-2')?.closest('section')?.querySelector(':scope > div.grid')
+      ).gridTemplateColumns.split(' ').length,
+    }));
+    expect(compactDimensions.documentWidth, `compact layout at ${width}px`).toBeLessThanOrEqual(compactDimensions.viewportWidth);
+    expect(compactDimensions.highCouncilColumns, `compact columns at ${width}px`).toBe(width < 420 ? 1 : 2);
+
+    const profileButton = page.getByRole('button', { name: 'Profile', exact: true }).first();
+    await expect(profileButton).toHaveCSS('min-height', '40px');
+    await profileButton.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    const bounds = await dialog.boundingBox();
+    expect(bounds.x, `profile left edge at ${width}px`).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width, `profile right edge at ${width}px`).toBeLessThanOrEqual(width);
+    expect(bounds.height, `profile height at ${width}px`).toBeLessThanOrEqual(844);
+    await page.getByRole('button', { name: 'Close member profile' }).click();
+    await page.getByRole('button', { name: 'Comfortable', exact: true }).click();
+  }
 });
 
 test('print view includes active search and filters but hides interactive controls', async ({ page }) => {
@@ -160,5 +221,6 @@ test('print view includes active search and filters but hides interactive contro
   await expect(summary).toContainText('Search: “Darcy”');
   await expect(summary).toContainText('Group: Military');
   await expect(page.getByRole('region', { name: 'Find a member' })).toBeHidden();
+  await expect(page.getByRole('navigation', { name: 'Page sections' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Print roster' })).toBeHidden();
 });
