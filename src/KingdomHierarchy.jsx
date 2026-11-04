@@ -35,7 +35,7 @@ function HighlightedText({ text, query }) {
   ));
 }
 
-function MemberAvatar({ member, config, avatarMode }) {
+function MemberAvatar({ member, config, avatarMode, showRetry = true, sizeClass = 'h-12 w-12' }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [providerIndex, setProviderIndex] = useState(0);
@@ -54,7 +54,7 @@ function MemberAvatar({ member, config, avatarMode }) {
   }, [member.mcName, avatarMode]);
 
   return (
-    <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className="relative h-12 w-12 shrink-0">
+    <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className={`relative shrink-0 ${sizeClass}`}>
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}>
         {avatarMode === 'local' || imageFailed ? (
           <span aria-hidden="true">{initials}</span>
@@ -75,7 +75,7 @@ function MemberAvatar({ member, config, avatarMode }) {
           />
         )}
       </div>
-      {imageFailed && avatarMode === 'minecraft' && (
+      {showRetry && imageFailed && avatarMode === 'minecraft' && (
         <button
           type="button"
           aria-label={`Retry loading ${member.name}'s avatar`}
@@ -841,7 +841,6 @@ export default function KingdomHierarchy() {
                   <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
                     {membersInRank.map(member => {
                       const config = ROLE_CONFIG[member.role];
-                      const Icon = config?.icon || User;
                       return (
                         <button
                           key={member.id}
@@ -850,9 +849,13 @@ export default function KingdomHierarchy() {
                           onClick={() => openMemberProfile(member)}
                           className={`flex min-h-[4.5rem] w-full items-center gap-3 rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900 to-[#121310] px-3 py-2.5 text-left shadow-md shadow-black/10 transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 sm:w-auto sm:min-w-48 sm:max-w-full ${config?.accent}`}
                         >
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/5 bg-stone-800/80 ${config?.color}`}>
-                            <Icon aria-hidden="true" size={16} />
-                          </span>
+                          <MemberAvatar
+                            member={member}
+                            config={config}
+                            avatarMode="minecraft"
+                            showRetry={false}
+                            sizeClass="h-10 w-10"
+                          />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-bold text-stone-100">{member.name}</span>
                             <span className={`mt-0.5 block truncate font-sans text-[10px] ${config?.color}`}>{member.role}</span>
