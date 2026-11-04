@@ -39,6 +39,7 @@ test('role guide explains each role and its primary-role points', async ({ page 
   await expect(guide.getByText('5 primary-role points')).toBeVisible();
   await expect(guide.getByText('Advisor', { exact: true })).toBeVisible();
   await expect(guide.getByText('3 primary-role points')).toBeVisible();
+  await expect(guide.locator('time')).toHaveAttribute('datetime', '2026-11-04');
 });
 
 test('compact mode is shareable and the copied view restores the active filters', async ({ page }) => {

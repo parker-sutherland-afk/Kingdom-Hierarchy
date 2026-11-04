@@ -56,7 +56,7 @@ test('High Council and Military filters include matching secondary roles', () =>
 
 test('search includes Minecraft usernames and descriptions', () => {
   assert.deepEqual(filterMembers(members, 'eighthsea6218', 'All').map(member => member.name), ['Will']);
-  assert.deepEqual(filterMembers(members, 'sovereign overlord', 'All').map(member => member.name), ['Will']);
+  assert.deepEqual(filterMembers(members, 'highest throne', 'All').map(member => member.name), ['Will']);
 });
 
 test('search highlighting safely matches case-insensitive text and literal regex characters', () => {

@@ -4,14 +4,14 @@
     "name": "Will",
     "mcName": "EighthSea6218",
     "role": "King",
-    "customDesc": "The sovereign overlord, whose mere whisper commands the tides of fate and whose iron will binds the very foundations of the realm."
+    "customDesc": "From the highest throne, Will rules with a voice that could still a battlefield and a gaze that seems to measure the fate of kingdoms. By crown, decree, and sheer force of legendary will, he holds the realm together against the turning of the ages."
   },
   {
     "id": 2,
     "name": "Parker",
     "mcName": "pikkapokaparker",
     "role": "Advisor",
-    "customDesc": "Master of whispers and the silent orchestrator of the throne's absolute power. He sees all that the light touches, and all that it does not."
+    "customDesc": "Parker is the throne's master of whispers, a silver-tongued strategist whose counsel slips through the palace like moonlight through a locked door. He sees the plans unfolding in every shadow and helps turn the King's grandest ambitions into commands the realm cannot ignore."
   },
   {
     "id": 3,
@@ -19,55 +19,55 @@
     "mcName": "ImmortalPrince63",
     "role": "Advisor",
     "secondaryRole": "Head Of Combat And War",
-    "customDesc": "The blood-soaked vanguard of the King's wrath. A relentless tactician whose enchanted blade has tasted the ruin of a thousand empires."
+    "customDesc": "At the King's side stands Darcy, a relentless tactician whose war plans are drawn with the precision of a master and the drama of a saga's final battle. As guardian of combat and war, Darcy meets every threat with an enchanted blade, unshakable nerve, and a legend that grows with every clash."
   },
   {
     "id": 4,
     "name": "Harrison",
     "mcName": "paddcake2016",
     "role": "Head Of Resources and Projects",
-    "customDesc": "The grand architect of prosperity. He bends the very earth to his will, forging unstoppable empires from raw stone and boundless ambition."
+    "customDesc": "Harrison is the realm's grand architect of prosperity, turning rough stone, scarce supplies, and impossible plans into the foundations of an empire. Where others see an empty chest or an unbuilt road, he sees the first chapter of a kingdom that will make history."
   },
   {
     "id": 5,
     "name": "Thomas",
     "mcName": "HYPERIOUS12",
     "role": "Head Of Agriculture and Justice",
-    "customDesc": "The iron-fisted warden of the harvest and the law. He reaps both the golden wheat and the souls of the guilty with equal, merciless judgment."
+    "customDesc": "Thomas watches over the harvest and the law with the thunderous authority of a judge beneath a storm-dark sky. From the first golden field to the final ruling, he keeps the kingdom fed, its rules upheld, and disorder trembling at the edge of the furrows."
   },
   {
     "id": 6,
     "name": "Nate",
     "mcName": "DirtGrub58",
     "role": "Head Of Medicinal Substances",
-    "customDesc": "An enigmatic alchemist dancing on the razor's edge of life and death, brewing volatile elixirs that could either grant immortality or shatter the mind."
+    "customDesc": "Nate is the kingdom's enigmatic alchemist, delving into the bubbling mysteries of medicinal substances with a steady hand and a flair for the extraordinary. From hidden ingredients he brews remedies and potions fit for a legend, guarding the delicate line between a miraculous cure and a spectacular fizz."
   },
   {
     "id": 7,
     "name": "Max",
     "mcName": "maxthaking____",
     "role": "Prince",
-    "customDesc": "The golden heir to the throne, bearing the crushing, inescapable weight of a legacy forged in blood and destined to one day eclipse the stars."
+    "customDesc": "Max, golden heir to the throne, carries a legacy vast enough to cast a shadow across the realm and a future bright enough to challenge the stars. Every step brings the Prince closer to the crown, where ancient duty and boundless ambition await their next chapter."
   },
   {
     "id": 8,
     "name": "Alex",
     "mcName": "Gamer2143707",
     "role": "Citizen",
-    "customDesc": "A humble soul bound to the dirt, yet harboring the burning, unyielding spirit of a thousand ancestors in the eternal shadow of the crown."
+    "customDesc": "Alex may stand among the citizens, but no ordinary title can contain a spirit forged in the oldest fires of the realm. With steadfast resolve and a place in the kingdom's living story, Alex proves that even the grandest legends begin on common ground."
   },
   {
     "id": 9,
     "name": "Nicky",
     "mcName": "Chicky31889",
     "role": "Citizen",
-    "customDesc": "An unsung hero of the cobblestones, whose relentless daily toil weaves the very fabric of the kingdom's glorious and unending tapestry."
+    "customDesc": "Nicky is an unsung hero of the cobblestones, whose everyday efforts quietly hold together the grand tapestry of the kingdom. Deed by deed and block by block, Nicky helps build a realm whose glory would be impossible without its steadfast citizens."
   },
   {
     "id": 10,
     "name": "Poppy",
     "mcName": "beastygirl101",
     "role": "Citizen",
-    "customDesc": "A fiercely loyal resident whose unwavering devotion to the realm burns brighter than the hottest forge. A true, unstoppable pillar of the kingdom's grand destiny."
+    "customDesc": "Poppy's loyalty burns like a beacon above the kingdom walls, bright enough to guide the realm through its darkest hour and its rowdiest celebration. A steadfast citizen and pillar of the realm, Poppy helps turn shared purpose into a destiny worthy of song."
   }
 ]
