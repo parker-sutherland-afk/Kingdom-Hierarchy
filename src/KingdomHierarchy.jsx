@@ -308,6 +308,10 @@ export default function KingdomHierarchy() {
   const profileDialogRef = useRef(null);
   const searchInputRef = useRef(null);
   const members = MEMBERS;
+  const actingLeaders = ROSTER_METADATA.kingAway
+    ? members.filter(member => member.role === 'Advisor')
+    : [];
+  const actingLeaderIds = new Set(actingLeaders.map(member => member.id));
 
   useEffect(() => {
     const handlePopState = () => {
@@ -554,6 +558,23 @@ export default function KingdomHierarchy() {
                   </div>
                 ))}
               </div>
+              {ROSTER_METADATA.kingAway && (
+                <section
+                  aria-label="Leadership status"
+                  role="status"
+                  className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3"
+                >
+                  <p className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-amber-200">
+                    King away
+                  </p>
+                  <p className="mt-1 text-sm text-stone-200">
+                    Acting leadership: {actingLeaders.map(member => member.name).join(' and ')}.
+                  </p>
+                  <p className="mt-1 font-sans text-xs text-stone-400">
+                    Their permanent roles and voting points are unchanged.
+                  </p>
+                </section>
+              )}
               <p className="mt-4 flex items-start gap-2 rounded-lg border border-stone-800/80 bg-black/20 px-4 py-3 font-sans text-xs leading-relaxed text-stone-400">
                 <Scale className="mt-0.5 shrink-0 text-sky-300/80" size={15} />
                 <span>Voting power comes from each member’s primary role only. Secondary roles do not add voting points.</span>
@@ -819,6 +840,11 @@ export default function KingdomHierarchy() {
                                 <MemberAvatar member={member} config={config} avatarMode={avatarMode} />
                                 <div className="min-w-0">
                                   <h3 className={`truncate font-black tracking-wide text-stone-100 transition-colors ${viewMode === 'compact' ? 'text-sm' : 'text-lg'} ${config?.nameHover}`}><HighlightedText text={member.name} query={normalizedQuery} /></h3>
+                                  {actingLeaderIds.has(member.id) && (
+                                    <span className="mt-1 inline-flex rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2 py-0.5 font-sans text-[9px] font-bold uppercase tracking-[0.1em] text-amber-200">
+                                      Acting leader
+                                    </span>
+                                  )}
                                   <div className={`mt-0.5 min-w-0 items-center gap-1 font-sans text-xs text-stone-500 ${viewMode === 'compact' ? 'hidden' : 'flex'}`}>
                                     <span className="truncate">@<HighlightedText text={member.mcName} query={normalizedQuery} /></span>
                                     <button
@@ -924,6 +950,11 @@ export default function KingdomHierarchy() {
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Member profile</p>
                         <h2 id="member-profile-title" className={`mt-1 truncate text-2xl font-black ${config?.color}`}>{selectedMember.name}</h2>
+                        {actingLeaderIds.has(selectedMember.id) && (
+                          <span className="mt-1 inline-flex rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2 py-0.5 font-sans text-[9px] font-bold uppercase tracking-[0.1em] text-amber-200">
+                            Acting leader
+                          </span>
+                        )}
                         <p className="mt-1 truncate font-sans text-sm text-stone-400">@{selectedMember.mcName}</p>
                       </div>
                     </div>

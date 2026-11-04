@@ -2,6 +2,24 @@ import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
 
+test('king-away status names the acting leaders without changing permanent voting points', async ({ page }) => {
+  await page.goto('/');
+
+  const status = page.getByRole('status', { name: 'Leadership status' });
+  await expect(status).toContainText('King away');
+  await expect(status).toContainText('Acting leadership: Parker and Darcy.');
+
+  for (const name of ['Parker', 'Darcy']) {
+    const card = page.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
+    await expect(card.getByText('Acting leader', { exact: true })).toBeVisible();
+    await expect(card.getByLabel('3 voting points from Advisor primary role')).toBeVisible();
+  }
+
+  const kingCard = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Will', exact: true }) });
+  await expect(kingCard.getByLabel('5 voting points from King primary role')).toBeVisible();
+  await expect(kingCard.getByText('Acting leader', { exact: true })).toHaveCount(0);
+});
+
 async function mockAvatarProviders(page, handleAvatar, requests) {
   for (const host of avatarProviderHosts) {
     await page.route(`https://${host}/**`, async route => {
@@ -33,7 +51,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page).toHaveURL(/q=Darcy/);
   await expect(page).toHaveURL(/group=Military/);
   await expect(page).toHaveURL(/view=compact/);
-  await expect(page.getByRole('status').first()).toContainText('Showing 1 of 10 members');
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Share view' }).click();
   await expect(page.getByText('Filtered view link copied.')).toBeVisible();
@@ -46,7 +64,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await page.goto(sharedUrl.href);
   await expect(page.getByRole('searchbox', { name: 'Search the roster' })).toHaveValue('Darcy');
   await expect(page.getByRole('button', { name: 'Compact', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('status').first()).toContainText('Showing 1 of 10 members');
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
 });
 
 test('filter state survives opening a member profile and browser back/forward', async ({ page }) => {
