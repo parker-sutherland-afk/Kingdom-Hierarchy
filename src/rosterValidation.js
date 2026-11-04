@@ -65,6 +65,19 @@ export function validateRoster(members, roleNames, metadata) {
     ) {
       errors.push('Roster metadata lastUpdated must be a valid YYYY-MM-DD date.');
     }
+
+    if (metadata.kingAway !== undefined && typeof metadata.kingAway !== 'boolean') {
+      errors.push('Roster metadata kingAway must be a boolean when it is provided.');
+    }
+
+    if (metadata.kingAway === true) {
+      if (!members.some(member => member?.role === 'King')) {
+        errors.push('Roster metadata cannot mark the King away when no King is listed.');
+      }
+      if (!members.some(member => member?.role === 'Advisor')) {
+        errors.push('Roster metadata cannot mark the King away when no Advisors are listed.');
+      }
+    }
   }
 
   return errors;
