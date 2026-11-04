@@ -38,13 +38,40 @@ async function mockAvatarProviders(page, handleAvatar, requests) {
 
 test('role guide explains each role and its primary-role points', async ({ page }) => {
   await page.goto('/');
-  await page.getByText('Role guide and primary-role voting points').click();
+  await page.getByRole('navigation', { name: 'Page sections' }).getByRole('button', { name: 'Roles & points' }).click();
 
   const guide = page.locator('details.group\\/guide');
+  await expect(guide).toHaveAttribute('open', '');
   await expect(guide.getByText('King', { exact: true })).toBeVisible();
   await expect(guide.getByText('5 primary-role points')).toBeVisible();
   await expect(guide.getByText('Advisor', { exact: true })).toBeVisible();
   await expect(guide.getByText('3 primary-role points')).toBeVisible();
+});
+
+test('sticky section navigation opens the role guide and jumps to roster areas', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  const navigation = page.getByRole('navigation', { name: 'Page sections' });
+  await navigation.getByRole('button', { name: 'Roles & points' }).click();
+  await expect(page.locator('#role-guide')).toHaveAttribute('open', '');
+  await expect(page.locator('#role-guide')).toBeInViewport();
+
+  await navigation.getByRole('link', { name: 'Find members' }).click();
+  await expect(page).toHaveURL(/#roster-controls$/);
+  await expect(page.locator('#roster-controls')).toBeInViewport();
+
+  await navigation.getByRole('link', { name: 'Roster', exact: true }).click();
+  await expect(page).toHaveURL(/#member-roster$/);
+  await expect(page.locator('#member-roster')).toBeInViewport();
+  const navBounds = await navigation.boundingBox();
+  expect(navBounds.y).toBeLessThan(30);
+
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
 });
 
 test('compact mode is shareable and the copied view restores the active filters', async ({ page }) => {
@@ -186,5 +213,6 @@ test('print view includes active search and filters but hides interactive contro
   await expect(summary).toContainText('Search: “Darcy”');
   await expect(summary).toContainText('Group: Military');
   await expect(page.getByRole('region', { name: 'Find a member' })).toBeHidden();
+  await expect(page.getByRole('navigation', { name: 'Page sections' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Print roster' })).toBeHidden();
 });

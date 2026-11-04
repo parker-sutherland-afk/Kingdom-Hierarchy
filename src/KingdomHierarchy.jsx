@@ -306,6 +306,7 @@ export default function KingdomHierarchy() {
   const [viewLinkStatus, setViewLinkStatus] = useState('');
   const [selectedMember, setSelectedMember] = useState(initialUrlState.current.selectedMember);
   const profileDialogRef = useRef(null);
+  const roleGuideRef = useRef(null);
   const searchInputRef = useRef(null);
   const members = MEMBERS;
   const king = members.find(member => member.role === 'King');
@@ -527,7 +528,29 @@ export default function KingdomHierarchy() {
         Skip to member roster
       </a>
       <div className="relative mx-auto max-w-6xl px-3 py-6 sm:px-4 md:px-8 md:py-12">
-        <header className="mb-10">
+        <nav aria-label="Page sections" className="sticky top-2 z-30 -mx-1 mb-4 flex gap-1 overflow-x-auto rounded-xl border border-stone-700/80 bg-[#10110f]/95 p-1.5 font-sans shadow-lg shadow-black/30 backdrop-blur-xl print:hidden sm:top-3 sm:mb-6">
+          <a href="#realm-overview" className="inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-[11px] font-semibold text-stone-300 transition hover:bg-stone-800 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+            Overview
+          </a>
+          <a href="#roster-controls" className="inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-[11px] font-semibold text-stone-300 transition hover:bg-stone-800 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+            Find members
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              if (!roleGuideRef.current) return;
+              roleGuideRef.current.open = true;
+              roleGuideRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className="inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-[11px] font-semibold text-stone-300 transition hover:bg-stone-800 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+          >
+            Roles &amp; points
+          </button>
+          <a href="#member-roster" className="inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-[11px] font-semibold text-stone-300 transition hover:bg-stone-800 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+            Roster
+          </a>
+        </nav>
+        <header id="realm-overview" className="mb-10 scroll-mt-24">
           <div className="relative overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900 via-[#171812] to-[#11120f] px-4 py-6 shadow-2xl sm:px-6 sm:py-8 md:px-10 md:py-10">
             <div className="absolute -right-10 -top-14 text-amber-100/[0.035]"><Crown size={260} strokeWidth={0.7} /></div>
             <div className="relative">
@@ -647,7 +670,7 @@ export default function KingdomHierarchy() {
             </div>
           </div>
 
-          <details className="group/guide mt-4 overflow-hidden rounded-xl border border-stone-800 bg-stone-900/45 print:hidden">
+          <details ref={roleGuideRef} id="role-guide" className="group/guide mt-4 scroll-mt-24 overflow-hidden rounded-xl border border-stone-800 bg-stone-900/45 print:hidden">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 font-sans text-xs font-semibold text-stone-300 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 [&::-webkit-details-marker]:hidden">
               <BookOpen aria-hidden="true" size={15} className="text-amber-400" />
               Role guide and primary-role voting points
@@ -673,7 +696,7 @@ export default function KingdomHierarchy() {
             </div>
           </details>
 
-          <section aria-labelledby="roster-controls-title" className="group/controls relative mt-6 rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
+          <section id="roster-controls" aria-labelledby="roster-controls-title" className="group/controls relative mt-6 scroll-mt-24 rounded-2xl border border-stone-800 bg-gradient-to-br from-[#1a1914] via-[#131410] to-[#10110f] shadow-xl shadow-black/20">
             <div aria-hidden="true" className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
             <div className="p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
