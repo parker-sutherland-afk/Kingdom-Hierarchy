@@ -2,16 +2,14 @@ import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
 
-test('king-away status names the acting leaders without changing permanent voting points', async ({ page }) => {
+test('returned King clears acting-leader status without changing permanent roles or voting points', async ({ page }) => {
   await page.goto('/');
 
-  const status = page.getByRole('status', { name: 'Leadership status' });
-  await expect(status).toContainText('King away');
-  await expect(status).toContainText('Acting leadership: Parker and Darcy.');
+  await expect(page.getByRole('status', { name: 'Leadership status' })).toHaveCount(0);
 
   for (const name of ['Parker', 'Darcy']) {
     const card = page.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
-    await expect(card.getByText('Acting leader', { exact: true })).toBeVisible();
+    await expect(card.getByText('Acting leader', { exact: true })).toHaveCount(0);
     await expect(card.getByLabel('3 voting points from Advisor primary role')).toBeVisible();
   }
 
