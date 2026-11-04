@@ -72,6 +72,11 @@ test('compact mode is shareable and the copied view restores the active filters'
 
 test('hierarchy view follows filters, is shareable, and opens member profiles', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await mockAvatarProviders(page, route => route.fulfill({
+    status: 200,
+    contentType: 'image/svg+xml',
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+  }), []);
   await page.goto('/?q=Darcy&group=Military&layout=hierarchy');
 
   const hierarchy = page.locator('#member-roster');
@@ -79,6 +84,10 @@ test('hierarchy view follows filters, is shareable, and opens member profiles', 
   await expect(hierarchy.getByRole('heading', { name: 'HIGH COUNCIL' })).toBeVisible();
   await expect(hierarchy.getByRole('heading', { name: 'CITIZENS' })).toHaveCount(0);
   await expect(hierarchy.getByRole('button', { name: "Open Darcy's profile" })).toBeVisible();
+  await expect(
+    hierarchy.getByRole('group', { name: "Darcy's Minecraft avatar" })
+      .getByRole('img', { name: "Darcy's Minecraft skin" })
+  ).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     documentWidth: document.documentElement.scrollWidth,
     viewportWidth: document.documentElement.clientWidth,
