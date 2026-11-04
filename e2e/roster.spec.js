@@ -69,6 +69,36 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
 });
 
+test('hierarchy view follows filters, is shareable, and opens member profiles', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?q=Darcy&group=Military&layout=hierarchy');
+
+  const hierarchy = page.locator('#member-roster');
+  await expect(hierarchy).toHaveAttribute('data-layout-mode', 'hierarchy');
+  await expect(hierarchy.getByRole('heading', { name: 'HIGH COUNCIL' })).toBeVisible();
+  await expect(hierarchy.getByRole('heading', { name: 'CITIZENS' })).toHaveCount(0);
+  await expect(hierarchy.getByRole('button', { name: "Open Darcy's profile" })).toBeVisible();
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+
+  await page.getByRole('button', { name: 'Share view' }).click();
+  await expect(page.getByText('Filtered view link copied.')).toBeVisible();
+  const sharedUrl = new URL(await page.evaluate(() => navigator.clipboard.readText()));
+  expect(sharedUrl.searchParams.get('layout')).toBe('hierarchy');
+  expect(sharedUrl.searchParams.get('group')).toBe('Military');
+  expect(sharedUrl.searchParams.get('q')).toBe('Darcy');
+
+  await page.goto(sharedUrl.href);
+  await page.locator('#member-roster').getByRole('button', { name: "Open Darcy's profile" }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page).toHaveURL(/layout=hierarchy/);
+  await page.goBack();
+  await expect(page.locator('#member-roster')).toHaveAttribute('data-layout-mode', 'hierarchy');
+});
+
 test('filter state survives opening a member profile and browser back/forward', async ({ page }) => {
   await page.goto('/?q=Darcy&group=Council&role=Advisor&sort=name&view=compact');
   await page.getByRole('button', { name: 'Profile', exact: true }).click();
@@ -165,4 +195,9 @@ test('print view includes active search and filters but hides interactive contro
   await expect(summary).toContainText('Group: Military');
   await expect(page.getByRole('region', { name: 'Find a member' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Print roster' })).toBeHidden();
+
+  await page.goto('/?layout=hierarchy');
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.getByTestId('print-roster-summary')).toContainText('Layout: Hierarchy');
+  await expect(page.getByRole('button', { name: "Open Will's profile" })).toBeVisible();
 });
