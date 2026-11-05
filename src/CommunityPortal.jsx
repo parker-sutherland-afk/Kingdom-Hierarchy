@@ -139,6 +139,10 @@ export default function CommunityPortal() {
 
           {section === 'constitution' && (
             <div className="space-y-5">
+              <section aria-labelledby="constitution-title" className={cardClass}>
+                <h3 id="constitution-title" className="text-xl font-black uppercase tracking-wide text-stone-100">Constitution of Imperius</h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-400">{CONSTITUTION.preamble}</p>
+              </section>
               <section aria-labelledby="currency-title" className={cardClass}>
                 <h3 id="currency-title" className="text-base font-bold text-amber-100">Kingdom Currency</h3>
                 <p className="mt-1 text-sm leading-relaxed text-stone-400">The kingdom's listed item values, from everyday trade to treasures fit for a throne.</p>
