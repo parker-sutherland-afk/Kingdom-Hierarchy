@@ -35,7 +35,7 @@ Run both the unit and browser tests with `npm run test:all`.
 
 ## Community pages
 
-The Community link opens static, read-only **Notices**, **Build projects**, **Constitution**, and **Profiles** pages. There is no chat/message board, sign-in system, external database, or member editing. Public roster profiles link back to each member’s full roster profile.
+The Community link opens a static, read-only **Realm Hall** overview, **Notices**, **Build projects**, **Constitution**, and **Profiles**. The overview highlights the latest notice, a featured project, and the date of the most recently updated roster or community entry. Constitution articles are organized into a table of contents and expandable sections so the full text stays available without overwhelming the page. There is no chat/message board, sign-in system, external database, or member editing. Public roster profiles link back to each member’s full roster profile.
 
 To publish a notice, edit [`src/data/notices.json`](./src/data/notices.json) and deploy. Each notice has an `id`, `title`, `body`, and `date` (`YYYY-MM-DD`). To publish or update build plans, edit [`src/data/buildProjects.json`](./src/data/buildProjects.json) and deploy. Each project has an `id`, `title`, `description`, `status` (`planned`, `active`, or `completed`), and `progress` (0–100); `updatedAt` (`YYYY-MM-DD`) is optional. Currency values and laws are maintained in [`src/data/constitution.json`](./src/data/constitution.json).
 
