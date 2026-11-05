@@ -47,6 +47,7 @@
     "name": "Max",
     "mcName": "maxthaking____",
     "role": "Prince",
+    "section": "Citizens",
     "customDesc": "Max, golden heir to the throne, carries a legacy vast enough to cast a shadow across the realm and a future bright enough to challenge the stars. Every step brings the Prince closer to the crown, where ancient duty and boundless ambition await their next chapter."
   },
   {
@@ -69,5 +70,12 @@
     "mcName": "beastygirl101",
     "role": "Citizen",
     "customDesc": "Poppy's loyalty burns like a beacon above the kingdom walls, bright enough to guide the realm through its darkest hour and its rowdiest celebration. A steadfast citizen and pillar of the realm, Poppy helps turn shared purpose into a destiny worthy of song."
+  },
+  {
+    "id": 11,
+    "name": "Charlie Pringle",
+    "mcName": "",
+    "role": "Citizen",
+    "customDesc": "Charlie Pringle joins the citizens of the realm, where every new name adds another chapter to the kingdom's ever-growing legend. Their story is just beginning, and the halls of history await the deeds still to come."
   }
 ]

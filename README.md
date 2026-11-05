@@ -1,6 +1,6 @@
 # Kingdom Hierarchy
 
-A searchable roster for the kingdom, built with React, Vite, Tailwind CSS, and Lucide icons.
+A searchable roster and static community pages for the kingdom, built with React, Vite, Tailwind CSS, and Lucide icons.
 
 ## Run locally
 
@@ -33,11 +33,19 @@ npm run test:e2e
 
 Run both the unit and browser tests with `npm run test:all`.
 
+## Community pages
+
+The Community link opens static, read-only **Notices**, **Build projects**, and **Profiles** pages. There is no chat/message board, sign-in system, external database, or member editing. Public roster profiles link back to each member’s full roster profile.
+
+To publish a notice, edit [`src/data/notices.json`](./src/data/notices.json) and deploy. Each notice has an `id`, `title`, `body`, and `date` (`YYYY-MM-DD`). To publish a build project, edit [`src/data/buildProjects.json`](./src/data/buildProjects.json) and deploy. Each project has an `id`, `title`, `description`, `status` (`planned`, `active`, or `completed`), and `progress` (0–100); `updatedAt` (`YYYY-MM-DD`) is optional. The pages are empty until you add content.
+
+A council-only board is intentionally omitted: without a server or protected hosting, static content cannot be kept private. Do not put confidential council messages in the site or repository.
+
 ## Roster data
 
-The site is a read-only viewer. To change the published roster, edit [`src/data/members.json`](./src/data/members.json) directly and deploy the project. Each member needs a unique `id`, a display `name`, a Minecraft `mcName`, and a role defined in [`src/roleConfig.js`](./src/roleConfig.js). `secondaryRole` and `customDesc` are optional.
+To change the published roster, edit [`src/data/members.json`](./src/data/members.json) directly and deploy the project. Each member needs a unique `id`, a display `name`, and a role defined in [`src/roleConfig.js`](./src/roleConfig.js). `mcName`, `section`, `secondaryRole`, and `customDesc` are optional. A member can have `section: "Citizens"` to place them in that area without changing their actual role or voting points.
 
-Run `npm run validate:data` to check the roster for missing fields, duplicate IDs or Minecraft usernames, and unknown roles. The production build runs this validation automatically. Role definitions live in [`src/roleConfig.js`](./src/roleConfig.js).
+Run `npm run validate:data` to check the roster for missing fields, duplicate IDs or Minecraft usernames, and unknown roles. Minecraft usernames are optional. The production build runs this validation automatically. Role definitions live in [`src/roleConfig.js`](./src/roleConfig.js).
 
 To publish a temporary King-away notice, set `kingAway` in [`src/data/rosterMetadata.json`](./src/data/rosterMetadata.json) to `true`; set it back to `false` when the King returns. While enabled, the viewer lists members whose primary role is Advisor as acting leaders and labels their cards. This does not change anyone’s permanent role or voting points. Commit and deploy the metadata change to update the shared site.
 

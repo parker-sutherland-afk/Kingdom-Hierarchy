@@ -32,7 +32,7 @@ export function matchesMemberFilter(member, filter) {
   }
 
   if (filter === 'Citizens') {
-    return member.role === 'Citizen';
+    return member.role === 'Citizen' || member.section === 'Citizens';
   }
 
   if (filter === 'Military') {
@@ -40,6 +40,12 @@ export function matchesMemberFilter(member, filter) {
   }
 
   return true;
+}
+
+export function getRosterSectionRank(member, roleConfig) {
+  return member.section === 'Citizens'
+    ? 5
+    : roleConfig[member.role]?.rank ?? 5;
 }
 
 export function filterMembers(members, searchQuery, activeFilter, selectedRole = '') {

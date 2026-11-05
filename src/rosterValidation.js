@@ -23,16 +23,24 @@ export function validateRoster(members, roleNames, metadata) {
       ids.add(member.id);
     }
 
-    for (const field of ['name', 'mcName', 'role']) {
+    for (const field of ['name', 'role']) {
       if (typeof member[field] !== 'string' || member[field].trim() === '') {
         errors.push(`${label} must have a non-empty ${field}.`);
       }
+    }
+
+    if (member.mcName !== undefined && typeof member.mcName !== 'string') {
+      errors.push(`${label} mcName must be a string when it is provided.`);
     }
 
     if (typeof member.mcName === 'string' && member.mcName.trim()) {
       const username = member.mcName.trim().toLocaleLowerCase();
       if (usernames.has(username)) errors.push(`${label} has duplicate Minecraft username ${member.mcName}.`);
       usernames.add(username);
+    }
+
+    if (member.section !== undefined && member.section !== 'Citizens') {
+      errors.push(`${label} section must be "Citizens" when it is provided.`);
     }
 
     if (typeof member.role === 'string' && !knownRoles.has(member.role)) {

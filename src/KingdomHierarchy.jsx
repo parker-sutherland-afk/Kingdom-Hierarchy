@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen, Network } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen, Network, MessageSquare } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
-import { describeVotingPower, filterMembers, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
+import { describeVotingPower, filterMembers, getRosterSectionRank, getVotingPowerBreakdown, matchesMemberFilter, sortByName, sortByVotingPower, splitSearchHighlights } from './rosterUtils.js';
 import { createRosterUrl, readRosterUrl } from './rosterUrl.js';
 import { getMinecraftAvatarSources } from './avatarSources.js';
 
@@ -56,7 +56,7 @@ function MemberAvatar({ member, config, avatarMode, showRetry = true, sizeClass 
   return (
     <div role="group" aria-label={`${member.name}'s Minecraft avatar`} className={`relative shrink-0 ${sizeClass}`}>
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-stone-700 bg-stone-950 font-sans text-sm font-bold shadow-md transition duration-300 group-hover:scale-105 motion-reduce:transition-none ${config?.color} ${config?.accent}`}>
-        {avatarMode === 'local' || imageFailed ? (
+        {avatarMode === 'local' || imageFailed || !member.mcName ? (
           <span aria-hidden="true">{initials}</span>
         ) : (
           <img
@@ -75,7 +75,7 @@ function MemberAvatar({ member, config, avatarMode, showRetry = true, sizeClass 
           />
         )}
       </div>
-      {showRetry && imageFailed && avatarMode === 'minecraft' && (
+      {showRetry && imageFailed && member.mcName && avatarMode === 'minecraft' && (
         <button
           type="button"
           aria-label={`Retry loading ${member.name}'s avatar`}
@@ -308,6 +308,7 @@ export default function KingdomHierarchy() {
   const [selectedMember, setSelectedMember] = useState(initialUrlState.current.selectedMember);
   const profileDialogRef = useRef(null);
   const searchInputRef = useRef(null);
+  const restoringHistoryRef = useRef(false);
   const members = MEMBERS;
   const actingLeaders = ROSTER_METADATA.kingAway
     ? members.filter(member => member.role === 'Advisor')
@@ -317,6 +318,7 @@ export default function KingdomHierarchy() {
   useEffect(() => {
     const handlePopState = () => {
       const state = readRosterUrl(window.location.search, members, ROLE_NAMES);
+      restoringHistoryRef.current = true;
       setSearchQuery(state.searchQuery);
       setActiveFilter(state.activeFilter);
       setSortMode(state.sortMode);
@@ -332,6 +334,11 @@ export default function KingdomHierarchy() {
   }, [members]);
 
   useEffect(() => {
+    if (restoringHistoryRef.current) {
+      restoringHistoryRef.current = false;
+      return;
+    }
+
     const url = createRosterUrl(window.location.href, {
       searchQuery,
       activeFilter,
@@ -504,7 +511,7 @@ export default function KingdomHierarchy() {
     ? [1, 2, 3, 4, 5].map(rank => ({
       key: rank,
       title: RANK_TITLES[rank],
-      members: filteredMembers.filter(member => ROLE_CONFIG[member.role]?.rank === rank),
+      members: filteredMembers.filter(member => getRosterSectionRank(member, ROLE_CONFIG) === rank),
     })).filter(section => section.members.length > 0)
     : [{
       key: sortMode,
@@ -514,7 +521,7 @@ export default function KingdomHierarchy() {
   const hierarchySections = [1, 2, 3, 4, 5].map(rank => ({
     key: rank,
     title: RANK_TITLES[rank],
-    members: filteredMembers.filter(member => ROLE_CONFIG[member.role]?.rank === rank),
+    members: filteredMembers.filter(member => getRosterSectionRank(member, ROLE_CONFIG) === rank),
   })).filter(section => section.members.length > 0).map(section => ({
     ...section,
     members: sortMode === 'power'
@@ -547,6 +554,9 @@ export default function KingdomHierarchy() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
                 </div>
+                <a href="/?page=community&section=general" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-stone-700/80 bg-black/20 px-3 font-sans text-xs font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+                  <MessageSquare aria-hidden="true" size={14} /> Community
+                </a>
               </div>
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                 <div>
@@ -906,7 +916,7 @@ export default function KingdomHierarchy() {
                                       Acting leader
                                     </span>
                                   )}
-                                  <div className={`mt-0.5 min-w-0 items-center gap-1 font-sans text-xs text-stone-500 ${viewMode === 'compact' ? 'hidden' : 'flex'}`}>
+                                  <div className={`mt-0.5 min-w-0 items-center gap-1 font-sans text-xs text-stone-500 ${viewMode === 'compact' || !member.mcName ? 'hidden' : 'flex'}`}>
                                     <span className="truncate">@<HighlightedText text={member.mcName} query={normalizedQuery} /></span>
                                     <button
                                       type="button"
@@ -1061,7 +1071,7 @@ export default function KingdomHierarchy() {
                             Acting leader
                           </span>
                         )}
-                        <p className="mt-1 truncate font-sans text-sm text-stone-400">@{selectedMember.mcName}</p>
+                        {selectedMember.mcName && <p className="mt-1 truncate font-sans text-sm text-stone-400">@{selectedMember.mcName}</p>}
                       </div>
                     </div>
                     <button
