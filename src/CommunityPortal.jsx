@@ -28,11 +28,12 @@ const SECTIONS = [
   { id: 'profiles', label: 'Profiles', icon: Users },
 ];
 
+const APP_BASE = import.meta.env.BASE_URL;
 const cardClass = 'rounded-xl border border-stone-800 bg-gradient-to-br from-stone-900/80 to-black/20 p-4';
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-4 font-sans text-xs font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70';
 
 function sectionUrl(section) {
-  return `/?page=community&section=${encodeURIComponent(section)}`;
+  return `${APP_BASE}?page=community&section=${encodeURIComponent(section)}`;
 }
 
 function formatDate(date) {
@@ -69,7 +70,7 @@ function MemberProfileCard({ member }) {
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-stone-800 pt-3">
         <span className="font-sans text-[10px] text-stone-500">{votingPower} voting point{votingPower === 1 ? '' : 's'}</span>
         <a
-          href={`/?member=${encodeURIComponent(member.id)}`}
+          href={`${APP_BASE}?member=${encodeURIComponent(member.id)}`}
           className="inline-flex min-h-10 items-center rounded-lg border border-stone-700 px-3 font-sans text-xs font-semibold text-stone-300 transition hover:border-amber-400/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
         >
           Full profile
@@ -110,7 +111,7 @@ export default function CommunityPortal() {
       <div className="relative mx-auto max-w-6xl px-3 py-5 sm:px-4 md:px-8 md:py-10">
         <header className="relative mb-6 overflow-hidden rounded-2xl border border-amber-900/40 bg-gradient-to-br from-[#211d13] via-[#171812] to-[#10110f] p-5 shadow-2xl sm:p-7 md:p-9">
           <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 text-amber-100/[0.035]"><Crown size={230} strokeWidth={0.7} /></div>
-          <a href="/" className="relative inline-flex min-h-10 items-center gap-2 font-sans text-xs font-semibold text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+          <a href={APP_BASE} className="relative inline-flex min-h-10 items-center gap-2 font-sans text-xs font-semibold text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
             <ArrowLeft aria-hidden="true" size={15} /> Realm roster
           </a>
           <div className="relative mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

@@ -18,6 +18,12 @@ npm run build
 npm run preview
 ```
 
+## GitHub Pages deployment
+
+The `Deploy to GitHub Pages` workflow builds and publishes the site to GitHub Pages whenever changes are pushed to `main`. It runs the unit and browser tests before deploying. The workflow enables GitHub Pages with Actions if repository permissions allow it. The published project site is expected at `https://parker-sutherland-afk.github.io/Kingdom-Hierarchy/`.
+
+Vite's base path defaults to `/` for local development and can be set for builds with `VITE_BASE_PATH`, as the Pages workflow does. Internal links and the favicon use that base path so the site works from the repository subdirectory.
+
 ## Tests
 
 ```sh

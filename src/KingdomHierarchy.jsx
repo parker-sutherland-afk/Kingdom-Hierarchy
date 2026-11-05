@@ -8,6 +8,7 @@ import { createRosterUrl, readRosterUrl } from './rosterUrl.js';
 import { getMinecraftAvatarSources } from './avatarSources.js';
 
 const RANK_TITLES = { 1: "KING", 2: "HIGH COUNCIL", 3: "COUNCIL", 4: "PRINCE", 5: "CITIZENS" };
+const APP_BASE = import.meta.env.BASE_URL;
 const RANK_ACCENTS = {
   1: 'text-blue-200 border-blue-400/25 bg-blue-400/[0.07]',
   2: 'text-stone-200 border-stone-400/25 bg-stone-400/[0.05]',
@@ -554,7 +555,7 @@ export default function KingdomHierarchy() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
                 </div>
-                <a href="/?page=community&section=general" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-400/[0.09] px-4 font-sans text-xs font-bold text-amber-100 shadow-sm shadow-amber-950/30 transition hover:border-amber-300/70 hover:bg-amber-400/[0.16] hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+                <a href={`${APP_BASE}?page=community&section=general`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-400/[0.09] px-4 font-sans text-xs font-bold text-amber-100 shadow-sm shadow-amber-950/30 transition hover:border-amber-300/70 hover:bg-amber-400/[0.16] hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
                   <MessageSquare aria-hidden="true" size={14} /> Community
                 </a>
               </div>
