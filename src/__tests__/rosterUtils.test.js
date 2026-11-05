@@ -102,7 +102,7 @@ test('name sorting is alphabetical without changing the source order', () => {
   const sortedNames = sortByName(members).map(member => member.name);
 
   assert.deepEqual(sortedNames, [
-    'Alex', 'Charlie Pringle', 'Darcy', 'Harrison', 'Max', 'Nate', 'Nicky', 'Parker', 'Poppy', 'Thomas', 'Will',
+    'Charlie Pringle', 'Chicky31889', 'Darcy', 'Gamer2143707', 'Harrison', 'Max', 'Nate', 'Parker', 'Poppy', 'Thomas', 'Will',
   ]);
   assert.equal(members[0].name, 'Will');
 });
@@ -128,7 +128,7 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
 
   assert.deepEqual(sortedNames, [
     'Will', 'Darcy', 'Parker', 'Harrison', 'Nate', 'Thomas', 'Max',
-    'Alex', 'Charlie Pringle', 'Nicky', 'Poppy',
+    'Charlie Pringle', 'Chicky31889', 'Gamer2143707', 'Poppy',
   ]);
 });
 
@@ -150,7 +150,7 @@ test('roster validation reports duplicate identities, invalid roles, and missing
   const invalidRoster = [
     { id: 1, name: 'Will', mcName: 'PlayerOne', role: 'King' },
     { id: 1, name: '', mcName: 'playerone', role: 'Unknown', secondaryRole: 'King' },
-    { id: 2, name: 'Alex', mcName: 'PlayerTwo', role: 'Citizen', secondaryRole: 'Citizen' },
+    { id: 2, name: 'MemberTwo', mcName: 'PlayerTwo', role: 'Citizen', secondaryRole: 'Citizen' },
   ];
 
   assert.deepEqual(validateRoster(invalidRoster, Object.keys(ROLE_CONFIG)), [
