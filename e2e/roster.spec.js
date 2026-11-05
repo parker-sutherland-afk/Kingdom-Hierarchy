@@ -66,6 +66,16 @@ test('community pages publish notices, build plans, and the constitution without
   await expect(page.getByRole('heading', { name: 'Conditions of Court' })).toBeVisible();
   await expect(page.getByText(/Judge Thomas maintains order in court/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Conditions of Construction' })).toBeVisible();
+  await expect(page.getByText(/constitutional monarchy created on the Boothboys Minecraft server/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Departments, Roles & Powers' })).toBeVisible();
+  await expect(page.getByText(/no more than two departments/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Parliament' })).toBeVisible();
+  await expect(page.getByText(/at least 51% of votes/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Court & Powers of the Court' })).toBeVisible();
+  await expect(page.getByText(/within one week of being caught/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Military Powers' })).toBeVisible();
+  await expect(page.getByText(/up to 20% of Imperius's weekly budget/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Signatures' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Profiles' }).click();
   await expect(page.getByRole('heading', { name: 'Max', exact: true })).toBeVisible();

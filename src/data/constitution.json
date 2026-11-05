@@ -1,4 +1,5 @@
 {
+  "preamble": "Imperius is a constitutional monarchy created on the Boothboys Minecraft server. A citizen of Imperius is called an Imperium.",
   "currency": [
     { "item": "Iron Nugget", "value": "1" },
     { "item": "Gold Nugget", "value": "2" },
@@ -13,6 +14,106 @@
     { "item": "Dragon Egg", "value": "Guaranteed purchase" }
   ],
   "laws": [
+    {
+      "id": "departments",
+      "title": "Departments, Roles & Powers",
+      "rules": [
+        "Imperius has six departments. Department roles may be held by multiple people, but each person may manage no more than two departments.",
+        "Resources and Projects — Amethyst Flow trim; Head: Paddcake2016. Oversees construction, money, resource stockpiles, and approval of building projects.",
+        "Combat — Redstone Flow trim; Head: ImmortalPrince63. Oversees gear, weapons, combat training, and military readiness.",
+        "War — Redstone Flow trim; Head: ImmortalPrince63. Oversees military strategy and works with the King on matters of war.",
+        "Agriculture — Gold Flow trim; Head: HYPERIOUS12. Oversees the food supply and the creation of food-producing farms.",
+        "Medicine — Emerald Flow trim; Head: DirtGrub58. Oversees potions and brewing.",
+        "Justice — Gold Flow trim; Head: HYPERIOUS12. Oversees law and the creation of new laws."
+      ]
+    },
+    {
+      "id": "monarchy",
+      "title": "The Crown & Royal Powers",
+      "rules": [
+        "The King is William Holoborrow. He may veto or deny any action by a department leader.",
+        "The King appoints two Advisors, Darcy and Parker, who help him make decisions about Imperius's future. Advisors wear Netherite Dune trim; the King wears Diamond Flow trim; the Prince wears Iron Flow trim.",
+        "Citizens who do not hold a rank may not wear armor trims. Anyone wearing Diamond Flow trim who is not the King must change it, unless they are the ruler of another kingdom.",
+        "The King may surrender to or declare war on opposing kingdoms, with guidance from the Head of War.",
+        "The King controls decisions about land within Imperius. In this context, 'owns' means the King controls decisions about the land for the country; other players may still own the land.",
+        "The King holds authority over mining, farming, and combat operations within Imperius, except for an ocean store if Nate builds one.",
+        "The King decides who may join or be expelled from Imperius and commands the Imperium military, including decisions to go to war or surrender.",
+        "The King may call a kingdom-wide meeting at any time. Members should make a reasonable effort to contact members who are offline.",
+        "The King oversees taxation.",
+        "The King may be deposed if every Imperium agrees; this decision cannot be vetoed."
+      ]
+    },
+    {
+      "id": "parliament",
+      "title": "Parliament",
+      "rules": [
+        "The King leads Parliament and has five votes. Each Advisor has three votes, department heads have two votes, and citizens have one vote.",
+        "An Advisor who is also a department head retains three votes total.",
+        "A proposal passes when at least 51% of votes favor it.",
+        "If a decision would be extremely detrimental to Imperius, the King may veto it if at least one other player agrees that it is detrimental.",
+        "The Head of Justice maintains order in Parliament.",
+        "All votes must affect all citizens of Imperius."
+      ]
+    },
+    {
+      "id": "constitutional-tax",
+      "title": "Tax",
+      "rules": [
+        "For produced resources, one raw resource per stack must be paid to the government. For example, a player who harvests wheat must pay one wheat per stack.",
+        "The tax on Netherite is one item per 32 Ancient Debris.",
+        "Taxes are collected every Saturday."
+      ]
+    },
+    {
+      "id": "court-process",
+      "title": "Court & Powers of the Court",
+      "rules": [
+        "The court may order players to pay fines or serve jail time.",
+        "A judge decides minor cases, such as stealing. Major cases—including murder, mass stealing, attacks on other teams, building without a permit, treason, stealing from the King, killing a player's pet, and citizens wearing armor trims—must have a jury of at least two people.",
+        "A jury verdict requires two-thirds agreement. The judge has a vote; conviction requires agreement from two jurors, or one juror and the judge.",
+        "If the Judge is offline, the King may handle cases. If both are offline, the case passes down the Imperium's rankings to the highest-ranking available person. If only a citizen is available, the trial is postponed.",
+        "A citizen has the right to a trial within one week of being caught. If the trial does not happen within that time, the accused is free of charges.",
+        "Once a judge is assigned to a case, that judge cannot be replaced by someone who logs on later, even if the new arrival has a higher legal rank. If the assigned judge is accused of a major crime, the highest-ranking available person in the legal system becomes judge.",
+        "People involved in a case must represent themselves unless the accused has five or more crimes on their record. In that case, they must have a representative from the legal ladder, selected from the bottom upward. The representative cannot be replaced.",
+        "A verdict stands unless evidence proving innocence is found.",
+        "The Head of Justice may offer plea deals to simplify sentencing. The lawyer and accused must both accept the deal before its punishment takes effect.",
+        "Anyone accused of a violent crime, such as murder, is held in prison while the trial is in progress.",
+        "The King cannot be convicted unless he commits the crime himself or commits mass murder of citizens. In that event, the next in line to the throne takes his place."
+      ]
+    },
+    {
+      "id": "military",
+      "title": "Military Powers",
+      "rules": [
+        "The military may recruit any member of Imperius who is not an Advisor to fight.",
+        "The Head of Combat may declare war with the King's permission.",
+        "The military may receive up to 20% of Imperius's weekly budget.",
+        "The military may build military bases on no more than 5% of Imperius land."
+      ]
+    },
+    {
+      "id": "miscellaneous",
+      "title": "Miscellaneous",
+      "rules": [
+        "Taylor Swift is illegal.",
+        "Chess is the national sport.",
+        "The national holiday is November 5, because why not.",
+        "Nicky is cool, and saying otherwise is wrong.",
+        "Anyone may join Imperius at any time."
+      ]
+    },
+    {
+      "id": "signatures",
+      "title": "Signatures",
+      "rules": [
+        "King: ____________________",
+        "Parker: ____________________",
+        "Darcy: ____________________",
+        "Harrison: ____________________",
+        "Nate: ____________________",
+        "Thomas: ____________________"
+      ]
+    },
     {
       "id": "court",
       "title": "Conditions of Court",
