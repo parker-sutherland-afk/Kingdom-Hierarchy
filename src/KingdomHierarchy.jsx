@@ -554,7 +554,7 @@ export default function KingdomHierarchy() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
                 </div>
-                <a href="/?page=community&section=general" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-stone-700/80 bg-black/20 px-3 font-sans text-xs font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+                <a href="/?page=community&section=general" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-400/[0.09] px-4 font-sans text-xs font-bold text-amber-100 shadow-sm shadow-amber-950/30 transition hover:border-amber-300/70 hover:bg-amber-400/[0.16] hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
                   <MessageSquare aria-hidden="true" size={14} /> Community
                 </a>
               </div>

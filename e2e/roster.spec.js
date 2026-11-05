@@ -43,7 +43,8 @@ test('Max is displayed in Citizens without changing his Prince role or points', 
 
 test('community pages publish notices, build plans, and the constitution without chat or a council board', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?page=community&section=general');
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Community' }).click();
 
   await expect(page.getByRole('heading', { name: 'Realm Hall', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'A Royal Welcome to Charlie Pringle' })).toBeVisible();
