@@ -1,0 +1,25 @@
+<body>
+  <hanko-auth />
+
+  <script type="module">
+    import { register } from "https://esm.run/@teamhanko/hanko-elements";
+
+    await register(process.env.HANKO_API_URL);
+  </script>
+</body>
+
+
+<body>
+  <hanko-auth />
+
+  <script type="module">
+    import { register } from "https://esm.run/@teamhanko/hanko-elements";
+
+    const { hanko } = await register(process.env.HANKO_API_URL);
+
+    hanko.onSessionCreated(() => {
+      // successfully logged in, redirect to a page in your application
+      document.location.href = "...";
+    });
+  </script>
+</body>
