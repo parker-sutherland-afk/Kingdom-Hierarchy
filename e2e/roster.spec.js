@@ -43,8 +43,13 @@ test('Max is displayed in Citizens without changing his Prince role or points', 
 
 test('community pages publish notices, build plans, and the constitution without chat or a council board', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?page=community&section=notices');
+  await page.goto('/?page=community&section=general');
 
+  await expect(page.getByRole('heading', { name: 'Realm Hall', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'A Royal Welcome to Charlie Pringle' })).toBeVisible();
+  await expect(page.getByText('Realm records updated')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Read the Constitution' })).toBeVisible();
+  await page.getByRole('link', { name: 'Notices', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Notices', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'A Royal Welcome to Charlie Pringle' })).toBeVisible();
   await expect(page.getByText(/welcoming Charlie Pringle to the realm/)).toBeVisible();
@@ -63,18 +68,26 @@ test('community pages publish notices, build plans, and the constitution without
   await expect(page.getByRole('heading', { name: 'Kingdom Currency' })).toBeVisible();
   await expect(page.getByRole('row', { name: 'Netherite Block 2,700' })).toBeVisible();
   await expect(page.getByRole('row', { name: 'Dragon Egg Guaranteed purchase' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Constitution sections' }).getByRole('link')).toHaveCount(15);
+  const constitutionNav = page.getByRole('navigation', { name: 'Constitution sections' });
+  await constitutionNav.getByRole('link', { name: 'Departments, Roles & Powers' }).click();
+  await expect(page.getByText(/no more than two departments/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Conditions of Court' }).click();
   await expect(page.getByRole('heading', { name: 'Conditions of Court' })).toBeVisible();
   await expect(page.getByText(/Judge Thomas maintains order in court/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Conditions of Construction' }).click();
   await expect(page.getByRole('heading', { name: 'Conditions of Construction' })).toBeVisible();
   await expect(page.getByText(/constitutional monarchy created on the Boothboys Minecraft server/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Departments, Roles & Powers' })).toBeVisible();
-  await expect(page.getByText(/no more than two departments/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Parliament', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Parliament' })).toBeVisible();
   await expect(page.getByText(/at least 51% of votes/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Court & Powers of the Court' }).click();
   await expect(page.getByRole('heading', { name: 'Court & Powers of the Court' })).toBeVisible();
   await expect(page.getByText(/within one week of being caught/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Military Powers' }).click();
   await expect(page.getByRole('heading', { name: 'Military Powers' })).toBeVisible();
   await expect(page.getByText(/up to 20% of Imperius's weekly budget/)).toBeVisible();
+  await constitutionNav.getByRole('link', { name: 'Signatures' }).click();
   await expect(page.getByRole('heading', { name: 'Signatures' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Profiles' }).click();
