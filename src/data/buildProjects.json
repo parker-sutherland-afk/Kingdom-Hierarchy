@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "id": "floor-3-armory-strategy-training",
+    "title": "Floor 3: Armory, Strategy Rooms & Combat Training",
+    "description": "A new stronghold above the realm: equip the kingdom, plan its next moves, and train its defenders on the third floor.",
+    "status": "planned",
+    "progress": 0
+  },
+  {
+    "id": "impyramid-front-yard",
+    "title": "Front Yard Renovation at the Impyramid",
+    "description": "Give the Impyramid's front yard a grand new look, creating an entrance worthy of the kingdom.",
+    "status": "planned",
+    "progress": 0
+  },
+  {
+    "id": "creeper-farm",
+    "title": "Creeper Farm",
+    "description": "Plan a dependable creeper farm to supply gunpowder for the realm's future projects.",
+    "status": "planned",
+    "progress": 0
+  },
+  {
+    "id": "skeleton-farm",
+    "title": "Skeleton Farm",
+    "description": "Build a skeleton farm to gather bones and arrows for the kingdom's needs.",
+    "status": "planned",
+    "progress": 0
+  },
+  {
+    "id": "enderman-farm",
+    "title": "Enderman Farm",
+    "description": "Construct an Enderman farm to help adventurers gather valuable drops and experience.",
+    "status": "planned",
+    "progress": 0
+  }
+]
