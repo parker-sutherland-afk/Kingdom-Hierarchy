@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   describeVotingPower,
   filterMembers,
+  getRosterSectionRank,
   getVotingPowerBreakdown,
   matchesMemberFilter,
   splitSearchHighlights,
@@ -54,6 +55,15 @@ test('High Council and Military filters include matching secondary roles', () =>
   );
 });
 
+test('Max appears in the Citizens section while keeping Prince role and voting points', () => {
+  const max = members.find(member => member.name === 'Max');
+
+  assert.equal(matchesMemberFilter(max, 'Citizens'), true);
+  assert.equal(getRosterSectionRank(max, ROLE_CONFIG), 5);
+  assert.equal(max.role, 'Prince');
+  assert.equal(getVotingPowerBreakdown(max, ROLE_CONFIG).points, 2);
+});
+
 test('search includes Minecraft usernames and descriptions', () => {
   assert.deepEqual(filterMembers(members, 'eighthsea6218', 'All').map(member => member.name), ['Will']);
   assert.deepEqual(filterMembers(members, 'highest throne', 'All').map(member => member.name), ['Will']);
@@ -92,7 +102,7 @@ test('name sorting is alphabetical without changing the source order', () => {
   const sortedNames = sortByName(members).map(member => member.name);
 
   assert.deepEqual(sortedNames, [
-    'Alex', 'Darcy', 'Harrison', 'Max', 'Nate', 'Nicky', 'Parker', 'Poppy', 'Thomas', 'Will',
+    'Alex', 'Charlie Pringle', 'Darcy', 'Harrison', 'Max', 'Nate', 'Nicky', 'Parker', 'Poppy', 'Thomas', 'Will',
   ]);
   assert.equal(members[0].name, 'Will');
 });
@@ -110,7 +120,7 @@ test('voting power comes only from the primary role', () => {
   assert.equal(darcyBreakdown.points, 3);
   assert.deepEqual(darcyBreakdown.roles, [{ role: 'Advisor', points: 3 }]);
   assert.match(describeVotingPower(darcy, roleConfig), /Primary role — Advisor: 3 points/);
-  assert.equal(total, 22);
+  assert.equal(total, 23);
 });
 
 test('voting-power sorting is descending with rank and name tie-breakers', () => {
@@ -118,12 +128,22 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
 
   assert.deepEqual(sortedNames, [
     'Will', 'Darcy', 'Parker', 'Harrison', 'Nate', 'Thomas', 'Max',
-    'Alex', 'Nicky', 'Poppy',
+    'Alex', 'Charlie Pringle', 'Nicky', 'Poppy',
   ]);
 });
 
 test('published roster passes structural and role validation', () => {
   assert.deepEqual(validateRoster(members, Object.keys(ROLE_CONFIG), rosterMetadata), []);
+});
+
+test('members without a Minecraft username and display-only section overrides validate', () => {
+  assert.deepEqual(validateRoster([
+    { id: 1, name: 'Max', mcName: '', role: 'Prince', section: 'Citizens' },
+    { id: 2, name: 'Charlie Pringle', role: 'Citizen' },
+  ], Object.keys(ROLE_CONFIG)), []);
+  assert.deepEqual(validateRoster([
+    { id: 1, name: 'Member', role: 'Citizen', section: 'Council' },
+  ], Object.keys(ROLE_CONFIG)), ['Member at index 0 section must be "Citizens" when it is provided.']);
 });
 
 test('roster validation reports duplicate identities, invalid roles, and missing fields', () => {

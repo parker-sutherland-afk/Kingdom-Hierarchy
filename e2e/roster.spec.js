@@ -18,6 +18,55 @@ test('returned King clears acting-leader status without changing permanent roles
   await expect(kingCard.getByText('Acting leader', { exact: true })).toHaveCount(0);
 });
 
+test('Max is displayed in Citizens without changing his Prince role or points', async ({ page }) => {
+  await page.goto('/');
+
+  const maxCard = page.locator('#member-roster section').filter({
+    has: page.getByRole('heading', { name: 'CITIZENS' }),
+  }).locator('article').filter({ has: page.getByRole('heading', { name: 'Max', exact: true }) });
+  await expect(maxCard).toBeVisible();
+  await expect(maxCard.getByRole('button', { name: 'Filter roster by primary role Prince' })).toBeVisible();
+  await expect(maxCard.getByLabel('2 voting points from Prince primary role')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Hierarchy', exact: true }).click();
+  const citizenTier = page.locator('#member-roster section').filter({
+    has: page.getByRole('heading', { name: 'CITIZENS' }),
+  });
+  await expect(citizenTier.getByRole('button', { name: "Open Max's profile" })).toContainText('Prince');
+  await page.getByRole('button', { name: 'Roster', exact: true }).click();
+
+  await page.getByRole('button', { name: /Citizens/ }).click();
+  await expect(page.getByRole('heading', { name: 'Max', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charlie Pringle', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: "Charlie Pringle's Minecraft avatar" })).toContainText('CP');
+});
+
+test('community pages are static notices and projects with no chat or council board', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?page=community&section=notices');
+
+  await expect(page.getByRole('heading', { name: 'Notices', exact: true })).toBeVisible();
+  await expect(page.getByText('No notices have been posted yet.')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Community pages' }).getByRole('link', { name: 'Message board' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Community pages' }).getByRole('link', { name: 'Council' })).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Build projects' }).click();
+  await expect(page.getByText('No build projects have been posted yet.')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Profiles' }).click();
+  await expect(page.getByRole('heading', { name: 'Max', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charlie Pringle', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Full profile' }).last().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('heading', { name: 'Charlie Pringle' })).toBeVisible();
+
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+});
+
 async function mockAvatarProviders(page, handleAvatar, requests) {
   for (const host of avatarProviderHosts) {
     await page.route(`https://${host}/**`, async route => {
@@ -37,7 +86,7 @@ test('role guide explains each role and its primary-role points', async ({ page 
   await expect(guide.getByText('5 primary-role points')).toBeVisible();
   await expect(guide.getByText('Advisor', { exact: true })).toBeVisible();
   await expect(guide.getByText('3 primary-role points')).toBeVisible();
-  await expect(guide.locator('time')).toHaveAttribute('datetime', '2026-11-04');
+  await expect(guide.locator('time')).toHaveAttribute('datetime', '2026-11-05');
 });
 
 test('compact mode is shareable and the copied view restores the active filters', async ({ page }) => {
@@ -51,7 +100,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page).toHaveURL(/q=Darcy/);
   await expect(page).toHaveURL(/group=Military/);
   await expect(page).toHaveURL(/view=compact/);
-  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 11 members' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Share view' }).click();
   await expect(page.getByText('Filtered view link copied.')).toBeVisible();
@@ -65,7 +114,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page.getByRole('searchbox', { name: 'Search the roster' })).toHaveValue('Darcy');
   await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await expect(page.getByRole('button', { name: 'Compact', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 10 members' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 11 members' })).toBeVisible();
 });
 
 test('hierarchy view follows filters, is shareable, and opens member profiles', async ({ page }) => {
@@ -198,7 +247,7 @@ test('print view includes active search and filters but hides interactive contro
 
   const summary = page.getByTestId('print-roster-summary');
   await expect(summary).toBeVisible();
-  await expect(summary).toContainText('Showing 1 of 10 members.');
+  await expect(summary).toContainText('Showing 1 of 11 members.');
   await expect(summary).toContainText('Search: “Darcy”');
   await expect(summary).toContainText('Group: Military');
   await expect(page.getByRole('region', { name: 'Find a member' })).toBeHidden();
