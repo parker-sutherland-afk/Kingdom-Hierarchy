@@ -35,9 +35,9 @@ Run both the unit and browser tests with `npm run test:all`.
 
 ## Community pages
 
-The Community link opens static, read-only **Notices**, **Build projects**, and **Profiles** pages. There is no chat/message board, sign-in system, external database, or member editing. Public roster profiles link back to each member’s full roster profile.
+The Community link opens static, read-only **Notices**, **Build projects**, **Constitution**, and **Profiles** pages. There is no chat/message board, sign-in system, external database, or member editing. Public roster profiles link back to each member’s full roster profile.
 
-To publish a notice, edit [`src/data/notices.json`](./src/data/notices.json) and deploy. Each notice has an `id`, `title`, `body`, and `date` (`YYYY-MM-DD`). To publish a build project, edit [`src/data/buildProjects.json`](./src/data/buildProjects.json) and deploy. Each project has an `id`, `title`, `description`, `status` (`planned`, `active`, or `completed`), and `progress` (0–100); `updatedAt` (`YYYY-MM-DD`) is optional. The pages are empty until you add content.
+To publish a notice, edit [`src/data/notices.json`](./src/data/notices.json) and deploy. Each notice has an `id`, `title`, `body`, and `date` (`YYYY-MM-DD`). To publish or update build plans, edit [`src/data/buildProjects.json`](./src/data/buildProjects.json) and deploy. Each project has an `id`, `title`, `description`, `status` (`planned`, `active`, or `completed`), and `progress` (0–100); `updatedAt` (`YYYY-MM-DD`) is optional. Currency values and laws are maintained in [`src/data/constitution.json`](./src/data/constitution.json).
 
 A council-only board is intentionally omitted: without a server or protected hosting, static content cannot be kept private. Do not put confidential council messages in the site or repository.
 

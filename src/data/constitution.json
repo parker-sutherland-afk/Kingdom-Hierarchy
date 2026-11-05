@@ -1,0 +1,101 @@
+{
+  "currency": [
+    { "item": "Iron Nugget", "value": "1" },
+    { "item": "Gold Nugget", "value": "2" },
+    { "item": "Iron Ingot", "value": "9" },
+    { "item": "Gold Ingot", "value": "18" },
+    { "item": "Diamond", "value": "25" },
+    { "item": "Iron Block", "value": "81" },
+    { "item": "Gold Block", "value": "162" },
+    { "item": "Diamond Block", "value": "225" },
+    { "item": "Netherite", "value": "300" },
+    { "item": "Netherite Block", "value": "2,700" },
+    { "item": "Dragon Egg", "value": "Guaranteed purchase" }
+  ],
+  "laws": [
+    {
+      "id": "court",
+      "title": "Conditions of Court",
+      "rules": [
+        "The King and two other players chosen by His Majesty will serve as the jury and decide whether the defendant is guilty or innocent.",
+        "Judge Thomas maintains order in court and determines the defendant's final punishment according to the Book of Punishment.",
+        "Violence is forbidden in court. Anyone who commits violence will be punished without a trial (see the Book of Crimes).",
+        "Only players holding a gavel (a specific mace) may speak. The Judge and the King each have a personal gavel; the defendant and accuser share a wooden sword while presenting their arguments.",
+        "Even if the defendant is found innocent, a temporary separation order must be issued: 10–50 blocks for 1–10 days. The Judge and/or the King decides the distance and duration.",
+        "Highly offensive language and threats are forbidden and may result in a ban.",
+        "Rigging a trial is an extremely serious crime and will be punished severely (see the Book of Punishment)."
+      ]
+    },
+    {
+      "id": "prison",
+      "title": "Conditions of Prison",
+      "rules": [
+        "Upon entering prison, the prisoner must hand all weapons, money, food, armor, and equipment to the Warden, who is appointed by the King. The Warden and other players may not use confiscated items for personal gain. All confiscated property must be returned when the sentence ends.",
+        "The prisoner is to receive one piece of bread per day.",
+        "With the King's permission, the prisoner may have five minutes of supervised yard time under the Warden's watch.",
+        "The prisoner's only permitted activity is mining cobblestone with a wooden pickaxe from the cobblestone generator inside their cell.",
+        "Each cell must be bare except for a bed, a torch, a cobblestone generator, and a lectern containing the books of law and punishment.",
+        "Escaping from prison will carry serious consequences (see the Book of Punishment).",
+        "For extremely serious crimes, solitary confinement may be imposed (see the Book of Punishment). The cell will have lava walls, measure 1 × 1 × 1 block, and provide a single standing place on an end rod. Food will be delivered through a dropper once every two days.",
+        "All prisoners must be treated humanely."
+      ]
+    },
+    {
+      "id": "crimes",
+      "title": "Crimes",
+      "rules": [
+        "Murder",
+        "Stealing",
+        "Arson",
+        "Robbery",
+        "Terrorism",
+        "Killing a player's pet",
+        "The 'villager spear' offence",
+        "Assault",
+        "Theft from the state",
+        "Tax evasion",
+        "Unlawful acquisition of medicinal goods",
+        "Building without a permit",
+        "Attacking other teams without approval from the King or Head of War",
+        "Bullying",
+        "Racism",
+        "Sexism",
+        "Treason",
+        "Escaping from prison"
+      ]
+    },
+    {
+      "id": "taxation",
+      "title": "Conditions of Taxation",
+      "rules": [
+        "Taxes are collected once every seven days, on Saturday.",
+        "An Imperium that does not pay its taxes may be taken to court and found guilty (see the Book of Punishment).",
+        "A tax collector who uses collected taxes for personal gain will be taken to court and seriously punished.",
+        "The King is exempt from taxation.",
+        "Tax is one item per stack.",
+        "Items found before the Constitution was established are tax-free.",
+        "Donating gear to new players counts as a tax write-off.",
+        "If you mine at least half a stack, tax must be paid."
+      ]
+    },
+    {
+      "id": "rationing",
+      "title": "Conditions of Rationing",
+      "rules": [
+        "The Head of Agriculture distributes food.",
+        "If a player has fewer than five hunger bars, basic food is free. At five hunger bars or more, food must be purchased from the restaurant.",
+        "If the Head of Agriculture is absent, a player in need may take wheat from the wheat ring to make bread. Replant the wheat after harvesting.",
+        "The Head of Agriculture is primarily responsible for maintaining the wheat ring and other food sources.",
+        "The King may take food whenever he wishes. More exotic food must be purchased from the restaurant."
+      ]
+    },
+    {
+      "id": "construction",
+      "title": "Conditions of Construction",
+      "rules": [
+        "All structures require approval from the Head of Construction, and builders must possess a physical, legal permit.",
+        "A builder may pay the Head of Construction to assist with a project. The cost depends on the size of the build."
+      ]
+    }
+  ]
+}

@@ -3,12 +3,14 @@ import { ArrowLeft, Bell, BookOpen, Crown, Users } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import NOTICES from './data/notices.json';
 import PROJECTS from './data/buildProjects.json';
+import CONSTITUTION from './data/constitution.json';
 import ROLE_CONFIG from './roleConfig.js';
 import { getVotingPowerBreakdown } from './rosterUtils.js';
 
 const SECTIONS = [
   { id: 'notices', label: 'Notices', icon: Bell },
   { id: 'projects', label: 'Build projects', icon: BookOpen },
+  { id: 'constitution', label: 'Constitution', icon: BookOpen },
   { id: 'profiles', label: 'Profiles', icon: Users },
 ];
 
@@ -134,6 +136,41 @@ export default function CommunityPortal() {
               ))}
             </div>
           ))}
+
+          {section === 'constitution' && (
+            <div className="space-y-5">
+              <section aria-labelledby="currency-title" className={cardClass}>
+                <h3 id="currency-title" className="text-base font-bold text-amber-100">Kingdom Currency</h3>
+                <p className="mt-1 text-sm leading-relaxed text-stone-400">The kingdom's listed item values, from everyday trade to treasures fit for a throne.</p>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full border-collapse text-left font-sans text-sm">
+                    <thead>
+                      <tr className="border-b border-stone-700 text-[10px] uppercase tracking-wider text-stone-500">
+                        <th scope="col" className="px-3 py-2">Item</th>
+                        <th scope="col" className="px-3 py-2">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {CONSTITUTION.currency.map(({ item, value }) => (
+                        <tr key={item} className="border-b border-stone-800 last:border-0">
+                          <th scope="row" className="px-3 py-2.5 font-medium text-stone-200">{item}</th>
+                          <td className="px-3 py-2.5 tabular-nums text-amber-200">{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              {CONSTITUTION.laws.map(({ id, title, rules }) => (
+                <section key={id} aria-labelledby={`law-${id}`} className={cardClass}>
+                  <h3 id={`law-${id}`} className="text-base font-bold text-amber-100">{title}</h3>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-300 marker:text-amber-500">
+                    {rules.map((rule, index) => <li key={`${id}-${index}`}>{rule}</li>)}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
 
           {section === 'profiles' && (
             <>

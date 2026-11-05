@@ -41,17 +41,31 @@ test('Max is displayed in Citizens without changing his Prince role or points', 
   await expect(page.getByRole('group', { name: "Charlie Pringle's Minecraft avatar" })).toContainText('CP');
 });
 
-test('community pages are static notices and projects with no chat or council board', async ({ page }) => {
+test('community pages publish notices, build plans, and the constitution without chat or a council board', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?page=community&section=notices');
 
   await expect(page.getByRole('heading', { name: 'Notices', exact: true })).toBeVisible();
-  await expect(page.getByText('No notices have been posted yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'A Royal Welcome to Charlie Pringle' })).toBeVisible();
+  await expect(page.getByText(/welcoming Charlie Pringle to the realm/)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Community pages' }).getByRole('link', { name: 'Message board' })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Community pages' }).getByRole('link', { name: 'Council' })).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Build projects' }).click();
-  await expect(page.getByText('No build projects have been posted yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Floor 3: Armory, Strategy Rooms & Combat Training' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Front Yard Renovation at the Impyramid' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Creeper Farm' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Skeleton Farm' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Enderman Farm' })).toBeVisible();
+  await expect(page.getByText('planned', { exact: true })).toHaveCount(5);
+
+  await page.getByRole('link', { name: 'Constitution' }).click();
+  await expect(page.getByRole('heading', { name: 'Kingdom Currency' })).toBeVisible();
+  await expect(page.getByRole('row', { name: 'Netherite Block 2,700' })).toBeVisible();
+  await expect(page.getByRole('row', { name: 'Dragon Egg Guaranteed purchase' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Conditions of Court' })).toBeVisible();
+  await expect(page.getByText(/Judge Thomas maintains order in court/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Conditions of Construction' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Profiles' }).click();
   await expect(page.getByRole('heading', { name: 'Max', exact: true })).toBeVisible();
