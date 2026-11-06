@@ -1,25 +1,36 @@
+<title>Imperius Sign-In</title>
+
+<script
+  
+HANKO_API_URL="https://95708629-f276-412a-8f48-43aa4a8c65e9.hanko.io/" src="config.js">
+  
+cors: {
+origin: [‘https://xxxxxx.github.io’, ‘http://localhost:5000’],
+methods: ‘GET,HEAD,PUT,PATCH,DELETE’,
+},
+
+</script>
+
 <body>
   <hanko-auth />
 
   <script type="module">
     import { register } from "https://esm.run/@teamhanko/hanko-elements";
-
-    await register(process.env.HANKO_API_URL);
+    
+    await register(HANKO_API_URL);
   </script>
 </body>
 
-
 <body>
   <hanko-auth />
 
   <script type="module">
     import { register } from "https://esm.run/@teamhanko/hanko-elements";
-
-    const { hanko } = await register(process.env.HANKO_API_URL);
+    const { hanko } = await register(HANKO_API_URL);
 
     hanko.onSessionCreated(() => {
       // successfully logged in, redirect to a page in your application
-      document.location.href = "...";
+      document.location.href = "youhavesignedin.html";
     });
   </script>
 </body>
