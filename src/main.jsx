@@ -12,3 +12,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     {isCommunityPage ? <CommunityPortal /> : <KingdomHierarchy />}
   </React.StrictMode>,
 )
+
+const isSignInPortal = new URLSearchParams(window.location.search).get('page') === 'signin'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    {isSignInPortral ? <SignInPortal /> : <KingdomHierarchy />}
+  </React.StrictMode>,
+)
