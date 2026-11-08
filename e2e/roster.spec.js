@@ -1,6 +1,69 @@
 import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
+const googleTestClientId = 'playwright-test.apps.googleusercontent.com';
+const googleTestCredential = `eyJhbGciOiJub25lIn0.${Buffer.from(JSON.stringify({
+  aud: googleTestClientId,
+  iss: 'https://accounts.google.com',
+  email: 'citizen@example.com',
+  email_verified: true,
+  name: 'Test Imperium',
+  sub: 'test-google-user',
+  exp: Math.floor(Date.now() / 1000) + 3600,
+})).toString('base64url')}.test-signature`;
+
+async function installGoogleSignInMock(page) {
+  await page.route('https://accounts.google.com/gsi/client', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `
+      window.google = { accounts: { id: {
+        initialize(options) { window.__imperiusGoogleCallback = options.callback; },
+        renderButton(container) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = 'Continue with Google';
+          button.addEventListener('click', () => window.__imperiusGoogleCallback({
+            credential: ${JSON.stringify(googleTestCredential)}
+          }));
+          container.append(button);
+        }
+      } } };
+    `,
+  }));
+}
+
+async function signInWithGoogle(page) {
+  await installGoogleSignInMock(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
+}
+
+test.beforeEach(async ({ page }) => {
+  await signInWithGoogle(page);
+});
+
+test('Google browser sign-in gate survives navigation and signs out cleanly', async ({ page }) => {
+  const storedIdentity = await page.evaluate(() => JSON.parse(sessionStorage.getItem('imperius.google.identity')));
+  expect(storedIdentity).toMatchObject({
+    email: 'citizen@example.com',
+    name: 'Test Imperium',
+  });
+  expect(storedIdentity).not.toHaveProperty('credential');
+
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+  await page.goto('/?page=community&section=constitution');
+  await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Kingdom Currency' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+});
 
 test('returned King clears acting-leader status without changing permanent roles or voting points', async ({ page }) => {
   await page.goto('/');
@@ -204,6 +267,7 @@ test('filter state survives opening a member profile and browser back/forward', 
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.getByRole('searchbox', { name: 'Search the roster' })).toHaveValue('Darcy');
   await page.goForward();
+  await expect(page).toHaveURL(/member=3/);
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('dialog').getByRole('heading', { name: 'Darcy' })).toBeVisible();
 });
