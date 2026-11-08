@@ -33,10 +33,13 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser tests
         run: npm run test:e2e
+        env:
+          VITE_GOOGLE_CLIENT_ID: playwright-test.apps.googleusercontent.com
       - name: Build site for GitHub Pages
         run: npm run build
         env:
           VITE_BASE_PATH: /Kingdom-Hierarchy/
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:

@@ -308,6 +308,7 @@ export default function KingdomHierarchy() {
   const [viewLinkStatus, setViewLinkStatus] = useState('');
   const [selectedMember, setSelectedMember] = useState(initialUrlState.current.selectedMember);
   const profileDialogRef = useRef(null);
+  const closingDialogFromStateRef = useRef(false);
   const searchInputRef = useRef(null);
   const restoringHistoryRef = useRef(false);
   const members = MEMBERS;
@@ -381,6 +382,7 @@ export default function KingdomHierarchy() {
     if (selectedMember && !dialog.open) {
       dialog.showModal();
     } else if (!selectedMember && dialog.open) {
+      closingDialogFromStateRef.current = true;
       dialog.close();
     }
   }, [selectedMember]);
@@ -428,6 +430,11 @@ export default function KingdomHierarchy() {
   }
 
   function handleProfileDialogClose() {
+    if (closingDialogFromStateRef.current) {
+      closingDialogFromStateRef.current = false;
+      return;
+    }
+
     if (new URLSearchParams(window.location.search).has('member')) {
       updateMemberUrl(null, 'replace', {
         searchQuery,
