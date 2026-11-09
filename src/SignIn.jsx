@@ -1,5 +1,6 @@
 import React from 'react';
 import { Crown, ShieldAlert } from 'lucide-react';
+import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js';
 
 const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client';
 const GOOGLE_SESSION_KEY = 'imperius.google.identity';
@@ -65,6 +66,7 @@ function decodeGoogleCredential(credential) {
   return {
     email: claims.email,
     name: claims.name || claims.email,
+    provider: 'google',
     expiresAt: claims.exp * 1000,
   };
 }
@@ -92,10 +94,42 @@ export function readGoogleBrowserSession() {
   }
 }
 
-export default function SignInPortal({ onSuccess }) {
+export default function SignInPortal({ onSuccess, initialError = '' }) {
   const buttonContainerRef = React.useRef(null);
-  const [error, setError] = React.useState('');
+  const [error, setError] = React.useState(initialError);
   const [isLoading, setIsLoading] = React.useState(isGoogleSignInEnabled);
+  const [hankoReady, setHankoReady] = React.useState(false);
+  const [hankoError, setHankoError] = React.useState('');
+
+  React.useEffect(() => {
+    if (!isHankoEnabled) return undefined;
+
+    let active = true;
+    let removeSessionCreated;
+
+    initializeHanko()
+      .then(hanko => {
+        if (!active) return;
+        removeSessionCreated = hanko.onSessionCreated(async () => {
+          try {
+            const identity = await getHankoIdentity(hanko);
+            if (identity) onSuccess(identity);
+            else setHankoError('Hanko did not return a valid sign-in session. Please try again.');
+          } catch (sessionError) {
+            setHankoError(sessionError instanceof Error ? sessionError.message : 'Hanko email sign-in failed.');
+          }
+        });
+        setHankoReady(true);
+      })
+      .catch(loadError => {
+        if (active) setHankoError(loadError instanceof Error ? loadError.message : 'Hanko email sign-in could not load.');
+      });
+
+    return () => {
+      active = false;
+      removeSessionCreated?.();
+    };
+  }, [onSuccess]);
 
   React.useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return undefined;
@@ -156,26 +190,53 @@ export default function SignInPortal({ onSuccess }) {
           <Crown aria-hidden="true" size={13} /> Imperius Realm Access
         </div>
         <h1 id="signin-title" className="text-3xl font-black uppercase tracking-wide text-stone-100 sm:text-4xl">Welcome to the Realm</h1>
-        <p className="mt-3 text-sm leading-relaxed text-stone-400">Sign in with Google to continue to the Kingdom Hierarchy.</p>
+        <p className="mt-3 text-sm leading-relaxed text-stone-400">Sign in with Google or use an email address to continue to the Kingdom Hierarchy.</p>
 
-        {GOOGLE_CLIENT_ID ? (
+        {isHankoEnabled && (
           <>
-            {isLoading && <p role="status" className="mt-6 font-sans text-xs text-stone-400">Loading Google sign-in…</p>}
-            <div className="mt-3 min-h-11" ref={buttonContainerRef} aria-label="Google sign-in" />
+            <section aria-labelledby="email-signin-title" className="mt-6 rounded-xl border border-stone-800 bg-black/15 p-4 sm:p-5">
+              <h2 id="email-signin-title" className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.14em] text-amber-200">Email sign-in</h2>
+              {hankoReady
+                ? <hanko-auth />
+                : <p role="status" className="font-sans text-xs text-stone-400">Connecting to email sign-in…</p>}
+            </section>
           </>
-        ) : (
-          <div role="status" className="mt-7 rounded-xl border border-amber-700/30 bg-amber-950/20 p-4 text-sm leading-relaxed text-amber-100">
-            Google sign-in is not configured yet. The site owner must set the <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">VITE_GOOGLE_CLIENT_ID</code> GitHub Actions variable.
+        )}
+
+        {isGoogleSignInEnabled && isHankoEnabled && (
+          <div aria-hidden="true" className="my-5 flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.18em] text-stone-600">
+            <span className="h-px flex-1 bg-stone-800" /> or <span className="h-px flex-1 bg-stone-800" />
+          </div>
+        )}
+
+        {isGoogleSignInEnabled && (
+          <section aria-labelledby="google-signin-title" className={`${isHankoEnabled ? '' : 'mt-7'} rounded-xl border border-stone-800 bg-black/15 p-4 sm:p-5`}>
+            <h2 id="google-signin-title" className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.14em] text-amber-200">Google sign-in</h2>
+            {isLoading && <p role="status" className="font-sans text-xs text-stone-400">Loading Google sign-in…</p>}
+            <div className="min-h-11" ref={buttonContainerRef} aria-label="Google sign-in" />
+          </section>
+        )}
+
+        {!isHankoEnabled && (
+          <div role="status" className={`${isGoogleSignInEnabled ? 'mt-4' : 'mt-7'} rounded-xl border border-amber-700/30 bg-amber-950/20 p-4 text-sm leading-relaxed text-amber-100`}>
+            Email sign-in is not set up yet. Create a Hanko project, then add its API URL as the <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">VITE_HANKO_API_URL</code> GitHub Actions variable.
+          </div>
+        )}
+
+        {!isGoogleSignInEnabled && (
+          <div role="status" className="mt-4 rounded-xl border border-amber-700/30 bg-amber-950/20 p-4 text-sm leading-relaxed text-amber-100">
+            Google sign-in is not configured. The site owner must set the <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">VITE_GOOGLE_CLIENT_ID</code> GitHub Actions variable.
           </div>
         )}
 
         {error && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 font-sans text-xs leading-relaxed text-red-200">{error}</p>}
+        {hankoError && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 font-sans text-xs leading-relaxed text-red-200">{hankoError}</p>}
 
         <aside className="mt-7 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] p-4">
           <div className="flex items-start gap-3">
             <ShieldAlert aria-hidden="true" className="mt-0.5 shrink-0 text-amber-400" size={17} />
             <p className="text-xs leading-relaxed text-stone-300">
-              <strong className="text-amber-100">Public-site notice:</strong> Google sign-in remembers the signed-in identity in this browser session; it does not secure the public site. Anyone can still access its pages and files directly. Do not put private information here.
+              <strong className="text-amber-100">Public-site notice:</strong> Sign-in identifies users, but does not secure this public site. Anyone can still access its pages and files directly. Do not put private information here.
             </p>
           </div>
         </aside>
