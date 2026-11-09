@@ -53,6 +53,8 @@ test('Google browser sign-in gate survives navigation and signs out cleanly', as
 
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+  await expect(page.getByText(/Email sign-in is not set up yet/)).toBeVisible();
+  await expect(page.getByText(/VITE_HANKO_API_URL/)).toBeVisible();
   await page.goto('/?page=community&section=constitution');
   await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Kingdom Currency' })).toHaveCount(0);

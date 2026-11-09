@@ -40,6 +40,7 @@ jobs:
         env:
           VITE_BASE_PATH: /Kingdom-Hierarchy/
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_HANKO_API_URL: ${{ vars.VITE_HANKO_API_URL }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
