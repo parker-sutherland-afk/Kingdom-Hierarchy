@@ -39,7 +39,7 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /Kingdom-Hierarchy/
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || vars.VITE_GOOGLE_CLIENT_ID }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
