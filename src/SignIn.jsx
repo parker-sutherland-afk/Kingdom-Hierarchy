@@ -1,6 +1,7 @@
 import React from 'react';
 import { Crown, ShieldAlert } from 'lucide-react';
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js';
+import { LegalLink } from './LegalLinks.jsx';
 
 const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client';
 const GOOGLE_SESSION_KEY = 'imperius.google.identity';
@@ -240,6 +241,10 @@ export default function SignInPortal({ onSuccess, initialError = '' }) {
             </p>
           </div>
         </aside>
+
+        <p className="mt-4 text-center font-sans text-[11px] leading-relaxed text-stone-500">
+          By signing in, you agree to the <LegalLink>Terms of Service and Privacy Policy</LegalLink>.
+        </p>
       </section>
     </main>
   );
