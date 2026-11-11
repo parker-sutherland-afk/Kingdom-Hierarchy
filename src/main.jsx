@@ -4,14 +4,24 @@ import SignInPortal, { isGoogleSignInEnabled, readGoogleBrowserSession } from '.
 import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
 import LegalFooter from './LegalLinks.jsx'
+import { GuestBanner, GuestLocked } from './GuestPreview.jsx'
+import { clearGuestSession, endGuestSession, readGuestSession, startGuestSession } from './guestSession.js'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
 
 const GOOGLE_SESSION_KEY = 'imperius.google.identity'
 
 function App() {
-  const [identity, setIdentity] = React.useState(() => readGoogleBrowserSession())
-  const onSignIn = React.useCallback(nextIdentity => setIdentity(nextIdentity), [])
+  const [identity, setIdentity] = React.useState(() => readGoogleBrowserSession() || readGuestSession())
+  const onSignIn = React.useCallback(nextIdentity => {
+    clearGuestSession()
+    setIdentity(nextIdentity)
+  }, [])
+  const onContinueAsGuest = React.useCallback(() => setIdentity(startGuestSession()), [])
+  const leaveGuestPreview = React.useCallback(() => {
+    endGuestSession()
+    setIdentity(null)
+  }, [])
   const [hankoClient, setHankoClient] = React.useState(null)
   const [authLoading, setAuthLoading] = React.useState(isHankoEnabled)
   const [authError, setAuthError] = React.useState('')
@@ -26,6 +36,7 @@ function App() {
       try {
         const nextIdentity = await getHankoIdentity(client)
         if (active) {
+          if (nextIdentity) clearGuestSession()
           setIdentity(nextIdentity)
           setAuthError('')
         }
@@ -51,7 +62,7 @@ function App() {
           if (active) setIdentity(null)
         }))
 
-        if (!readGoogleBrowserSession()) await syncHankoSession(client)
+        if (!readGoogleBrowserSession() && !readGuestSession()) await syncHankoSession(client)
         else setAuthLoading(false)
       })
       .catch(error => {
@@ -72,7 +83,8 @@ function App() {
 
     const expiresIn = Math.max(0, identity.expiresAt - Date.now())
     const expiryTimer = window.setTimeout(() => {
-      sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+      if (identity.isGuest) endGuestSession()
+      else sessionStorage.removeItem(GOOGLE_SESSION_KEY)
       setIdentity(null)
     }, Math.min(expiresIn, 2_147_483_647))
 
@@ -107,14 +119,19 @@ function App() {
       </main>
     )
   }
-  if (signInEnabled && !identity) return <SignInPortal onSuccess={onSignIn} initialError={authError} />
+  if (signInEnabled && !identity) {
+    return <SignInPortal onSuccess={onSignIn} onContinueAsGuest={onContinueAsGuest} initialError={authError} />
+  }
 
+  const isGuest = Boolean(identity?.isGuest)
   const isCommunityPage = new URLSearchParams(window.location.search).get('page') === 'community'
   const Page = isCommunityPage ? CommunityPortal : KingdomHierarchy
 
   return (
     <>
-      {identity ? (
+      {isGuest ? (
+        <GuestBanner expiresAt={identity.expiresAt} onSignIn={leaveGuestPreview} />
+      ) : identity ? (
         <div className="sticky top-0 z-[70] border-b border-stone-800 bg-[#11120f]/95 px-3 py-2 backdrop-blur sm:px-5">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 font-sans text-[10px] sm:text-xs">
             <p className="min-w-0 truncate text-stone-400">
@@ -136,7 +153,9 @@ function App() {
         </div>
       )}
       {authError && identity && <p role="alert" className="bg-red-950/70 px-4 py-2 text-center font-sans text-xs text-red-100">{authError}</p>}
-      <Page />
+      {isGuest && isCommunityPage
+        ? <GuestLocked feature="Community pages" onSignIn={leaveGuestPreview} />
+        : <Page guest={isGuest} onRequestSignIn={leaveGuestPreview} />}
       <LegalFooter />
     </>
   )

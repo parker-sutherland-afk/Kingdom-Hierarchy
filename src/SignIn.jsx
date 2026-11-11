@@ -1,6 +1,7 @@
 import React from 'react';
-import { Crown, ShieldAlert } from 'lucide-react';
+import { Crown, Eye, ShieldAlert } from 'lucide-react';
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js';
+import { GUEST_DURATION_MS, hasGuestPreviewEnded } from './guestSession.js';
 import { LegalLink } from './LegalLinks.jsx';
 
 const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client';
@@ -95,12 +96,14 @@ export function readGoogleBrowserSession() {
   }
 }
 
-export default function SignInPortal({ onSuccess, initialError = '' }) {
+export default function SignInPortal({ onSuccess, onContinueAsGuest, initialError = '' }) {
   const buttonContainerRef = React.useRef(null);
   const [error, setError] = React.useState(initialError);
   const [isLoading, setIsLoading] = React.useState(isGoogleSignInEnabled);
   const [hankoReady, setHankoReady] = React.useState(false);
   const [hankoError, setHankoError] = React.useState('');
+  const [previewEnded] = React.useState(hasGuestPreviewEnded);
+  const guestMinutes = GUEST_DURATION_MS / 60000;
 
   React.useEffect(() => {
     if (!isHankoEnabled) return undefined;
@@ -232,6 +235,27 @@ export default function SignInPortal({ onSuccess, initialError = '' }) {
 
         {error && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 font-sans text-xs leading-relaxed text-red-200">{error}</p>}
         {hankoError && <p role="alert" className="mt-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 font-sans text-xs leading-relaxed text-red-200">{hankoError}</p>}
+
+        {previewEnded && (
+          <div role="status" className="mt-6 rounded-xl border border-amber-700/30 bg-amber-950/20 p-4 text-sm leading-relaxed text-amber-100">
+            Your guest preview has ended. Sign in to keep exploring the realm.
+          </div>
+        )}
+
+        {onContinueAsGuest && !previewEnded && (
+          <div className="mt-6 border-t border-stone-800 pt-5 text-center">
+            <button
+              type="button"
+              onClick={onContinueAsGuest}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-stone-700 bg-stone-900/70 px-5 font-sans text-xs font-semibold text-stone-200 transition hover:border-amber-500/50 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+            >
+              <Eye aria-hidden="true" size={14} /> Skip for now — preview as guest
+            </button>
+            <p className="mt-2 font-sans text-[11px] leading-relaxed text-stone-500">
+              Browse the roster for {guestMinutes} minutes. Full profiles, Community pages, and sharing are locked until you sign in.
+            </p>
+          </div>
+        )}
 
         <aside className="mt-7 rounded-xl border border-amber-500/20 bg-amber-500/[0.05] p-4">
           <div className="flex items-start gap-3">
