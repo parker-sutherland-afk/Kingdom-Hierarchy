@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen, Network, MessageSquare } from 'lucide-react';
+import { Crown, Pickaxe, Info, Search, Users, Scale, X, Copy, Check, ChevronDown, SlidersHorizontal, Link2, RefreshCw, Printer, User, LayoutGrid, Rows3, BookOpen, Network, MessageSquare, Lock } from 'lucide-react';
 import MEMBERS from './data/members.json';
 import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG, { ROLE_NAMES } from './roleConfig.js';
@@ -290,7 +290,7 @@ function ThemedDropdown({ id, label, value, options, onChange }) {
   );
 }
 
-export default function KingdomHierarchy() {
+export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
   const initialUrlState = useRef(null);
   if (!initialUrlState.current) {
     initialUrlState.current = readRosterUrl(window.location.search, MEMBERS, ROLE_NAMES);
@@ -306,7 +306,8 @@ export default function KingdomHierarchy() {
   const [copyFailed, setCopyFailed] = useState(false);
   const [profileLinkStatus, setProfileLinkStatus] = useState('');
   const [viewLinkStatus, setViewLinkStatus] = useState('');
-  const [selectedMember, setSelectedMember] = useState(initialUrlState.current.selectedMember);
+  const [selectedMember, setSelectedMember] = useState(guest ? null : initialUrlState.current.selectedMember);
+  const [guestNotice, setGuestNotice] = useState('');
   const profileDialogRef = useRef(null);
   const closingDialogFromStateRef = useRef(false);
   const searchInputRef = useRef(null);
@@ -329,11 +330,11 @@ export default function KingdomHierarchy() {
       setSelectedRole(state.selectedRole);
       setProfileLinkStatus('');
       setViewLinkStatus('');
-      setSelectedMember(state.selectedMember);
+      setSelectedMember(guest ? null : state.selectedMember);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [members]);
+  }, [members, guest]);
 
   useEffect(() => {
     if (restoringHistoryRef.current) {
@@ -411,7 +412,15 @@ export default function KingdomHierarchy() {
     }
   }
 
+  function lockedFeature(message) {
+    setGuestNotice(message);
+  }
+
   function openMemberProfile(member) {
+    if (guest) {
+      lockedFeature('Full member profiles are locked in guest preview.');
+      return;
+    }
     if (selectedMember?.id === member.id) return;
     updateMemberUrl(member.id, 'push', {
       searchQuery,
@@ -562,9 +571,20 @@ export default function KingdomHierarchy() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-amber-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Realm records
                 </div>
-                <a href={`${APP_BASE}?page=community&section=general`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-400/[0.09] px-4 font-sans text-xs font-bold text-amber-100 shadow-sm shadow-amber-950/30 transition hover:border-amber-300/70 hover:bg-amber-400/[0.16] hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
-                  <MessageSquare aria-hidden="true" size={14} /> Community
-                </a>
+                {guest ? (
+                  <button
+                    type="button"
+                    onClick={() => lockedFeature('Community pages are locked in guest preview.')}
+                    aria-label="Community pages (locked in guest preview)"
+                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-stone-700 bg-stone-900/60 px-4 font-sans text-xs font-bold text-stone-400 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+                  >
+                    <Lock aria-hidden="true" size={14} /> Community
+                  </button>
+                ) : (
+                  <a href={`${APP_BASE}?page=community&section=general`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-400/[0.09] px-4 font-sans text-xs font-bold text-amber-100 shadow-sm shadow-amber-950/30 transition hover:border-amber-300/70 hover:bg-amber-400/[0.16] hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+                    <MessageSquare aria-hidden="true" size={14} /> Community
+                  </a>
+                )}
               </div>
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                 <div>
@@ -755,17 +775,17 @@ export default function KingdomHierarchy() {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={copyViewLink}
+                    onClick={guest ? () => lockedFeature('Sharing filtered views is locked in guest preview.') : copyViewLink}
                     className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
-                    <Link2 aria-hidden="true" size={13} /> Share view
+                    {guest ? <Lock aria-hidden="true" size={13} /> : <Link2 aria-hidden="true" size={13} />} Share view
                   </button>
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={guest ? () => lockedFeature('Printing the roster is locked in guest preview.') : () => window.print()}
                     className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
-                    <Printer aria-hidden="true" size={13} /> Print roster
+                    {guest ? <Lock aria-hidden="true" size={13} /> : <Printer aria-hidden="true" size={13} />} Print roster
                   </button>
                   {(activeFilter !== 'All' || selectedRole || searchQuery || sortMode !== 'rank') && (
                     <button
@@ -817,6 +837,19 @@ export default function KingdomHierarchy() {
             {normalizedQuery && <> matching <span className="text-stone-300">“{searchQuery.trim()}”</span></>}
             {selectedRole && <> with role <span className="text-stone-300">{selectedRole}</span></>}
           </p>
+          {guest && guestNotice && (
+            <p className="mt-1 px-1 text-xs text-amber-300" role="status" aria-live="polite">
+              {guestNotice}{' '}
+              <button
+                type="button"
+                onClick={onRequestSignIn}
+                className="font-semibold underline underline-offset-2 transition hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+              >
+                Sign in
+              </button>{' '}
+              to unlock it.
+            </p>
+          )}
           {(copiedUsername || copyFailed) && (
             <p className={`mt-1 px-1 text-xs ${copyFailed ? 'text-rose-300' : 'text-emerald-300'}`} role="status">
               {copyFailed ? 'Could not copy username. Check clipboard permissions and try again.' : `Copied ${copiedUsername} to clipboard.`}
@@ -924,6 +957,7 @@ export default function KingdomHierarchy() {
                                       Acting leader
                                     </span>
                                   )}
+                                  {!guest && (
                                   <div className={`mt-0.5 min-w-0 items-center gap-1 font-sans text-xs text-stone-500 ${viewMode === 'compact' || !member.mcName ? 'hidden' : 'flex'}`}>
                                     <span className="truncate">@<HighlightedText text={member.mcName} query={normalizedQuery} /></span>
                                     <button
@@ -936,6 +970,7 @@ export default function KingdomHierarchy() {
                                       {copiedUsername === member.mcName && !copyFailed ? <Check size={12} /> : <Copy size={12} />}
                                     </button>
                                   </div>
+                                  )}
                                 </div>
                               </div>
                               <div
@@ -995,7 +1030,8 @@ export default function KingdomHierarchy() {
                               onClick={() => openMemberProfile(member)}
                               className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
                             >
-                              {viewMode === 'compact' ? 'Profile' : 'View full profile'} <span aria-hidden="true">→</span>
+                              {guest && <Lock aria-hidden="true" size={12} />}
+                              {guest ? 'Profile locked' : viewMode === 'compact' ? 'Profile' : 'View full profile'}{!guest && <> <span aria-hidden="true">→</span></>}
                             </button>
                           </div>
                         </article>
