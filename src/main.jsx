@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import SignInPortal, { isGoogleSignInEnabled, readGoogleBrowserSession } from './SignIn.jsx'
 import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
+import LegalFooter from './LegalLinks.jsx'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
 
@@ -136,6 +137,7 @@ function App() {
       )}
       {authError && identity && <p role="alert" className="bg-red-950/70 px-4 py-2 text-center font-sans text-xs text-red-100">{authError}</p>}
       <Page />
+      <LegalFooter />
     </>
   )
 }
