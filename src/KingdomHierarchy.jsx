@@ -412,13 +412,13 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
     }
   }
 
-  function lockedFeature(message) {
-    setGuestNotice(message);
+  function lockedFeature(action) {
+    setGuestNotice(`You need to be signed in to ${action}.`);
   }
 
   function openMemberProfile(member) {
     if (guest) {
-      lockedFeature('Full member profiles are locked in guest preview.');
+      lockedFeature('view full member profiles');
       return;
     }
     if (selectedMember?.id === member.id) return;
@@ -574,8 +574,8 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
                 {guest ? (
                   <button
                     type="button"
-                    onClick={() => lockedFeature('Community pages are locked in guest preview.')}
-                    aria-label="Community pages (locked in guest preview)"
+                    onClick={() => lockedFeature('open the Community pages')}
+                    aria-label="Community (sign in required)"
                     className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-stone-700 bg-stone-900/60 px-4 font-sans text-xs font-bold text-stone-400 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
                     <Lock aria-hidden="true" size={14} /> Community
@@ -775,14 +775,14 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={guest ? () => lockedFeature('Sharing filtered views is locked in guest preview.') : copyViewLink}
+                    onClick={guest ? () => lockedFeature('share filtered views') : copyViewLink}
                     className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
                     {guest ? <Lock aria-hidden="true" size={13} /> : <Link2 aria-hidden="true" size={13} />} Share view
                   </button>
                   <button
                     type="button"
-                    onClick={guest ? () => lockedFeature('Printing the roster is locked in guest preview.') : () => window.print()}
+                    onClick={guest ? () => lockedFeature('print the roster') : () => window.print()}
                     className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-stone-700/80 bg-stone-900/60 px-3 font-sans text-[10px] font-semibold text-stone-300 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
                     {guest ? <Lock aria-hidden="true" size={13} /> : <Printer aria-hidden="true" size={13} />} Print roster
@@ -845,9 +845,8 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
                 onClick={onRequestSignIn}
                 className="font-semibold underline underline-offset-2 transition hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
               >
-                Sign in
-              </button>{' '}
-              to unlock it.
+                Sign in or register
+              </button>
             </p>
           )}
           {(copiedUsername || copyFailed) && (
@@ -1031,7 +1030,7 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
                               className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-950 ${config?.badge} ${config?.accent}`}
                             >
                               {guest && <Lock aria-hidden="true" size={12} />}
-                              {guest ? 'Profile locked' : viewMode === 'compact' ? 'Profile' : 'View full profile'}{!guest && <> <span aria-hidden="true">→</span></>}
+                              {viewMode === 'compact' ? 'Profile' : 'View full profile'} <span aria-hidden="true">→</span>
                             </button>
                           </div>
                         </article>
