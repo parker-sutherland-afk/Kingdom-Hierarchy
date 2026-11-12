@@ -1,20 +1,29 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import SignInPortal, { isGoogleSignInEnabled, readGoogleBrowserSession } from './SignIn.jsx'
+import SignInPortal, { clearGoogleSession, isGoogleSignInEnabled, readGoogleBrowserSession } from './SignIn.jsx'
 import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
 import LegalFooter from './LegalLinks.jsx'
+import { GuestBar, GuestLocked } from './GuestPreview.jsx'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
 
-const GOOGLE_SESSION_KEY = 'imperius.google.identity'
-
 function App() {
   const [identity, setIdentity] = React.useState(() => readGoogleBrowserSession())
+  const [showSignIn, setShowSignIn] = React.useState(false)
   const onSignIn = React.useCallback(nextIdentity => setIdentity(nextIdentity), [])
+  const openSignIn = React.useCallback(() => {
+    window.scrollTo({ top: 0 })
+    setShowSignIn(true)
+  }, [])
+  const closeSignIn = React.useCallback(() => setShowSignIn(false), [])
   const [hankoClient, setHankoClient] = React.useState(null)
   const [authLoading, setAuthLoading] = React.useState(isHankoEnabled)
   const [authError, setAuthError] = React.useState('')
+
+  React.useEffect(() => {
+    if (identity) setShowSignIn(false)
+  }, [identity])
 
   React.useEffect(() => {
     if (!isHankoEnabled) return undefined
@@ -72,7 +81,7 @@ function App() {
 
     const expiresIn = Math.max(0, identity.expiresAt - Date.now())
     const expiryTimer = window.setTimeout(() => {
-      sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+      clearGoogleSession()
       setIdentity(null)
     }, Math.min(expiresIn, 2_147_483_647))
 
@@ -95,7 +104,7 @@ function App() {
       return
     }
 
-    sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+    clearGoogleSession()
     setIdentity(null)
   }
 
@@ -107,8 +116,11 @@ function App() {
       </main>
     )
   }
-  if (signInEnabled && !identity) return <SignInPortal onSuccess={onSignIn} initialError={authError} />
+  if (signInEnabled && !identity && showSignIn) {
+    return <SignInPortal onSuccess={onSignIn} onBack={closeSignIn} initialError={authError} />
+  }
 
+  const isGuest = signInEnabled && !identity
   const isCommunityPage = new URLSearchParams(window.location.search).get('page') === 'community'
   const Page = isCommunityPage ? CommunityPortal : KingdomHierarchy
 
@@ -130,13 +142,17 @@ function App() {
           </div>
           <p className="mx-auto mt-1 max-w-6xl font-sans text-[9px] text-stone-600">Sign-in is for browser identity only; this GitHub Pages site and its files are public.</p>
         </div>
+      ) : isGuest ? (
+        <GuestBar onSignIn={openSignIn} />
       ) : (
         <div role="status" className="border-b border-amber-900/40 bg-amber-950/30 px-3 py-2 text-center font-sans text-[10px] text-amber-200 sm:text-xs">
           No sign-in provider is configured; this site is public.
         </div>
       )}
       {authError && identity && <p role="alert" className="bg-red-950/70 px-4 py-2 text-center font-sans text-xs text-red-100">{authError}</p>}
-      <Page />
+      {isGuest && isCommunityPage
+        ? <GuestLocked feature="Community pages" onSignIn={openSignIn} />
+        : <Page guest={isGuest} onRequestSignIn={openSignIn} />}
       <LegalFooter />
     </>
   )

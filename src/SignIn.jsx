@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Crown, ShieldAlert } from 'lucide-react';
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js';
 import { LegalLink } from './LegalLinks.jsx';
 
@@ -7,6 +7,73 @@ const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client';
 const GOOGLE_SESSION_KEY = 'imperius.google.identity';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
 export const isGoogleSignInEnabled = Boolean(GOOGLE_CLIENT_ID);
+
+// "Remember me" cookie: keeps a Google sign-in across visits for 30 days.
+// It stores only the name, email and expiry (never the Google credential), and is scoped to this app's path.
+const REMEMBER_COOKIE = 'imperius_signin';
+const REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
+const COOKIE_PATH = import.meta.env.BASE_URL;
+
+function isValidSession(session) {
+  return Boolean(session) &&
+    typeof session.email === 'string' &&
+    typeof session.name === 'string' &&
+    Number.isFinite(session.expiresAt) &&
+    session.expiresAt > Date.now();
+}
+
+function writeRememberCookie(session) {
+  try {
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    const value = encodeURIComponent(JSON.stringify({
+      email: session.email,
+      name: session.name,
+      expiresAt: session.expiresAt,
+    }));
+    document.cookie = `${REMEMBER_COOKIE}=${value}; Path=${COOKIE_PATH}; Expires=${new Date(session.expiresAt).toUTCString()}; SameSite=Lax${secure}`;
+  } catch {
+    // Cookies can be unavailable or blocked; the sign-in still works for this tab.
+  }
+}
+
+function readRememberCookie() {
+  try {
+    const entry = document.cookie.split('; ').find(part => part.startsWith(`${REMEMBER_COOKIE}=`));
+    if (!entry) return null;
+
+    const session = JSON.parse(decodeURIComponent(entry.slice(REMEMBER_COOKIE.length + 1)));
+    if (!isValidSession(session)) return null;
+    return { email: session.email, name: session.name, provider: 'google', expiresAt: session.expiresAt };
+  } catch {
+    return null;
+  }
+}
+
+function clearRememberCookie() {
+  try {
+    document.cookie = `${REMEMBER_COOKIE}=; Path=${COOKIE_PATH}; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  } catch {
+    // Ignore cookie errors.
+  }
+}
+
+function saveGoogleSession(identity) {
+  try {
+    sessionStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify(identity));
+  } catch {
+    // Storage can be unavailable; the cookie below still keeps the sign-in.
+  }
+  writeRememberCookie(identity);
+}
+
+export function clearGoogleSession() {
+  try {
+    sessionStorage.removeItem(GOOGLE_SESSION_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+  clearRememberCookie();
+}
 
 let googleScriptPromise;
 
@@ -68,34 +135,30 @@ function decodeGoogleCredential(credential) {
     email: claims.email,
     name: claims.name || claims.email,
     provider: 'google',
-    expiresAt: claims.exp * 1000,
+    expiresAt: Date.now() + REMEMBER_MS,
   };
 }
 
 export function readGoogleBrowserSession() {
   try {
     const rawSession = sessionStorage.getItem(GOOGLE_SESSION_KEY);
-    if (!rawSession) return null;
-
-    const session = JSON.parse(rawSession);
-    if (
-      typeof session.email !== 'string' ||
-      typeof session.name !== 'string' ||
-      !Number.isFinite(session.expiresAt) ||
-      session.expiresAt <= Date.now()
-    ) {
+    if (rawSession) {
+      const session = JSON.parse(rawSession);
+      if (isValidSession(session)) return session;
       sessionStorage.removeItem(GOOGLE_SESSION_KEY);
-      return null;
     }
-
-    return session;
   } catch {
-    sessionStorage.removeItem(GOOGLE_SESSION_KEY);
-    return null;
+    try {
+      sessionStorage.removeItem(GOOGLE_SESSION_KEY);
+    } catch {
+      // Storage is unavailable; fall back to the remember-me cookie.
+    }
   }
+
+  return readRememberCookie();
 }
 
-export default function SignInPortal({ onSuccess, initialError = '' }) {
+export default function SignInPortal({ onSuccess, onBack, initialError = '' }) {
   const buttonContainerRef = React.useRef(null);
   const [error, setError] = React.useState(initialError);
   const [isLoading, setIsLoading] = React.useState(isGoogleSignInEnabled);
@@ -150,7 +213,7 @@ export default function SignInPortal({ onSuccess, initialError = '' }) {
 
             try {
               const identity = decodeGoogleCredential(response.credential);
-              sessionStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify(identity));
+              saveGoogleSession(identity);
               onSuccess(identity);
             } catch (credentialError) {
               setError(credentialError instanceof Error ? credentialError.message : 'Google sign-in failed.');
@@ -187,11 +250,20 @@ export default function SignInPortal({ onSuccess, initialError = '' }) {
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0d0b] px-4 py-10 font-serif text-stone-200 selection:bg-amber-900/70 selection:text-amber-50">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,34,0.2),_transparent_60%)]" />
       <section aria-labelledby="signin-title" className="relative w-full max-w-lg rounded-2xl border border-amber-900/40 bg-gradient-to-br from-stone-900 via-[#171812] to-[#10110f] p-6 shadow-2xl sm:p-9">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="-ml-2 mb-5 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 font-sans text-xs font-semibold text-stone-400 transition hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+          >
+            <ArrowLeft aria-hidden="true" size={14} /> Back to home
+          </button>
+        )}
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-700/30 bg-amber-950/30 px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">
           <Crown aria-hidden="true" size={13} /> Imperius Realm Access
         </div>
         <h1 id="signin-title" className="text-3xl font-black uppercase tracking-wide text-stone-100 sm:text-4xl">Welcome to the Realm</h1>
-        <p className="mt-3 text-sm leading-relaxed text-stone-400">Sign in with Google or use an email address to continue to the Kingdom Hierarchy.</p>
+        <p className="mt-3 text-sm leading-relaxed text-stone-400">Sign in or register with Google or an email address to unlock full member profiles, Community pages, sharing, and printing.</p>
 
         {isHankoEnabled && (
           <>
