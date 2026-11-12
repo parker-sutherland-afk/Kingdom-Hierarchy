@@ -1,14 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import SignInPortal, { isGoogleSignInEnabled, readGoogleBrowserSession } from './SignIn.jsx'
+import SignInPortal, { clearGoogleSession, isGoogleSignInEnabled, readGoogleBrowserSession } from './SignIn.jsx'
 import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
 import LegalFooter from './LegalLinks.jsx'
 import { GuestBar, GuestLocked } from './GuestPreview.jsx'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
-
-const GOOGLE_SESSION_KEY = 'imperius.google.identity'
 
 function App() {
   const [identity, setIdentity] = React.useState(() => readGoogleBrowserSession())
@@ -83,7 +81,7 @@ function App() {
 
     const expiresIn = Math.max(0, identity.expiresAt - Date.now())
     const expiryTimer = window.setTimeout(() => {
-      sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+      clearGoogleSession()
       setIdentity(null)
     }, Math.min(expiresIn, 2_147_483_647))
 
@@ -106,7 +104,7 @@ function App() {
       return
     }
 
-    sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+    clearGoogleSession()
     setIdentity(null)
   }
 
