@@ -35,6 +35,7 @@ async function installGoogleSignInMock(page) {
 async function signInWithGoogle(page) {
   await installGoogleSignInMock(page);
   await page.goto('/');
+  await page.getByRole('button', { name: 'Sign in / Register', exact: true }).click();
   await page.getByRole('button', { name: 'Continue with Google' }).click();
   await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
 }
@@ -43,7 +44,7 @@ test.beforeEach(async ({ page }) => {
   await signInWithGoogle(page);
 });
 
-test('Google browser sign-in gate survives navigation and signs out cleanly', async ({ page }) => {
+test('Google browser sign-in survives navigation and signs out to the guest home page', async ({ page }) => {
   const storedIdentity = await page.evaluate(() => JSON.parse(sessionStorage.getItem('imperius.google.identity')));
   expect(storedIdentity).toMatchObject({
     email: 'citizen@example.com',
@@ -52,19 +53,53 @@ test('Google browser sign-in gate survives navigation and signs out cleanly', as
   expect(storedIdentity).not.toHaveProperty('credential');
 
   await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByText('Signed in as Test Imperium')).toHaveCount(0);
+  await expect(page.getByRole('main', { name: 'Kingdom member roster' })).toBeVisible();
+  await page.getByRole('button', { name: 'Sign in / Register', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
   await expect(page.getByText(/Email sign-in is not set up yet/)).toBeVisible();
   await expect(page.getByText(/VITE_HANKO_API_URL/)).toBeVisible();
+  await page.getByRole('button', { name: 'Back to home' }).click();
+  await expect(page.getByRole('main', { name: 'Kingdom member roster' })).toBeVisible();
+
   await page.goto('/?page=community&section=constitution');
-  await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Community pages locked' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Kingdom Currency' })).toHaveCount(0);
 
+  await page.getByRole('button', { name: 'Sign in / Register', exact: true }).click();
   await page.getByRole('button', { name: 'Continue with Google' }).click();
   await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
   await page.reload();
   await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
   await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page.getByRole('heading', { name: 'Welcome to the Realm' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign in / Register', exact: true })).toBeVisible();
+});
+
+test('guests browse the home page with limited access and are asked to sign in for locked actions', async ({ page }) => {
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('button', { name: 'Sign in / Register', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charlie Pringle', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Minecraft username/ })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'View full profile' }).first().click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByText('You need to be signed in to view full member profiles.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Share view' }).click();
+  await expect(page.getByText('You need to be signed in to share filtered views.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Print roster' }).click();
+  await expect(page.getByText('You need to be signed in to print the roster.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Community (sign in required)' }).click();
+  await expect(page.getByText('You need to be signed in to open the Community pages.')).toBeVisible();
+
+  await page.goto('/?member=3');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+
+  await page.getByRole('button', { name: 'Sign in / Register', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await expect(page.getByText('Signed in as Test Imperium')).toBeVisible();
 });
 
 test('returned King clears acting-leader status without changing permanent roles or voting points', async ({ page }) => {
