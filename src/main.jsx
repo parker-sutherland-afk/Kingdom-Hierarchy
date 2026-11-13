@@ -4,6 +4,7 @@ import SignInPortal, { clearGoogleSession, isGoogleSignInEnabled, readGoogleBrow
 import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
 import LegalFooter from './LegalLinks.jsx'
+import VoteCalculator from './VoteCalculator.jsx'
 import { GuestBar, GuestLocked } from './GuestPreview.jsx'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
@@ -153,6 +154,7 @@ function App() {
       {isGuest && isCommunityPage
         ? <GuestLocked feature="Community pages" onSignIn={openSignIn} />
         : <Page guest={isGuest} onRequestSignIn={openSignIn} />}
+      {!isCommunityPage && <VoteCalculator />}
       <LegalFooter />
     </>
   )
