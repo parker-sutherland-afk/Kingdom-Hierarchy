@@ -307,7 +307,7 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
   const [profileLinkStatus, setProfileLinkStatus] = useState('');
   const [viewLinkStatus, setViewLinkStatus] = useState('');
   const [selectedMember, setSelectedMember] = useState(guest ? null : initialUrlState.current.selectedMember);
-  const [guestNotice, setGuestNotice] = useState('');
+  const [guestNotice, setGuestNotice] = useState(null);
   const profileDialogRef = useRef(null);
   const closingDialogFromStateRef = useRef(false);
   const searchInputRef = useRef(null);
@@ -412,13 +412,23 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
     }
   }
 
-  function lockedFeature(action) {
-    setGuestNotice(`You need to be signed in to ${action}.`);
+  // Guests see a notice with a sign-in button; returnTo is where they land after signing in.
+  function lockedFeature(action, returnTo) {
+    setGuestNotice({ message: `You need to be signed in to ${action}.`, returnTo });
   }
 
   function openMemberProfile(member) {
     if (guest) {
-      lockedFeature('view full member profiles');
+      const profileUrl = createRosterUrl(window.location.href, {
+        searchQuery,
+        activeFilter,
+        sortMode,
+        viewMode,
+        layoutMode,
+        selectedRole,
+        selectedMember: member,
+      });
+      lockedFeature('view full member profiles', `${profileUrl.pathname}${profileUrl.search}`);
       return;
     }
     if (selectedMember?.id === member.id) return;
@@ -574,7 +584,7 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
                 {guest ? (
                   <button
                     type="button"
-                    onClick={() => lockedFeature('open the Community pages')}
+                    onClick={() => lockedFeature('open the Community pages', `${APP_BASE}?page=community&section=general`)}
                     aria-label="Community (sign in required)"
                     className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-stone-700 bg-stone-900/60 px-4 font-sans text-xs font-bold text-stone-400 transition hover:border-amber-500/40 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
                   >
@@ -839,10 +849,10 @@ export default function KingdomHierarchy({ guest = false, onRequestSignIn }) {
           </p>
           {guest && guestNotice && (
             <p className="mt-1 px-1 text-xs text-amber-300" role="status" aria-live="polite">
-              {guestNotice}{' '}
+              {guestNotice.message}{' '}
               <button
                 type="button"
-                onClick={onRequestSignIn}
+                onClick={() => onRequestSignIn(guestNotice.returnTo)}
                 className="font-semibold underline underline-offset-2 transition hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
               >
                 Sign in or register

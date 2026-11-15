@@ -19,6 +19,7 @@ import CONSTITUTION from './data/constitution.json';
 import ROSTER_METADATA from './data/rosterMetadata.json';
 import ROLE_CONFIG from './roleConfig.js';
 import { getVotingPowerBreakdown } from './rosterUtils.js';
+import ConstitutionSearch from './ConstitutionSearch.jsx';
 
 const SECTIONS = [
   { id: 'general', label: 'Realm Hall', icon: Crown },
@@ -257,6 +258,7 @@ export default function CommunityPortal() {
                 <h3 id="constitution-title" className="text-xl font-black uppercase tracking-wide text-stone-100">Constitution of Imperius</h3>
                 <p className="mt-2 text-sm leading-relaxed text-stone-400">{CONSTITUTION.preamble}</p>
               </section>
+              <ConstitutionSearch />
               <section aria-labelledby="currency-title" className={cardClass}>
                 <h3 id="currency-title" className="text-base font-bold text-amber-100">Kingdom Currency</h3>
                 <p className="mt-1 text-sm leading-relaxed text-stone-400">The kingdom's listed item values, from everyday trade to treasures fit for a throne.</p>
