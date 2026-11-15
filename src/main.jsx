@@ -5,6 +5,7 @@ import KingdomHierarchy from './KingdomHierarchy.jsx'
 import CommunityPortal from './CommunityPortal.jsx'
 import LegalFooter from './LegalLinks.jsx'
 import VoteCalculator from './VoteCalculator.jsx'
+import RosterDownloadButton from './RosterDownload.jsx'
 import { GuestBar, GuestLocked } from './GuestPreview.jsx'
 import { getHankoIdentity, initializeHanko, isHankoEnabled } from './hankoAuth.js'
 import './index.css'
@@ -12,12 +13,26 @@ import './index.css'
 function App() {
   const [identity, setIdentity] = React.useState(() => readGoogleBrowserSession())
   const [showSignIn, setShowSignIn] = React.useState(false)
-  const onSignIn = React.useCallback(nextIdentity => setIdentity(nextIdentity), [])
-  const openSignIn = React.useCallback(() => {
+  // Where to send a guest after they sign in (e.g. the profile or page they tried to open).
+  const returnToRef = React.useRef(null)
+  const applyReturnTo = React.useCallback(() => {
+    if (!returnToRef.current) return
+    window.history.replaceState(window.history.state, '', returnToRef.current)
+    returnToRef.current = null
+  }, [])
+  const onSignIn = React.useCallback(nextIdentity => {
+    applyReturnTo()
+    setIdentity(nextIdentity)
+  }, [applyReturnTo])
+  const openSignIn = React.useCallback(returnTo => {
+    returnToRef.current = typeof returnTo === 'string' && returnTo.startsWith('/') ? returnTo : null
     window.scrollTo({ top: 0 })
     setShowSignIn(true)
   }, [])
-  const closeSignIn = React.useCallback(() => setShowSignIn(false), [])
+  const closeSignIn = React.useCallback(() => {
+    returnToRef.current = null
+    setShowSignIn(false)
+  }, [])
   const [hankoClient, setHankoClient] = React.useState(null)
   const [authLoading, setAuthLoading] = React.useState(isHankoEnabled)
   const [authError, setAuthError] = React.useState('')
@@ -36,6 +51,7 @@ function App() {
       try {
         const nextIdentity = await getHankoIdentity(client)
         if (active) {
+          if (nextIdentity) applyReturnTo()
           setIdentity(nextIdentity)
           setAuthError('')
         }
@@ -75,7 +91,7 @@ function App() {
       active = false
       removeListeners.forEach(removeListener => removeListener())
     }
-  }, [])
+  }, [applyReturnTo])
 
   React.useEffect(() => {
     if (!identity || identity.provider === 'hanko') return undefined
@@ -133,13 +149,16 @@ function App() {
             <p className="min-w-0 truncate text-stone-400">
               Signed in as <span className="font-semibold text-stone-200">{identity.name}</span>
             </p>
-            <button
-              type="button"
-              onClick={signOut}
-              className="inline-flex min-h-9 shrink-0 items-center rounded-lg border border-stone-700 px-3 font-semibold text-stone-300 transition hover:border-amber-400/50 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
-            >
-              Sign out
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <RosterDownloadButton />
+              <button
+                type="button"
+                onClick={signOut}
+                className="inline-flex min-h-9 shrink-0 items-center rounded-lg border border-stone-700 px-3 font-semibold text-stone-300 transition hover:border-amber-400/50 hover:text-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
           <p className="mx-auto mt-1 max-w-6xl font-sans text-[9px] text-stone-600">Sign-in is for browser identity only; this GitHub Pages site and its files are public.</p>
         </div>
