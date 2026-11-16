@@ -7,15 +7,6 @@ A searchable roster and static community pages for the kingdom, built with React
 
 **Visit the live site:** <https://parker-sutherland-afk.github.io/Kingdom-Hierarchy/>
 
-## Run locally
-
-```sh
-npm install
-npm run dev
-```
-
-Vite prints the local development URL after the server starts.
-
 ## Production build
 
 ```sh
