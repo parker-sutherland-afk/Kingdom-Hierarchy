@@ -238,7 +238,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page).toHaveURL(/q=Darcy/);
   await expect(page).toHaveURL(/group=Military/);
   await expect(page).toHaveURL(/view=compact/);
-  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 11 members' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 9 members' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Share view' }).click();
   await expect(page.getByText('Filtered view link copied.')).toBeVisible();
@@ -252,7 +252,7 @@ test('compact mode is shareable and the copied view restores the active filters'
   await expect(page.getByRole('searchbox', { name: 'Search the roster' })).toHaveValue('Darcy');
   await page.locator('details').filter({ hasText: 'Display options' }).locator('summary').click();
   await expect(page.getByRole('button', { name: 'Compact', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 11 members' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Showing 1 of 9 members' })).toBeVisible();
 });
 
 test('hierarchy view follows filters, is shareable, and opens member profiles', async ({ page }) => {
@@ -386,7 +386,7 @@ test('print view includes active search and filters but hides interactive contro
 
   const summary = page.getByTestId('print-roster-summary');
   await expect(summary).toBeVisible();
-  await expect(summary).toContainText('Showing 1 of 11 members.');
+  await expect(summary).toContainText('Showing 1 of 9 members.');
   await expect(summary).toContainText('Search: “Darcy”');
   await expect(summary).toContainText('Group: Military');
   await expect(page.getByRole('region', { name: 'Find a member' })).toBeHidden();
