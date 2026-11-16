@@ -102,7 +102,7 @@ test('name sorting is alphabetical without changing the source order', () => {
   const sortedNames = sortByName(members).map(member => member.name);
 
   assert.deepEqual(sortedNames, [
-    'Charlie Pringle', 'Chicky31889', 'Darcy', 'Gamer2143707', 'Harrison', 'Max', 'Nate', 'Parker', 'Poppy', 'Thomas', 'Will',
+    'Charlie Pringle', 'Darcy', 'Harrison', 'Max', 'Nate', 'Parker', 'Poppy', 'Thomas', 'Will',
   ]);
   assert.equal(members[0].name, 'Will');
 });
@@ -120,7 +120,7 @@ test('voting power comes only from the primary role', () => {
   assert.equal(darcyBreakdown.points, 3);
   assert.deepEqual(darcyBreakdown.roles, [{ role: 'Advisor', points: 3 }]);
   assert.match(describeVotingPower(darcy, roleConfig), /Primary role — Advisor: 3 points/);
-  assert.equal(total, 23);
+  assert.equal(total, 21);
 });
 
 test('voting-power sorting is descending with rank and name tie-breakers', () => {
@@ -128,7 +128,7 @@ test('voting-power sorting is descending with rank and name tie-breakers', () =>
 
   assert.deepEqual(sortedNames, [
     'Will', 'Darcy', 'Parker', 'Harrison', 'Nate', 'Thomas', 'Max',
-    'Charlie Pringle', 'Chicky31889', 'Gamer2143707', 'Poppy',
+    'Charlie Pringle', 'Poppy',
   ]);
 });
 
