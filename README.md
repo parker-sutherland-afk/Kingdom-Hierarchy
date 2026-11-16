@@ -1,6 +1,11 @@
 # Kingdom Hierarchy
 
+[![Deploy to GitHub Pages](https://github.com/parker-sutherland-afk/Kingdom-Hierarchy/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/parker-sutherland-afk/Kingdom-Hierarchy/actions/workflows/deploy-pages.yml)
+[![Live site](https://img.shields.io/badge/Live_site-parker--sutherland--afk.github.io-2b5876)](https://parker-sutherland-afk.github.io/Kingdom-Hierarchy/)
+
 A searchable roster and static community pages for the kingdom, built with React, Vite, Tailwind CSS, and Lucide icons.
+
+**Visit the live site:** <https://parker-sutherland-afk.github.io/Kingdom-Hierarchy/>
 
 ## Run locally
 
