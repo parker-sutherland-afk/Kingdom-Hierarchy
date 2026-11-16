@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
 const avatarProviderHosts = ['minotar.net', 'cravatar.eu', 'mineskin.eu', 'mc-heads.net'];
@@ -224,7 +225,8 @@ test('role guide explains each role and its primary-role points', async ({ page 
   await expect(guide.getByText('5 primary-role points')).toBeVisible();
   await expect(guide.getByText('Advisor', { exact: true })).toBeVisible();
   await expect(guide.getByText('3 primary-role points')).toBeVisible();
-  await expect(guide.locator('time')).toHaveAttribute('datetime', '2026-11-05');
+  const lastUpdated = JSON.parse(readFileSync(new URL('../src/data/rosterMetadata.json', import.meta.url), 'utf8')).lastUpdated;
+  await expect(guide.locator('time')).toHaveAttribute('datetime', lastUpdated);
 });
 
 test('compact mode is shareable and the copied view restores the active filters', async ({ page }) => {
